@@ -1,0 +1,218 @@
+'use client'
+
+import { useState, useRef, useEffect } from 'react'
+
+const GREETING = 'Merhaba! Ben Gamzelieczanem eczacı asistanınızım. Size nasıl yardımcı olabilirim?'
+
+export default function ChatBot() {
+  const [isOpen, setIsOpen] = useState(false)
+  const [messages, setMessages] = useState([
+    { role: 'assistant', content: GREETING },
+  ])
+  const [input, setInput] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef(null)
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      inputRef.current?.focus()
+    }
+  }, [messages, isOpen])
+
+  useEffect(() => {
+    const handler = () => setIsOpen(true)
+    window.addEventListener('openChatBot', handler)
+    return () => window.removeEventListener('openChatBot', handler)
+  }, [])
+
+  async function sendMessage(e) {
+    e.preventDefault()
+    const text = input.trim()
+    if (!text || isLoading) return
+
+    const userMsg = { role: 'user', content: text }
+    const updatedMessages = [...messages, userMsg]
+    setMessages(updatedMessages)
+    setInput('')
+    setIsLoading(true)
+
+    // API'ye gönderilecek mesajlar: ilk asistan selamını atla, user ile başla
+    const firstUserIdx = updatedMessages.findIndex((m) => m.role === 'user')
+    const apiMessages = updatedMessages.slice(firstUserIdx)
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: apiMessages }),
+      })
+
+      if (!response.ok) throw new Error('API hatası')
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let content = ''
+
+      setMessages((prev) => [...prev, { role: 'assistant', content: '' }])
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        content += decoder.decode(value, { stream: true })
+        setMessages((prev) => [
+          ...prev.slice(0, -1),
+          { role: 'assistant', content },
+        ])
+      }
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: 'Üzgünüm, bir sorun oluştu. Lütfen tekrar deneyin.',
+        },
+      ])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const isStreaming =
+    isLoading && messages[messages.length - 1]?.role === 'assistant'
+
+  return (
+    <>
+      {/* Floating Button */}
+      <button
+        onClick={() => setIsOpen((o) => !o)}
+        aria-label={isOpen ? 'Sohbeti kapat' : 'Eczacı asistanını aç'}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-rose-500 text-white rounded-full shadow-xl hover:bg-rose-600 active:scale-95 transition-all flex items-center justify-center"
+      >
+        {isOpen ? (
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        ) : (
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+          </svg>
+        )}
+      </button>
+
+      {/* Chat Window */}
+      {isOpen && (
+        <div className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 flex flex-col bg-white rounded-2xl shadow-2xl border border-rose-100 overflow-hidden"
+          style={{ height: '480px' }}
+        >
+          {/* Header */}
+          <div className="bg-rose-500 px-4 py-3 flex items-center gap-3 shrink-0">
+            <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center text-lg">
+              💊
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-semibold text-sm leading-tight">Eczacı Asistanı</p>
+              <p className="text-rose-100 text-xs">GAMZELİECZANEM</p>
+            </div>
+            <span className="flex items-center gap-1.5 text-xs text-rose-100">
+              <span className="w-2 h-2 bg-green-400 rounded-full inline-block"></span>
+              Çevrimiçi
+            </span>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-rose-50/30">
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                {msg.role === 'assistant' && (
+                  <div className="w-7 h-7 rounded-full bg-rose-100 flex items-center justify-center text-sm shrink-0 mr-2 mt-0.5">
+                    💊
+                  </div>
+                )}
+                <div
+                  className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                    msg.role === 'user'
+                      ? 'bg-rose-500 text-white rounded-tr-sm'
+                      : 'bg-white text-stone-800 rounded-tl-sm shadow-sm border border-rose-100'
+                  }`}
+                >
+                  {msg.content}
+                  {isStreaming && i === messages.length - 1 && (
+                    <span className="inline-block w-1 h-4 bg-rose-400 ml-0.5 animate-pulse rounded-sm align-middle" />
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Typing indicator (before stream starts) */}
+            {isLoading && !isStreaming && (
+              <div className="flex justify-start items-end gap-2">
+                <div className="w-7 h-7 rounded-full bg-rose-100 flex items-center justify-center text-sm shrink-0">
+                  💊
+                </div>
+                <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm border border-rose-100">
+                  <span className="flex gap-1 items-center">
+                    <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce [animation-delay:0ms]" />
+                    <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce [animation-delay:150ms]" />
+                    <span className="w-2 h-2 bg-rose-400 rounded-full animate-bounce [animation-delay:300ms]" />
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick suggestions (only when just greeting shown) */}
+          {messages.length === 1 && (
+            <div className="px-3 pb-2 flex flex-wrap gap-1.5 bg-white border-t border-rose-50 pt-2 shrink-0">
+              {[
+                'Kuru cilt için ne önerirsiniz?',
+                'Yağlı cilt ürünleri',
+                'Güneş koruyucu tavsiyesi',
+                'Saç dökülmesi için ne iyi?',
+              ].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => setInput(suggestion)}
+                  className="text-xs px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full hover:bg-rose-100 transition-colors border border-rose-100"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Input */}
+          <form
+            onSubmit={sendMessage}
+            className="p-3 border-t border-rose-100 flex gap-2 bg-white shrink-0"
+          >
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Sorunuzu yazın..."
+              disabled={isLoading}
+              className="flex-1 text-sm px-3.5 py-2 border border-rose-200 rounded-full focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 disabled:opacity-50 transition-all"
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              className="w-9 h-9 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 disabled:opacity-40 transition-colors shrink-0"
+            >
+              <svg className="w-4 h-4 rotate-90" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      )}
+    </>
+  )
+}

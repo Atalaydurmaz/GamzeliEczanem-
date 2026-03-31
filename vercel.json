@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/terk-sepet/isle",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/rutin-hatirlatici/isle",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}
