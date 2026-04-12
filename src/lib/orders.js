@@ -99,6 +99,19 @@ export async function saveOrder(order) {
   return true
 }
 
+/**
+ * iyzico paymentId'ye göre sipariş numarası döner.
+ * Duplicate callback'lerde "sipariş zaten var mı?" kontrolü için kullanılır.
+ */
+export async function getOrderByPaymentId(paymentId) {
+  const { data } = await supabaseAdmin
+    .from('orders')
+    .select('siparis_no')
+    .eq('iyzico_payment_id', paymentId)
+    .maybeSingle()
+  return data?.siparis_no || null
+}
+
 export async function getOrderByIdempotencyKey(idempotencyKey) {
   const { data } = await supabaseAdmin
     .from('orders')

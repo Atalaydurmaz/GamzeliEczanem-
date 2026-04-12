@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 import { claimPendingOrder } from '@/lib/pendingOrders'
-import { createOrderAtomic } from '@/lib/orders'
+import { createOrderAtomic, getOrderByPaymentId } from '@/lib/orders'
 import { getLowStockUrunler } from '@/lib/stock'
 import { incrementUsage } from '@/lib/discountCodes'
 import { deleteAbandonedCart } from '@/lib/abandonedCarts'
 import { scheduleReminders } from '@/lib/routineReminders'
 import { getRafOmruGun } from '@/lib/rafOmru'
 import { urunler } from '@/lib/data'
+import { withCallbackLock } from '@/lib/callbackLock'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Iyzipay = require('iyzipay')
@@ -35,6 +36,17 @@ export async function POST(req) {
     return NextResponse.redirect(`${siteUrl}/odeme/basarisiz?neden=3ds`, { status: 302 })
   }
 
+  // ── Katman 1: Instance düzeyinde in-memory lock ────────────────────────────
+  // Aynı paymentId ile eş zamanlı gelen iki callback aynı Node.js instance'ına
+  // düşerse, withCallbackLock ilkinin sonucunu ikinciye de döner.
+  // Farklı instance'lar için Katman 2 (DB atomicity) devreye girer.
+  const { sonuc } = await withCallbackLock(paymentId, () => _processCallback({
+    paymentId, conversationData, conversationId,
+  }))
+  return sonuc
+}
+
+async function _processCallback({ paymentId, conversationData, conversationId }) {
   return new Promise((resolve) => {
     getIyzipay().threedsPayment.create({
       locale: Iyzipay.LOCALE.TR,
@@ -48,10 +60,25 @@ export async function POST(req) {
         return
       }
 
-      // Atomik: al+sil tek işlemde — eş zamanlı iki callback gelirse sadece biri işlenir
+      // ── Katman 2: DB düzeyinde atomik claim ─────────────────────────────
+      // DELETE ... RETURNING — PostgreSQL garantisi: eş zamanlı iki istek
+      // arasında sadece biri veri alır, diğeri null görür.
       const orderData = await claimPendingOrder(conversationId)
+
       if (!orderData) {
-        resolve(NextResponse.redirect(`${siteUrl}/odeme/basarisiz?neden=veri`, { status: 302 }))
+        // pending_orders'da yok: ya süresi doldu ya da başka bir istek zaten işledi.
+        // Sipariş DB'de var mı kontrol et → varsa başarı sayfasına yönlendir.
+        const mevcutSiparisNo = await getOrderByPaymentId(paymentId)
+        if (mevcutSiparisNo) {
+          console.warn(
+            'Duplicate iyzico callback — sipariş zaten mevcut, başarı sayfasına yönlendiriliyor | paymentId:', paymentId,
+            '| siparis_no:', mevcutSiparisNo
+          )
+          resolve(NextResponse.redirect(`${siteUrl}/odeme/basarili?siparis=${mevcutSiparisNo}`, { status: 302 }))
+        } else {
+          // Gerçekten veri yok (token süresi dolmuş olabilir)
+          resolve(NextResponse.redirect(`${siteUrl}/odeme/basarisiz?neden=veri`, { status: 302 }))
+        }
         return
       }
 
