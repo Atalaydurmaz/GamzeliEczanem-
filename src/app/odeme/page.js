@@ -327,11 +327,19 @@ export default function OdemeSayfasi() {
           indirimKodu: indirimKodu || null,
           indirimTutari,
           uyeIndirimi,
+          idempotencyKey,
         }),
       })
       clearTimeout(timeoutId)
 
       const data = await res.json()
+
+      // Adım 0 yanıtı: sipariş zaten tamamlanmış → başarı sayfasına yönlendir
+      if (data.redirect) {
+        sepetiBosalt()
+        router.replace(data.redirect)
+        return
+      }
 
       if (!res.ok || data.hata) {
         setHatalar({ genel: data.hata || 'Ödeme başlatılamadı, lütfen tekrar deneyin.' })

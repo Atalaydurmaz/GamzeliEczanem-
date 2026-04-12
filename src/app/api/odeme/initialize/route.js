@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server'
-import { setPendingOrder } from '@/lib/pendingOrders'
-import { getUrunStock } from '@/lib/stock'
+import { setPendingOrder, getPendingOrder } from '@/lib/pendingOrders'
+import { getEfektifStok } from '@/lib/stock'
 import { hesaplaSiparisDetay, sanitizeSiparisAlanlari } from '@/lib/orderUtils'
 import { rateLimit, getIp } from '@/lib/rateLimit'
+import { getOrderByIdempotencyKey } from '@/lib/orders'
+import { toTurkishUpperCase } from '@/lib/tr-iller'
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const Iyzipay = require('iyzipay')
@@ -27,7 +31,29 @@ export async function POST(req) {
   }
 
   const body = await req.json()
-  const { kart, sepet, indirimKodu } = body
+  const { kart, sepet, indirimKodu, idempotencyKey } = body
+  const gecerliKey = idempotencyKey && UUID_RE.test(idempotencyKey) ? idempotencyKey : null
+
+  // ── Adım 0: Sipariş zaten tamamlandı mı? ─────────────────────────────
+  // Aynı idempotencyKey ile daha önce başarılı ödeme yapıldıysa
+  // iyzico'ya hiç gitmeden başarı sayfasına yönlendir.
+  if (gecerliKey) {
+    const mevcutSiparisNo = await getOrderByIdempotencyKey(gecerliKey)
+    if (mevcutSiparisNo) {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+      return NextResponse.json({ redirect: `${siteUrl}/odeme/basarili?siparis=${mevcutSiparisNo}` })
+    }
+  }
+
+  // ── Adım 1: Initialize zaten yapıldı mı? ─────────────────────────────
+  // Aynı idempotencyKey ile iyzico initialize çağrısı yapıldıysa
+  // (ağ hatası sonrası retry gibi) kayıtlı HTML'i geri döndür.
+  if (gecerliKey) {
+    const mevcutPending = await getPendingOrder(gecerliKey)
+    if (mevcutPending?.htmlContent) {
+      return NextResponse.json({ htmlContent: mevcutPending.htmlContent })
+    }
+  }
 
   // String alanları sanitize et ve uzunluk sınırlarını uygula
   let temizAlanlar
@@ -55,9 +81,11 @@ export async function POST(req) {
   }
   const { sepetSunucu, toplamFiyat, kargoUcreti, uyeIndirimi, indirimTutari, gecerliIndirimKodu, genelToplam } = siparisFiyatlar
 
-  // Stok ön kontrolü — kart formuna geçmeden önce hızlı fail
+  // Stok ön kontrolü — kart formuna geçmeden önce hızlı fail.
+  // getEfektifStok: normal ürünlerde doğrudan stok, set/bundle ürünlerde
+  // alt ürünlerden en kısıtlayıcısını döndürür (migration 013).
   for (const item of sepetSunucu) {
-    const mevcutStok = await getUrunStock(item.id)
+    const mevcutStok = await getEfektifStok(item.id)
     if (mevcutStok < item.adet) {
       return NextResponse.json(
         { hata: `"${item.ad}" için yeterli stok yok. Lütfen sepetinizi güncelleyin.` },
@@ -66,7 +94,9 @@ export async function POST(req) {
     }
   }
 
-  const conversationId = 'GM' + Date.now()
+  // conversationId = idempotencyKey (UUID) → iyzico da kendi tarafında mükerrer işlemi engeller.
+  // Key gelmemişse fallback olarak timestamp bazlı üret.
+  const conversationId = gecerliKey ?? ('GM' + Date.now())
   const siparisNo = 'GM' + Date.now().toString().slice(-8)
 
   const [ad, ...soyadArr] = adSoyad.trim().split(' ')
@@ -133,20 +163,23 @@ export async function POST(req) {
       registrationDate: new Date().toISOString().replace('T', ' ').slice(0, 19),
       registrationAddress: adres,
       ip,
-      city: sehir,
+      // iyzico buyer.city büyük harf bekler; Türkçe İ/ı dönüşümü için toTurkishUpperCase kullanılır
+      // (örn. "İstanbul" → "İSTANBUL", "Ankara" → "ANKARA")
+      city: toTurkishUpperCase(sehir),
       country: 'Turkey',
       zipCode: postaKodu,
     },
     shippingAddress: {
       contactName: adSoyad,
-      city: sehir,
+      // Kargo firmaları (Aras, Yurtiçi vb.) büyük harf şehir adı bekler
+      city: toTurkishUpperCase(sehir),
       country: 'Turkey',
       address: adres,
       zipCode: postaKodu,
     },
     billingAddress: {
       contactName: adSoyad,
-      city: sehir,
+      city: toTurkishUpperCase(sehir),
       country: 'Turkey',
       address: adres,
       zipCode: postaKodu,
@@ -156,15 +189,7 @@ export async function POST(req) {
 
   // API key yoksa mock mod — tüm akışı gerçek gibi test eder
   if (!process.env.IYZICO_API_KEY) {
-    await setPendingOrder(conversationId, {
-      siparisNo,
-      adSoyad, email, telefon,
-      adres, sehir, ilce, postaKodu,
-      sepet: sepetSunucu, toplamFiyat, kargoUcreti, genelToplam,
-      indirimKodu: gecerliIndirimKodu || null,
-      indirimTutari: indirimTutari || 0,
-    })
-    const mockHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+    const mockHtmlRaw = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
       body{margin:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff7f7;font-family:Arial,sans-serif}
       .box{background:#fff;border-radius:20px;padding:40px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.1);max-width:400px;width:90%}
       h2{color:#f43f5e;margin:0 0 8px}p{color:#78716c;margin:0 0 24px;font-size:14px}
@@ -180,7 +205,17 @@ export async function POST(req) {
         <button type="submit">✅ Ödemeyi Onayla (Test)</button>
       </form>
     </div></body></html>`
-    return NextResponse.json({ htmlContent: Buffer.from(mockHtml).toString('base64') })
+    const mockHtmlContent = Buffer.from(mockHtmlRaw).toString('base64')
+    await setPendingOrder(conversationId, {
+      siparisNo,
+      adSoyad, email, telefon,
+      adres, sehir, ilce, postaKodu,
+      sepet: sepetSunucu, toplamFiyat, kargoUcreti, genelToplam,
+      indirimKodu: gecerliIndirimKodu || null,
+      indirimTutari: indirimTutari || 0,
+      htmlContent: mockHtmlContent,
+    })
+    return NextResponse.json({ htmlContent: mockHtmlContent })
   }
 
   return new Promise((resolve) => {
@@ -198,6 +233,8 @@ export async function POST(req) {
 
       // sepetSunucu kullan — client'dan gelen ham sepet değil, sunucuda
       // doğrulanmış fiyatlar (item.fiyat = urunler dizisindeki gerçek fiyat)
+      // htmlContent retry için de saklanır: aynı idempotencyKey ile tekrar
+      // istek gelirse iyzico'ya gitmeden aynı 3DS formu döndürülür.
       await setPendingOrder(conversationId, {
         siparisNo,
         adSoyad, email, telefon,
@@ -206,6 +243,7 @@ export async function POST(req) {
         toplamFiyat, kargoUcreti, genelToplam,
         indirimKodu: gecerliIndirimKodu || null,
         indirimTutari: indirimTutari || 0,
+        htmlContent: result.threeDSHtmlContent,
       })
 
       resolve(NextResponse.json({ htmlContent: result.threeDSHtmlContent }))

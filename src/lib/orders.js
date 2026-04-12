@@ -99,6 +99,15 @@ export async function saveOrder(order) {
   return true
 }
 
+export async function getOrderByIdempotencyKey(idempotencyKey) {
+  const { data } = await supabaseAdmin
+    .from('orders')
+    .select('siparis_no')
+    .eq('idempotency_key', idempotencyKey)
+    .maybeSingle()
+  return data?.siparis_no || null
+}
+
 export async function getOrderBySiparisNo(siparisNo) {
   const { data } = await supabaseAdmin
     .from('orders')

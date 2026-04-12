@@ -14,6 +14,24 @@ export async function getUrunStock(urunId) {
   return data?.stok ?? 0
 }
 
+/**
+ * Set/bundle ürün dahil stok kontrolü.
+ * - Normal ürün → doğrudan stock tablosuna bakar
+ * - Set ürünü    → get_bundle_available_stock() RPC çağırır;
+ *                  alt ürünlerden en kısıtlayıcısını döndürür
+ * Döndürdüğü değer: kaç adet satılabilir (integer)
+ */
+export async function getEfektifStok(urunId) {
+  const { data, error } = await supabaseAdmin
+    .rpc('get_bundle_available_stock', { p_urun_id: Number(urunId) })
+  if (error) {
+    // Fonksiyon henüz oluşturulmadıysa (migration 013 çalışmadı) normal stoğa dön
+    console.warn('get_bundle_available_stock RPC bulunamadı, fallback:', error.message)
+    return getUrunStock(urunId)
+  }
+  return data ?? 0
+}
+
 export async function updateStock(urunId, yeniStok) {
   await supabaseAdmin
     .from('stock')

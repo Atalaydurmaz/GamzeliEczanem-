@@ -1,5 +1,6 @@
 import { urunler } from './data'
 import { validateDiscountCode } from './discountCodes'
+import { normalizeSehir, normalizeIlce } from './tr-iller'
 
 const KARGO_UCRETI = 130
 const KARGO_LIMIT = 1500
@@ -47,6 +48,15 @@ export function sanitizeSiparisAlanlari({ adSoyad, email, telefon, adres, sehir,
   if (!temiz.adSoyad) throw 'Ad soyad boş olamaz'
   if (!temiz.email || !temiz.email.includes('@')) throw 'Geçerli bir e-posta giriniz'
   if (!temiz.adres) throw 'Adres boş olamaz'
+
+  // ── Şehir / ilçe normalizasyonu ─────────────────────────────────────────
+  // Kullanıcıdan gelen değer (örn. "istanbul", "ANKARA", "izmir") → TR_ILLER'deki
+  // kanonik forma çevrilir (örn. "İstanbul", "Ankara", "İzmir").
+  // Kanonik form iyzico ve kargo API'lerinde tutarlı biçimde kullanılır.
+  // Listede bulunmayan şehir/ilçe hata fırlatır (400 döner).
+  temiz.sehir = normalizeSehir(temiz.sehir)
+  temiz.ilce  = normalizeIlce(temiz.sehir, temiz.ilce)
+  // ────────────────────────────────────────────────────────────────────────
 
   return temiz
 }

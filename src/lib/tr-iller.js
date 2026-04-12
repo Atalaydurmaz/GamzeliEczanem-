@@ -88,3 +88,84 @@ export const IL_LISTESI = Object.keys(TR_ILLER).sort()
 export function getIlceler(il) {
   return TR_ILLER[il] ?? []
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Normalizasyon yardımcıları
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Türkçe büyük/küçük harf dönüşümü (i → İ, ı → I).
+ * Standart JS toUpperCase() "istanbul" → "ISTANBUL" yazar (İ değil).
+ * Bu fonksiyon Türkçe lokale göre doğru dönüştürür.
+ */
+export function toTurkishUpperCase(str) {
+  return str
+    .replace(/i/g, 'İ')
+    .replace(/ı/g, 'I')
+    .toUpperCase()
+}
+
+/**
+ * Türkçe küçük harf (İ → i, I → ı).
+ * Eşleştirme için normalizeye yardımcı.
+ */
+function trLower(str) {
+  return str
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'ı')
+    .toLowerCase()
+}
+
+// Şehir eşleştirme: normalLeştirimiş küçük harf → orijinal TR_ILLER anahtarı
+// Modül yüklendiğinde bir kez oluşturulur; O(1) arama sağlar.
+const IL_LOOKUP = new Map(
+  Object.keys(TR_ILLER).map((il) => [trLower(il), il])
+)
+
+// İlçe eşleştirme: { ilKey → Map<normalLeştirimiş ilçe → orijinal ilçe> }
+const ILCE_LOOKUP = new Map(
+  Object.entries(TR_ILLER).map(([il, ilceler]) => [
+    il,
+    new Map(ilceler.map((ilce) => [trLower(ilce), ilce])),
+  ])
+)
+
+/**
+ * Gelen şehir adını TR_ILLER'deki kanonik forma dönüştürür.
+ * Büyük/küçük harf, boşluk ve Türkçe karakter farkı gözetilmez.
+ *
+ * @param {string} input - Kullanıcıdan gelen şehir adı
+ * @returns {string} Kanonik şehir adı (örn. "İstanbul")
+ * @throws {string} Listede bulunamazsa
+ */
+export function normalizeSehir(input) {
+  if (typeof input !== 'string' || !input.trim()) {
+    throw 'Şehir boş olamaz'
+  }
+  const anahtar = trLower(input.trim())
+  const kanonikal = IL_LOOKUP.get(anahtar)
+  if (!kanonikal) {
+    throw `Geçersiz şehir: "${input.trim()}". Lütfen listeden seçin.`
+  }
+  return kanonikal
+}
+
+/**
+ * Gelen ilçe adını TR_ILLER'deki kanonik forma dönüştürür.
+ * normalizeSehir() çıktısıyla çalışır.
+ *
+ * @param {string} sehirKanonik - normalizeSehir() dönüşü (kanonik şehir)
+ * @param {string} input        - Kullanıcıdan gelen ilçe adı
+ * @returns {string} Kanonik ilçe adı (örn. "Kadıköy")
+ * @throws {string} Listede bulunamazsa
+ */
+export function normalizeIlce(sehirKanonik, input) {
+  if (typeof input !== 'string' || !input.trim()) return ''
+  const ilceler = ILCE_LOOKUP.get(sehirKanonik)
+  if (!ilceler) return input.trim() // şehir bilinmiyorsa dokunma
+  const kanonikal = ilceler.get(trLower(input.trim()))
+  if (!kanonikal) {
+    throw `Geçersiz ilçe: "${input.trim()}" (${sehirKanonik}). Lütfen listeden seçin.`
+  }
+  return kanonikal
+}

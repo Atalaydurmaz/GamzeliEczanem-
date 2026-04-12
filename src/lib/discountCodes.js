@@ -51,6 +51,50 @@ export async function validateDiscountCode(kod, toplamFiyat, { email, telefon } 
 }
 
 /**
+ * Sipariş iptal edildiğinde kupon kullanımını geri alır.
+ * discount_code_usages kaydını siler ve discount_codes.kullanim_sayisi'nı 1 azaltır.
+ * Döndürür: 'ok' | 'not_found'
+ */
+export async function cancelDiscountUsage(siparisNo) {
+  const { data, error } = await supabaseAdmin.rpc('cancel_discount_usage', {
+    p_siparis_no: siparisNo,
+  })
+  if (error) {
+    // Migration 014 henüz uygulanmadıysa manuel fallback (best-effort)
+    console.warn('cancel_discount_usage RPC hatası (migration eksik olabilir):', error.message)
+    try {
+      const { data: usage } = await supabaseAdmin
+        .from('discount_code_usages')
+        .select('kod')
+        .eq('siparis_no', siparisNo)
+        .maybeSingle()
+      if (usage?.kod) {
+        await supabaseAdmin
+          .from('discount_code_usages')
+          .delete()
+          .eq('siparis_no', siparisNo)
+        // Sayacı azalt — 0'ın altına düşmemesi için önce mevcut değeri oku
+        const { data: dc } = await supabaseAdmin
+          .from('discount_codes')
+          .select('kullanim_sayisi')
+          .eq('kod', usage.kod)
+          .single()
+        if (dc && dc.kullanim_sayisi > 0) {
+          await supabaseAdmin
+            .from('discount_codes')
+            .update({ kullanim_sayisi: dc.kullanim_sayisi - 1 })
+            .eq('kod', usage.kod)
+        }
+      }
+    } catch (fallbackErr) {
+      console.error('cancelDiscountUsage fallback hatası:', fallbackErr)
+    }
+    return 'ok'
+  }
+  return data // 'ok' | 'not_found'
+}
+
+/**
  * Kuponu atomik olarak "kullanıldı" olarak işaretler.
  * Döndürür: 'ok' | 'limit_doldu' | 'zaten_kullanildi' | 'gecersiz'
  *

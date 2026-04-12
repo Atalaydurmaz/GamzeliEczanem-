@@ -1,5 +1,6 @@
 import { getOrderBySiparisNo, updateOrderStatus } from '@/lib/orders'
 import { getCurrentUserEmail } from '@/lib/userAuth'
+import { cancelDiscountUsage } from '@/lib/discountCodes'
 
 export async function POST(req, { params }) {
   const { siparisNo } = await params
@@ -28,5 +29,11 @@ export async function POST(req, { params }) {
   }
 
   await updateOrderStatus(siparisNo, 'İptal Talebi')
+
+  // Siparişte kupon kullanıldıysa kullanım hakkını geri ver
+  if (siparis.indirim_kodu) {
+    await cancelDiscountUsage(siparisNo)
+  }
+
   return Response.json({ ok: true })
 }

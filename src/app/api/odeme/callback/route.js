@@ -98,6 +98,11 @@ export async function POST(req) {
       // ── Atomik transaction: stok düşüm + sipariş kaydı ──────────────
       // PostgreSQL fonksiyonu tek transaction içinde çalışır.
       // Herhangi bir adım başarısız olursa tüm değişiklikler geri alınır.
+      // conversationId = idempotencyKey (UUID) ise orders tablosuna da kaydedilir.
+      // Böylece aynı key ile tekrar initialize çalışırsa Adım 0'da yakalanır.
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      const idempotencyKey = UUID_RE.test(conversationId) ? conversationId : null
+
       const atomicSonuc = await createOrderAtomic({
         siparisNo,
         tarih: siparisTarihi,
@@ -112,6 +117,7 @@ export async function POST(req) {
         odemeYontemi: 'iyzico - Kredi/Banka Kartı',
         durum: 'Hazırlanıyor',
         iyzicoPaymentId: result.paymentId,
+        idempotencyKey,
       })
 
       if (!atomicSonuc.ok) {

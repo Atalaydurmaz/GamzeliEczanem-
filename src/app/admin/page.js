@@ -26,79 +26,6 @@ function StatKart({ baslik, deger, alt, ikon }) {
   )
 }
 
-function LoginEkrani({ onLogin }) {
-  const [sifre, setSifre] = useState('')
-  const [hata, setHata] = useState('')
-  const [yukleniyor, setYukleniyor] = useState(false)
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setYukleniyor(true)
-    setHata('')
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sifre }),
-    })
-    if (res.ok) {
-      onLogin()
-    } else {
-      const data = await res.json().catch(() => ({}))
-      setHata(data.hata || 'Hatalı şifre')
-    }
-    setYukleniyor(false)
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-rose-500 rounded-2xl mb-4 shadow-lg shadow-rose-200">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-stone-900">Admin Paneli</h1>
-          <p className="text-stone-500 text-sm mt-1">GAMZELİECZANEM</p>
-        </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-rose-100 p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">E-posta</label>
-              <input
-                type="email"
-                value="durmazatalay6@gmail.com"
-                readOnly
-                className="w-full px-4 py-3 border border-stone-200 rounded-xl text-sm bg-stone-50 text-stone-500 cursor-default"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Şifre</label>
-              <input
-                type="password"
-                value={sifre}
-                onChange={(e) => setSifre(e.target.value)}
-                placeholder="Admin şifresi"
-                className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${
-                  hata ? 'border-red-300 focus:ring-red-100' : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'
-                }`}
-                autoFocus
-              />
-              {hata && <p className="mt-1.5 text-xs text-red-500">{hata}</p>}
-            </div>
-            <button
-              type="submit"
-              disabled={yukleniyor || !sifre}
-              className="w-full py-3 bg-rose-500 hover:bg-rose-600 disabled:bg-stone-300 text-white font-semibold rounded-xl transition-all"
-            >
-              {yukleniyor ? 'Giriş yapılıyor...' : 'Giriş Yap'}
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 function SiparisDetay({ siparis, onKargoKaydet }) {
   const [takipNo, setTakipNo] = useState(siparis.kargoTakipNo || '')
@@ -1382,7 +1309,10 @@ function MusterilerSekme({ musteriler }) {
 }
 
 export default function AdminPaneli() {
-  const [ekran, setEkran] = useState('yukleniyor') // yukleniyor | login | panel
+  // Middleware gla_admin cookie'sini HMAC ile doğruladığı için bu sayfaya
+  // yalnızca geçerli admin token'ı olan kullanıcılar ulaşabilir.
+  // 'yukleniyor' → veriler yüklenirken; 'panel' → hazır
+  const [ekran, setEkran] = useState('yukleniyor') // yukleniyor | panel
   const [aktifSekme, setAktifSekme] = useState('siparisler') // siparisler | stok | raporlar | urunler | yorumlar | iadeler | musteriler
   const [siparisler, setSiparisler] = useState([])
   const [adminUrunler, setAdminUrunler] = useState([])
@@ -1412,10 +1342,12 @@ export default function AdminPaneli() {
   }, [])
 
   useEffect(() => {
+    // Middleware zaten doğruladı; check yine de çağrılır (savunma katmanı).
+    // Olası token manipülasyonunda /admin/giris'e yönlendir.
     fetch('/api/admin/check').then((r) => {
       if (r.ok) { setEkran('panel'); fetchOrders() }
-      else setEkran('login')
-    }).catch(() => setEkran('login'))
+      else window.location.href = '/admin/giris'
+    }).catch(() => { window.location.href = '/admin/giris' })
   }, [fetchOrders])
 
   // 60 saniyede bir otomatik yenile (panel açıkken)
@@ -1427,8 +1359,7 @@ export default function AdminPaneli() {
 
   async function handleLogout() {
     await fetch('/api/admin/logout', { method: 'POST' })
-    setEkran('login')
-    setSiparisler([])
+    window.location.href = '/admin/giris'
   }
 
   async function durumDegistir(siparisNo, yeniDurum) {
@@ -1493,10 +1424,6 @@ export default function AdminPaneli() {
         <div className="animate-spin w-8 h-8 border-4 border-rose-300 border-t-rose-500 rounded-full" />
       </div>
     )
-  }
-
-  if (ekran === 'login') {
-    return <LoginEkrani onLogin={() => { setEkran('panel'); fetchOrders() }} />
   }
 
   return (
