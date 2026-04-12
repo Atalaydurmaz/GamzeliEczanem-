@@ -53,7 +53,23 @@ async function isAdminCookieValid(req) {
 export async function middleware(req) {
   const { pathname } = req.nextUrl
 
-  // ── /admin koruması ────────────────────────────────────────────────────────
+  // ── /api/admin koruması (API rotaları — redirect değil 401 JSON döner) ─────
+  if (pathname.startsWith('/api/admin')) {
+    // Giriş endpoint'i muaf — cookie henüz yok, set edilecek
+    if (pathname === '/api/admin/login') return NextResponse.next()
+
+    const adminGecerli = await isAdminCookieValid(req)
+    if (!adminGecerli) {
+      return NextResponse.json(
+        { hata: 'Yetkisiz erişim. Admin girişi gerekli.' },
+        { status: 401 },
+      )
+    }
+
+    return NextResponse.next()
+  }
+
+  // ── /admin sayfa koruması ──────────────────────────────────────────────────
   if (pathname.startsWith('/admin')) {
     // /admin/giris sayfasına doğrudan erişime izin ver (login formu burada)
     if (pathname.startsWith('/admin/giris')) return NextResponse.next()
@@ -94,5 +110,10 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ['/hesabim/:path*', '/admin/:path*', '/admin'],
+  matcher: [
+    '/hesabim/:path*',
+    '/admin',
+    '/admin/:path*',
+    '/api/admin/:path*',
+  ],
 }
