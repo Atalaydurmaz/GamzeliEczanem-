@@ -4,7 +4,8 @@ import { getEfektifStok } from '@/lib/stock'
 import { hesaplaSiparisDetay, sanitizeSiparisAlanlari } from '@/lib/orderUtils'
 import { rateLimit, getIp } from '@/lib/rateLimit'
 import { getOrderByIdempotencyKey } from '@/lib/orders'
-import { toTurkishUpperCase } from '@/lib/tr-iller'
+// toTurkishUpperCase burada artık gerekli değil:
+// sanitizeSiparisAlanlari zaten büyük harf normalize edilmiş sehir/ilce döner.
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -163,23 +164,21 @@ export async function POST(req) {
       registrationDate: new Date().toISOString().replace('T', ' ').slice(0, 19),
       registrationAddress: adres,
       ip,
-      // iyzico buyer.city büyük harf bekler; Türkçe İ/ı dönüşümü için toTurkishUpperCase kullanılır
-      // (örn. "İstanbul" → "İSTANBUL", "Ankara" → "ANKARA")
-      city: toTurkishUpperCase(sehir),
+      // sehir: sanitizeSiparisAlanlari tarafından zaten "İSTANBUL" formatında geliyor
+      city: sehir,
       country: 'Turkey',
       zipCode: postaKodu,
     },
     shippingAddress: {
       contactName: adSoyad,
-      // Kargo firmaları (Aras, Yurtiçi vb.) büyük harf şehir adı bekler
-      city: toTurkishUpperCase(sehir),
+      city: sehir,
       country: 'Turkey',
       address: adres,
       zipCode: postaKodu,
     },
     billingAddress: {
       contactName: adSoyad,
-      city: toTurkishUpperCase(sehir),
+      city: sehir,
       country: 'Turkey',
       address: adres,
       zipCode: postaKodu,
