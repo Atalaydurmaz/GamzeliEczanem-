@@ -117,6 +117,36 @@ export async function getOrderBySiparisNo(siparisNo) {
   return data ? mapRow(data) : null
 }
 
+/**
+ * Siparişi iptal eder ve stokları atomik olarak geri iade eder.
+ * Set/bundle ürünlerin alt ürün stokları da doğru şekilde iade edilir.
+ *
+ * Döndürür:
+ *   { ok: true }                          → başarı
+ *   { ok: false, neden: 'not_found' }     → sipariş bulunamadı
+ *   { ok: false, neden: 'already_cancelled' } → zaten iptal edilmiş
+ *   { ok: false, neden: 'db', mesaj }     → beklenmedik DB hatası
+ *
+ * SQL fonksiyonu hem stok iade + hem durum güncellemeyi tek transaction'da yapar.
+ * Migration 015 Supabase SQL Editor'de çalıştırılmış olmalıdır.
+ */
+export async function cancelOrderAtomic(siparisNo) {
+  const { data, error } = await supabaseAdmin.rpc('cancel_order_atomic', {
+    p_siparis_no: siparisNo,
+  })
+
+  if (error) {
+    // Migration henüz çalıştırılmadıysa (RPC yok) fallback: basit durum güncelle
+    console.warn('cancel_order_atomic RPC hatası (migration 015 eksik olabilir):', error.message)
+    return { ok: false, neden: 'db', mesaj: error.message }
+  }
+
+  if (data === 'not_found')        return { ok: false, neden: 'not_found' }
+  if (data === 'already_cancelled') return { ok: false, neden: 'already_cancelled' }
+
+  return { ok: true } // 'ok'
+}
+
 export async function updateOrderStatus(siparisNo, durum) {
   const { error } = await supabaseAdmin
     .from('orders')

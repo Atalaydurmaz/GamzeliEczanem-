@@ -1,7 +1,5 @@
 import { isAdmin } from '@/lib/adminAuth'
-
-import { updateOrderStatus, getOrderBySiparisNo, deleteOrder, updateKargoTakipNo } from '@/lib/orders'
-import { incrementStock } from '@/lib/stock'
+import { updateOrderStatus, getOrderBySiparisNo, deleteOrder, updateKargoTakipNo, cancelOrderAtomic } from '@/lib/orders'
 import nodemailer from 'nodemailer'
 
 
@@ -16,12 +14,21 @@ export async function PATCH(req, { params }) {
   }
 
   if (durum === 'İptal Edildi') {
-    const siparis = await getOrderBySiparisNo(id)
-    if (siparis) {
-      for (const item of siparis.urunler) {
-        await incrementStock(item.id, item.adet)
+    // cancelOrderAtomic: stok iadesi + durum güncellemesini tek SQL transaction'da yapar.
+    // Set/bundle ürünlerin alt ürün stokları da doğru şekilde iade edilir.
+    const sonuc = await cancelOrderAtomic(id)
+    if (!sonuc.ok) {
+      if (sonuc.neden === 'not_found') {
+        return Response.json({ error: 'Sipariş bulunamadı.' }, { status: 404 })
       }
+      if (sonuc.neden === 'already_cancelled') {
+        return Response.json({ ok: true, mesaj: 'Sipariş zaten iptal edilmiş.' })
+      }
+      // Migration eksikse (RPC yok) normal durum güncellemesine düş
+      console.warn('cancelOrderAtomic başarısız, fallback ile devam:', sonuc.mesaj)
+      await updateOrderStatus(id, durum)
     }
+    return Response.json({ ok: true })
   }
 
   const ok = await updateOrderStatus(id, durum)
