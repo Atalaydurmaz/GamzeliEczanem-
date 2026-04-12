@@ -22,34 +22,34 @@ export default function AgizBakimi() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {kategori.altKategoriler.map((alt) => (
-            <Link key={alt.id} href={alt.href}
-              className="group bg-white border border-rose-100 rounded-2xl p-6 hover:shadow-lg hover:border-rose-300 transition-all">
-              <h2 className="text-base font-bold text-stone-800 group-hover:text-rose-700 transition-colors mb-3">
-                {alt.label}
-              </h2>
-              <ul className="space-y-1.5">
-                {alt.urunler.map((u) => (
-                  <li key={u.href}
-                    className="text-sm text-stone-500 group-hover:text-stone-600 transition-colors flex items-center gap-1.5">
-                    <span className="w-1 h-1 rounded-full bg-rose-300 shrink-0" />
-                    {u.label}
-                  </li>
-                ))}
-              </ul>
-            </Link>
-          ))}
-        </div>
 
-        <div className="mt-16 text-center py-16 bg-rose-50 rounded-3xl border border-rose-100">
-          <p className="text-5xl mb-4">🚀</p>
+        {/* Yakında banner — en üstte */}
+        <div className="mb-10 text-center py-10 bg-rose-50 rounded-3xl border border-rose-100">
+          <p className="text-5xl mb-3">🚀</p>
           <h3 className="text-xl font-bold text-stone-800 mb-2">Ürünler Yakında Eklenecek</h3>
-          <p className="text-stone-500 text-sm mb-6">Bu kategorideki ürünlerimiz çok yakında burada olacak.</p>
+          <p className="text-stone-500 text-sm mb-5">Bu kategorideki ürünlerimiz çok yakında burada olacak.</p>
           <Link href="/iletisim"
             className="inline-block px-6 py-2.5 bg-rose-600 text-white text-sm font-semibold rounded-full hover:bg-rose-700 transition-colors">
             Bilgi Al
           </Link>
+        </div>
+
+        {/* Alt kategoriler — sadece görsel, tıklanamaz */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+          {kategori.altKategoriler.map((alt) => (
+            <div key={alt.id}
+              className="bg-white border border-stone-100 rounded-2xl p-6 opacity-60 cursor-not-allowed select-none">
+              <h2 className="text-base font-bold text-stone-500 mb-3">{alt.label}</h2>
+              <ul className="space-y-1.5">
+                {alt.urunler.map((u) => (
+                  <li key={u.href} className="text-sm text-stone-400 flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-stone-300 shrink-0" />
+                    {u.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </div>
     </div>

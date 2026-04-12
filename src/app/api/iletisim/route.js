@@ -1,7 +1,27 @@
 import nodemailer from 'nodemailer'
+import { createMessage } from '@/lib/messages'
+import { rateLimit, getIp } from '@/lib/rateLimit'
+import { parseBody, IletisimSchema } from '@/lib/validate'
 
 export async function POST(req) {
-  const { ad, email, telefon, konu, mesaj } = await req.json()
+  // Rate limit: IP başına 10 dakikada 5 istek
+  const ip = getIp(req)
+  const rl = rateLimit(`iletisim:${ip}`, 5, 10 * 60 * 1000)
+  if (!rl.ok) {
+    return Response.json(
+      { ok: false, error: `Çok fazla istek. ${Math.ceil(rl.retryAfterSec / 60)} dakika sonra tekrar deneyin.` },
+      { status: 429 }
+    )
+  }
+
+  const parsed = await parseBody(IletisimSchema, req)
+  if (!parsed.ok) return parsed.response
+  const { ad, email, telefon, konu, mesaj, website } = parsed.data
+
+  // Honeypot: botlar bu gizli alanı doldurur, insanlar doldurmaz
+  if (website) {
+    return Response.json({ ok: true })
+  }
 
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
@@ -88,6 +108,15 @@ export async function POST(req) {
 </body>
 </html>`
 
+  // Önce Supabase'e kaydet (birincil — e-posta bağımsız çalışır)
+  try {
+    await createMessage({ ad, email, telefon, konu, mesaj })
+  } catch (err) {
+    console.error('Mesaj Supabase kaydı başarısız:', err.message)
+    return Response.json({ ok: false, error: 'Mesajınız kaydedilemedi.' }, { status: 500 })
+  }
+
+  // Sonra e-posta gönder (ikincil — başarısız olsa da 200 dön)
   try {
     await transporter.sendMail({
       from: `"GAMZELİECZANEM İletişim" <${process.env.SMTP_USER}>`,
@@ -96,9 +125,10 @@ export async function POST(req) {
       subject: `[İletişim] ${konu} – ${ad}`,
       html,
     })
-    return Response.json({ ok: true })
   } catch (err) {
     console.error('İletişim e-postası gönderilemedi:', err.message)
-    return Response.json({ ok: false, error: err.message }, { status: 500 })
+    // Supabase kaydı başarılıysa 200 dön
   }
+
+  return Response.json({ ok: true })
 }

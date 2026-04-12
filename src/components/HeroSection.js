@@ -81,14 +81,14 @@ export default function HeroSection() {
 
             <motion.h1
               {...fadeUp(0.25)}
-              className="text-5xl sm:text-6xl font-bold text-stone-900 leading-tight mb-3"
+              className="text-4xl xs:text-5xl sm:text-6xl font-bold text-stone-900 leading-tight mb-3 break-words"
             >
               GAMZELİECZANEM
             </motion.h1>
 
             <motion.p
               {...fadeUp(0.4)}
-              className="text-3xl font-light text-rose-500 mb-6 tracking-wide"
+              className="text-xl sm:text-3xl font-light text-rose-500 mb-6 tracking-wide"
             >
               Eczacı Güvencesiyle Sağlıklı Güzellik
             </motion.p>

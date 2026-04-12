@@ -28,10 +28,11 @@ export function useCurrentUser() {
   if (session?.user) {
     return {
       kullanici: {
-        id: session.user.email,
-        ad: session.user.name,
+        id: session.user.id || session.user.email,
+        ad: session.user.ad || session.user.name,
         email: session.user.email,
         avatar: session.user.image,
+        provider: 'google',
       },
       yukleniyor: false,
       googleGiris: true,

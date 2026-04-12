@@ -18,6 +18,7 @@ export default function Header() {
   const [aramaMetni, setAramaMetni] = useState('')
   const [aramaFocused, setAramaFocused] = useState(false)
   const [mobilAramaFocused, setMobilAramaFocused] = useState(false)
+  const [aramaHata, setAramaHata] = useState(false)
   const [gorselYukleniyor, setGorselYukleniyor] = useState(false)
   const [gorselMenuAcik, setGorselMenuAcik] = useState(false)
   const gorselInputRef = useRef(null)
@@ -47,13 +48,22 @@ export default function Header() {
     setKategorilerAcik(false)
   }, [pathname])
 
+  useEffect(() => {
+    document.body.style.overflow = mobileMenuAcik ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [mobileMenuAcik])
+
   function handleArama(e) {
     e.preventDefault()
-    if (aramaMetni.trim()) {
-      router.push(`/arama?q=${encodeURIComponent(aramaMetni.trim())}`)
-      setAramaMetni('')
-      setMobileMenuAcik(false)
+    if (!aramaMetni.trim()) {
+      setAramaHata(true)
+      setTimeout(() => setAramaHata(false), 2500)
+      return
     }
+    router.push(`/arama?q=${encodeURIComponent(aramaMetni.trim())}`)
+    setAramaMetni('')
+    setAramaHata(false)
+    setMobileMenuAcik(false)
   }
 
   async function handleGorselArama(e) {
@@ -126,13 +136,29 @@ export default function Header() {
 
       {/* ── 2. ORTA: Logo + Arama + İkonlar ─────────────── */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-5 lg:gap-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center gap-2 sm:gap-5 lg:gap-8">
+
+          {/* Hamburger — sadece mobil, solda */}
+          <button
+            className="md:hidden flex items-center justify-center w-8 h-8 rounded-xl hover:bg-rose-50 transition-colors shrink-0"
+            onClick={() => setMobileMenuAcik(!mobileMenuAcik)}
+            aria-label="Menü">
+            {mobileMenuAcik ? (
+              <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 shrink-0">
-            <img src="/icon.png" alt="GAMZELİECZANEM" className="w-12 h-12 object-contain rounded-xl" />
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <img src="/icon.png" alt="GAMZELİECZANEM" className="w-9 h-9 sm:w-12 sm:h-12 object-contain rounded-xl" />
             <div className="leading-tight">
-              <span className="block text-[16px] font-black tracking-[0.15em] text-rose-700 uppercase">
+              <span className="block text-[13px] sm:text-[16px] font-black tracking-[0.1em] sm:tracking-[0.15em] text-rose-700 uppercase">
                 GAMZELİECZANEM
               </span>
               <span className="block text-[9px] tracking-[0.28em] text-rose-400 uppercase font-medium">
@@ -143,7 +169,7 @@ export default function Header() {
 
           {/* ── Arama Çubuğu ── */}
           <div
-            className="flex-1 hidden md:flex max-w-3xl mx-auto rounded-2xl p-[2px] transition-all duration-300"
+            className="flex-1 min-w-0 hidden md:flex max-w-xl lg:max-w-3xl rounded-2xl p-[2px] transition-all duration-300"
             style={{
               background: aramaFocused
                 ? 'linear-gradient(135deg, #f43f5e, #ec4899, #818cf8)'
@@ -157,17 +183,22 @@ export default function Header() {
             <input ref={gorselInputRef} type="file" accept="image/*" className="hidden" onChange={handleGorselArama} />
             <input ref={kameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleGorselArama} />
 
-            <div className="flex items-center w-full h-14 bg-white rounded-2xl">
+            <div className="relative flex items-center w-full h-14 bg-white rounded-2xl">
               {/* Form: sadece text input kısmı — overflow-hidden buraya sınırlı */}
+              {aramaHata && (
+                <div className="absolute top-full left-0 mt-1.5 ml-4 px-3 py-1.5 bg-rose-500 text-white text-xs font-medium rounded-lg shadow-lg z-50 pointer-events-none whitespace-nowrap">
+                  Lütfen bir ürün adı girin
+                </div>
+              )}
               <form
                 id="main-search-form"
                 onSubmit={handleArama}
                 onFocus={() => setAramaFocused(true)}
                 onBlur={() => setAramaFocused(false)}
-                className="flex items-center flex-1 h-full overflow-hidden rounded-l-2xl"
+                className="flex items-center flex-1 min-w-0 h-full overflow-hidden rounded-l-2xl"
               >
-                {/* AI badge pill */}
-                <div className="flex items-center gap-2 pl-5 pr-4 shrink-0">
+                {/* AI badge pill — sadece lg'de göster */}
+                <div className="hidden lg:flex items-center gap-2 pl-5 pr-4 shrink-0">
                   <div
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
                     style={{ background: 'linear-gradient(135deg,rgba(244,63,94,0.08),rgba(167,139,250,0.08))' }}
@@ -188,7 +219,7 @@ export default function Header() {
 
                 {/* Search icon */}
                 <svg
-                  className="w-5 h-5 shrink-0 mr-3 transition-colors duration-200"
+                  className="w-5 h-5 shrink-0 ml-4 lg:ml-0 mr-3 transition-colors duration-200"
                   style={{ color: aramaFocused ? '#f43f5e' : '#9ca3af' }}
                   fill="none" viewBox="0 0 24 24" stroke="currentColor"
                 >
@@ -200,7 +231,7 @@ export default function Header() {
                   placeholder="Eczacı asistanımıza sorun: Hangi ürünü aramıştınız?"
                   value={aramaMetni}
                   onChange={(e) => setAramaMetni(e.target.value)}
-                  className="flex-1 h-full text-[15px] text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent"
+                  className="flex-1 min-w-0 h-full text-[15px] text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent"
                 />
               </form>
 
@@ -270,15 +301,15 @@ export default function Header() {
           </div>
 
           {/* Sağ: İkon Grubu */}
-          <div className="flex items-center gap-1 ml-auto md:ml-0 shrink-0">
-            <Link href="/hesabim/favoriler" className="hidden sm:flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-xl hover:bg-rose-50 transition-colors group min-w-[56px]">
+          <div className="flex items-center gap-0 sm:gap-1 ml-auto md:ml-0 shrink-0">
+            <Link href="/hesabim/favoriler" className="flex flex-col items-center gap-0.5 px-2 sm:px-2.5 py-1.5 rounded-xl hover:bg-rose-50 transition-colors group">
               <svg className="w-[22px] h-[22px] text-gray-500 group-hover:text-rose-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              <span className="text-[10px] text-gray-400 group-hover:text-rose-600 transition-colors leading-none">Favorilerim</span>
+              <span className="hidden lg:block text-[10px] text-gray-400 group-hover:text-rose-600 transition-colors leading-none">Favorilerim</span>
             </Link>
 
-            <Link href="/hesabim" className="hidden sm:flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-xl hover:bg-rose-50 transition-colors group min-w-[56px]">
+            <Link href="/hesabim" className="flex flex-col items-center gap-0.5 px-2 sm:px-2.5 py-1.5 rounded-xl hover:bg-rose-50 transition-colors group">
               {kullanici ? (
                 <div className="w-[22px] h-[22px] rounded-full bg-rose-600 flex items-center justify-center text-white text-[10px] font-bold">
                   {kullanici.ad.charAt(0).toUpperCase()}
@@ -288,13 +319,13 @@ export default function Header() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               )}
-              <span className="text-[10px] text-gray-400 group-hover:text-rose-600 transition-colors leading-none">
+              <span className="hidden lg:block text-[10px] text-gray-400 group-hover:text-rose-600 transition-colors leading-none">
                 {kullanici ? kullanici.ad.split(' ')[0] : 'Hesabım'}
               </span>
             </Link>
 
             <Link href="/sepet"
-              className="flex flex-col items-center gap-0.5 px-2.5 py-1.5 rounded-xl hover:bg-rose-50 transition-colors group min-w-[56px] relative">
+              className="flex flex-col items-center gap-0.5 px-2 sm:px-2.5 py-1.5 rounded-xl hover:bg-rose-50 transition-colors group relative">
               <div className="relative">
                 <svg className="w-[22px] h-[22px] text-gray-500 group-hover:text-rose-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -305,25 +336,45 @@ export default function Header() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] text-gray-400 group-hover:text-rose-600 transition-colors leading-none">Sepetim</span>
+              <span className="hidden lg:block text-[10px] text-gray-400 group-hover:text-rose-600 transition-colors leading-none">Sepetim</span>
             </Link>
 
-            <button
-              className="md:hidden flex items-center justify-center w-9 h-9 rounded-xl hover:bg-rose-50 transition-colors ml-1"
-              onClick={() => setMobileMenuAcik(!mobileMenuAcik)}
-              aria-label="Menü">
-              {mobileMenuAcik ? (
-                <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
           </div>
         </div>
+      </div>
+
+      {/* ── MOBİL ARAMA ÇUBUĞU ─────────────────────────── */}
+      <div className="md:hidden bg-white border-b border-gray-100 px-3 py-2">
+        <input ref={gorselInputRef} type="file" accept="image/*" className="hidden" onChange={handleGorselArama} />
+        <form onSubmit={handleArama} className={`flex items-center gap-2 bg-gray-50 border rounded-xl px-3 h-11 focus-within:bg-white transition-all ${aramaHata ? 'border-rose-400' : 'border-gray-200 focus-within:border-rose-400'}`}>
+          {/* AI badge */}
+          <span className="text-[11px] font-black px-1.5 py-0.5 rounded-lg shrink-0"
+            style={{ background: 'linear-gradient(135deg,rgba(244,63,94,0.1),rgba(167,139,250,0.1))', color: '#f43f5e' }}>
+            ✦ AI
+          </span>
+          <div className="w-px h-4 bg-gray-200 shrink-0" />
+          <input
+            type="text"
+            placeholder="Ürün, kategori veya marka ara..."
+            value={aramaMetni}
+            onChange={(e) => setAramaMetni(e.target.value)}
+            onFocus={() => setMobilAramaFocused(true)}
+            onBlur={() => setMobilAramaFocused(false)}
+            className="flex-1 text-sm text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent"
+          />
+          <button type="button" onClick={() => gorselInputRef.current?.click()} className="shrink-0 text-gray-400 hover:text-rose-500 transition-colors">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+          <button type="submit" className="shrink-0 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold px-4 h-8 rounded-lg transition-colors">
+            Ara
+          </button>
+        </form>
+        {aramaHata && (
+          <p className="text-xs text-rose-500 font-medium mt-1 pl-2">Lütfen bir ürün adı girin</p>
+        )}
       </div>
 
       {/* ── 3. ALT NAVBAR ────────────────────────────────── */}
@@ -448,7 +499,7 @@ export default function Header() {
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              1.250₺ üzeri ücretsiz kargo
+              1.500₺ üzeri ücretsiz kargo
             </div>
           </div>
         </div>

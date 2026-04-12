@@ -1,21 +1,21 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { getUrun, urunler, kategoriAdlari, kategoriSayfaYollari } from '@/lib/data'
+import { kategoriAdlari, kategoriSayfaYollari } from '@/lib/data'
+import { getProductById, getProducts } from '@/lib/products'
+import { getStats } from '@/lib/reviews'
 import AddToCartButton from '@/components/AddToCartButton'
 import ProductCard from '@/components/ProductCard'
+import ProductImage from '@/components/ProductImage'
 import ReviewSection from '@/components/ReviewSection'
 import ShareButtons from '@/components/ShareButtons'
 
-export async function generateStaticParams() {
-  return urunler.map((u) => ({ id: String(u.id) }))
-}
+export const dynamic = 'force-dynamic'
 
 const BASE_URL = 'https://gamzelieczanem.com'
 
 export async function generateMetadata({ params }) {
   const { id } = await params
-  const urun = getUrun(id)
+  const urun = await getProductById(id)
   if (!urun) return { title: 'Ürün Bulunamadı' }
   const canonicalUrl = `${BASE_URL}/urunler/${urun.id}`
   return {
@@ -41,12 +41,19 @@ export async function generateMetadata({ params }) {
 
 export default async function UrunDetaySayfasi({ params }) {
   const { id } = await params
-  const urun = getUrun(id)
+  const urun = await getProductById(id)
 
   if (!urun) notFound()
 
-  const benzerUrunler = urunler
-    .filter((u) => u.kategori === urun.kategori && u.id !== urun.id)
+  const [kategoriUrunler, reviewStats] = await Promise.all([
+    getProducts({ kategori: urun.kategori }),
+    getStats(),
+  ])
+  const stats = reviewStats[urun.id]
+  const urunPuan = stats ? stats.puan : 0
+  const urunYorumSayisi = stats ? stats.yorumSayisi : 0
+  const benzerUrunler = kategoriUrunler
+    .filter((u) => u.id !== urun.id)
     .slice(0, 4)
 
   const indirimOrani = urun.eskiFiyat
@@ -70,11 +77,11 @@ export default async function UrunDetaySayfasi({ params }) {
       availability: 'https://schema.org/InStock',
       seller: { '@type': 'Organization', name: 'GAMZELİECZANEM' },
     },
-    ...(urun.yorumSayisi > 0 && {
+    ...(urunYorumSayisi > 0 && {
       aggregateRating: {
         '@type': 'AggregateRating',
-        ratingValue: urun.puan,
-        reviewCount: urun.yorumSayisi,
+        ratingValue: urunPuan,
+        reviewCount: urunYorumSayisi,
         bestRating: 5,
         worstRating: 1,
       },
@@ -108,26 +115,12 @@ export default async function UrunDetaySayfasi({ params }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           {/* Sol: Görsel */}
           <div className="space-y-4">
-            <div className="relative aspect-square rounded-3xl overflow-hidden bg-rose-50 shadow-lg">
-              <Image
-                src={urun.gorsel}
-                alt={urun.ad}
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                priority
-              />
-              {urun.etiket && (
-                <span className="absolute top-4 left-4 px-3 py-1.5 bg-rose-500 text-white text-sm font-bold rounded-full">
-                  {urun.etiket}
-                </span>
-              )}
-              {indirimOrani && (
-                <span className="absolute top-4 right-4 px-3 py-1.5 bg-emerald-500 text-white text-sm font-bold rounded-full">
-                  %{indirimOrani} İndirim
-                </span>
-              )}
-            </div>
+            <ProductImage
+              src={urun.gorsel}
+              alt={`${urun.ad} – ${kategoriAdlari[urun.kategori] ?? urun.kategori} | GAMZELİECZANEM`}
+              etiket={urun.etiket}
+              indirimOrani={indirimOrani}
+            />
           </div>
 
           {/* Sağ: Bilgiler */}
@@ -151,7 +144,7 @@ export default async function UrunDetaySayfasi({ params }) {
                 {[1, 2, 3, 4, 5].map((yildiz) => (
                   <svg
                     key={yildiz}
-                    className={`w-5 h-5 ${yildiz <= Math.round(urun.puan) ? 'text-amber-400' : 'text-stone-200'}`}
+                    className={`w-5 h-5 ${yildiz <= Math.round(urunPuan) ? 'text-amber-400' : 'text-stone-200'}`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -159,8 +152,8 @@ export default async function UrunDetaySayfasi({ params }) {
                   </svg>
                 ))}
               </div>
-              <span className="text-sm font-semibold text-stone-700">{urun.puan}</span>
-              <span className="text-sm text-stone-400">({urun.yorumSayisi} yorum)</span>
+              <span className="text-sm font-semibold text-stone-700">{urunPuan > 0 ? urunPuan : ''}</span>
+              <span className="text-sm text-stone-400">({urunYorumSayisi} yorum)</span>
             </div>
 
             {/* Kısa açıklama */}
@@ -191,7 +184,7 @@ export default async function UrunDetaySayfasi({ params }) {
             {/* Avantajlar */}
             <div className="grid grid-cols-2 gap-3 mb-8">
               {[
-                { ikon: '🚚', text: 'Ücretsiz kargo (1.250₺ üzeri)' },
+                { ikon: '🚚', text: 'Ücretsiz kargo (1.500₺ üzeri)' },
                 { ikon: '↩️', text: '30 gün ücretsiz iade' },
                 { ikon: '🔒', text: 'Güvenli ödeme' },
                 { ikon: '✅', text: 'Orijinal ürün garantisi' },
@@ -223,7 +216,7 @@ export default async function UrunDetaySayfasi({ params }) {
       </div>
 
       {/* Müşteri Yorumları */}
-      <ReviewSection urunId={urun.id} urunPuan={urun.puan} urunYorumSayisi={urun.yorumSayisi} />
+      <ReviewSection urunId={urun.id} urunPuan={urunPuan} urunYorumSayisi={urunYorumSayisi} />
 
       {/* Benzer Ürünler */}
       {benzerUrunler.length > 0 && (
@@ -232,7 +225,7 @@ export default async function UrunDetaySayfasi({ params }) {
             <h2 className="text-2xl font-bold text-stone-900 mb-8">
               Benzer Ürünler
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {benzerUrunler.map((u) => (
                 <ProductCard key={u.id} urun={u} />
               ))}

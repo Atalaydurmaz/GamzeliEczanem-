@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import ProductCard from '@/components/ProductCard'
-import { getAnneBebek } from '@/lib/data'
 
 const siralamaSecenekleri = [
   { value: 'varsayilan', label: 'Önerilen' },
@@ -11,17 +10,24 @@ const siralamaSecenekleri = [
   { value: 'puan', label: 'En Yüksek Puan' },
 ]
 
-const tumUrunler = getAnneBebek()
-
 export default function AnneBebek() {
+  const [tumUrunler, setTumUrunler] = useState([])
+  const [yukleniyor, setYukleniyor] = useState(true)
   const [siralama, setSiralama] = useState('varsayilan')
   const [aramaMetni, setAramaMetni] = useState('')
+
+  useEffect(() => {
+    fetch('/api/products?kategori=anne-bebek')
+      .then(r => r.json())
+      .then(d => { setTumUrunler(Array.isArray(d) ? d : []); setYukleniyor(false) })
+      .catch(() => setYukleniyor(false))
+  }, [])
 
   const filtreliUrunler = useMemo(() => {
     let liste = [...tumUrunler]
     if (aramaMetni.trim()) {
       const k = aramaMetni.toLowerCase()
-      liste = liste.filter((u) => u.ad.toLowerCase().includes(k) || u.aciklama.toLowerCase().includes(k))
+      liste = liste.filter((u) => u.ad.toLowerCase().includes(k) || u.aciklama?.toLowerCase().includes(k))
     }
     switch (siralama) {
       case 'fiyat-artan': liste.sort((a, b) => a.fiyat - b.fiyat); break
@@ -29,7 +35,7 @@ export default function AnneBebek() {
       case 'puan': liste.sort((a, b) => b.puan - a.puan); break
     }
     return liste
-  }, [siralama, aramaMetni])
+  }, [siralama, aramaMetni, tumUrunler])
 
   return (
     <div className="bg-white min-h-screen">
@@ -64,7 +70,7 @@ export default function AnneBebek() {
             <p className="text-stone-500 font-medium">Ürün bulunamadı</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {filtreliUrunler.map((urun) => (
               <ProductCard key={urun.id} urun={urun} />
             ))}

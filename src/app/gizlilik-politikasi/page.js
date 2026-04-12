@@ -5,6 +5,11 @@ export const metadata = {
 
 const BOLUMLER = [
   {
+    baslik: 'Veri Sorumlusu',
+    icerik:
+      'Bu aydınlatma metni, 6698 sayılı Kişisel Verilerin Korunması Kanunu\'nun (KVKK) 10. maddesi uyarınca hazırlanmıştır. Veri Sorumlusu: Atalay Durmaz (Şahıs Şirketi) — Yüzbaşılar Mah. 3013. Sokak Reverans Evleri D Blok Daire 7, Gölcük / Kocaeli. Tel: 0262 412 6928. E-posta: destek@gamzelieczanem.com',
+  },
+  {
     baslik: '1. Toplanan Veriler',
     icerik:
       'GAMZELİECZANEM olarak; ad-soyad, e-posta adresi, telefon numarası, teslimat adresi ve ödeme bilgileri gibi kişisel verilerinizi yalnızca sipariş ve üyelik işlemleriniz için toplamaktayız. Web sitemizi ziyaretiniz sırasında çerezler aracılığıyla anonim kullanım verileri de toplanabilir.',

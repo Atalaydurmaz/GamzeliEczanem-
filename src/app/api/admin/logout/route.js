@@ -1,7 +1,6 @@
-import { cookies } from 'next/headers'
+import { clearAdminCookie } from '@/lib/adminAuth'
 
 export async function POST() {
-  const store = await cookies()
-  store.delete('gla_admin')
+  await clearAdminCookie()
   return Response.json({ ok: true })
 }

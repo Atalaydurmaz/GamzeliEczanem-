@@ -158,6 +158,57 @@ const kategoriler = [
   },
 
   {
+    id: 'yuz-bakimi',
+    label: 'Yüz Bakımı',
+    href: '/yuz-bakimi',
+    ikon: '🧖',
+    altKategoriler: [
+      {
+        id: 'temizleme',
+        label: 'Temizleme',
+        href: '/yuz-bakimi/temizleme',
+        urunler: [
+          { label: 'Yüz Temizleme Jeli', href: '/yuz-bakimi#jel' },
+          { label: 'Temizleme Köpüğü', href: '/yuz-bakimi#kopuk' },
+          { label: 'Miseller Su', href: '/yuz-bakimi#miseller' },
+          { label: 'Yüz Peelingi', href: '/yuz-bakimi#peeling' },
+        ],
+      },
+      {
+        id: 'nemlendirme',
+        label: 'Nemlendirme',
+        href: '/yuz-bakimi/nemlendirme',
+        urunler: [
+          { label: 'Günlük Nemlendirici', href: '/yuz-bakimi#nemlendirici' },
+          { label: 'Yüz Kremi', href: '/yuz-bakimi#krem' },
+          { label: 'Yüz Yağı', href: '/yuz-bakimi#yag' },
+        ],
+      },
+      {
+        id: 'ozel-bakim',
+        label: 'Özel Bakım',
+        href: '/yuz-bakimi/ozel-bakim',
+        urunler: [
+          { label: 'Yüz Serumu', href: '/yuz-bakimi#serum' },
+          { label: 'Göz Çevresi Bakımı', href: '/yuz-bakimi#goz' },
+          { label: 'Yüz Maskesi', href: '/yuz-bakimi#maske' },
+          { label: 'Leke Karşıtı Bakım', href: '/yuz-bakimi#leke' },
+        ],
+      },
+      {
+        id: 'tonik-bakim',
+        label: 'Tonik & Onarıcı',
+        href: '/yuz-bakimi/tonik',
+        urunler: [
+          { label: 'Yüz Toniği', href: '/yuz-bakimi#tonik' },
+          { label: 'Termal Su', href: '/yuz-bakimi#termal' },
+          { label: 'Onarıcı Balsam', href: '/yuz-bakimi#balsam' },
+        ],
+      },
+    ],
+  },
+
+  {
     id: 'makyaj',
     label: 'Makyaj',
     href: '/makyaj',
@@ -306,57 +357,6 @@ const kategoriler = [
     ],
   },
 
-  
-   {
-    id: 'yuz-bakimi',
-    label: 'Yüz Bakımı',
-    href: '/yuz-bakimi',
-    ikon: '🧴',
-    altKategoriler: [
-      {
-        id: 'temizleme',
-        label: 'Temizleme',
-        href: '/yuz-bakimi/temizleme',
-        urunler: [
-          { label: 'Yüz Temizleme Jeli', href: '/yuz-bakimi#jel' },
-          { label: 'Temizleme Köpüğü', href: '/yuz-bakimi#kopuk' },
-          { label: 'Miseller Su', href: '/yuz-bakimi#miseller' },
-          { label: 'Yüz Peelingi', href: '/yuz-bakimi#peeling' },
-        ],
-      },
-      {
-        id: 'nemlendirme',
-        label: 'Nemlendirme',
-        href: '/yuz-bakimi/nemlendirme',
-        urunler: [
-          { label: 'Günlük Nemlendirici', href: '/yuz-bakimi#nemlendirici' },
-          { label: 'Yüz Kremi', href: '/yuz-bakimi#krem' },
-          { label: 'Yüz Yağı', href: '/yuz-bakimi#yag' },
-        ],
-      },
-      {
-        id: 'ozel-bakim',
-        label: 'Özel Bakım',
-        href: '/yuz-bakimi/ozel-bakim',
-        urunler: [
-          { label: 'Yüz Serumu', href: '/yuz-bakimi#serum' },
-          { label: 'Göz Çevresi Bakımı', href: '/yuz-bakimi#goz' },
-          { label: 'Yüz Maskesi', href: '/yuz-bakimi#maske' },
-          { label: 'Leke Karşıtı Bakım', href: '/yuz-bakimi#leke' },
-        ],
-      },
-      {
-        id: 'tonik-bakim',
-        label: 'Tonik & Onarıcı',
-        href: '/yuz-bakimi/tonik',
-        urunler: [
-          { label: 'Yüz Toniği', href: '/yuz-bakimi#tonik' },
-          { label: 'Termal Su', href: '/yuz-bakimi#termal' },
-          { label: 'Onarıcı Balsam', href: '/yuz-bakimi#balsam' },
-        ],
-      },
-    ],
-  },
- ] 
+]
   
 export default kategoriler

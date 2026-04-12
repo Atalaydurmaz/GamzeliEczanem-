@@ -36,6 +36,21 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Tek kullanımlık admin/seed scriptleri — API key içerebilir
+/scripts/
+
+# Geçici veri dosyaları
+/data/abandonedCarts.json
+/data/routineReminders.json
+/data/messages.json
+.pending-orders.json
+
+# Yüklenen görseller
+/public/uploads/
+
+# Claude worktree'leri
+.claude/worktrees/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #1c1917;
+  /* Tarayıcının dark mode'da form elemanlarını (input/select/textarea) otomatik
+     karartmasını engeller. Metin her zaman okunabilir kalır. */
+  color-scheme: light;
 }
 
 @theme inline {
@@ -19,6 +22,12 @@ body {
 
 html {
   scroll-behavior: smooth;
+}
+
+/* Chatbot bubble */
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(16px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
 }
 
 /* Hero: slide zoom */

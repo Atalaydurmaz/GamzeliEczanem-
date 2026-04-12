@@ -1,37 +1,25 @@
-import fs from 'fs'
-import path from 'path'
+import { supabaseAdmin } from './supabase'
 
-const FILE = path.join(process.cwd(), 'data', 'stockNotifications.json')
-
-function read() {
-  try {
-    return JSON.parse(fs.readFileSync(FILE, 'utf-8'))
-  } catch {
-    return []
-  }
+export async function addNotification(urunId, email) {
+  const { error } = await supabaseAdmin
+    .from('stock_notifications')
+    .insert({ urun_id: urunId, email: email.toLowerCase() })
+  // UNIQUE constraint ihlali = zaten kayıtlı
+  if (error?.code === '23505') return false
+  return !error
 }
 
-function write(data) {
-  fs.mkdirSync(path.dirname(FILE), { recursive: true })
-  fs.writeFileSync(FILE, JSON.stringify(data, null, 2), 'utf-8')
+export async function getNotificationsForUrun(urunId) {
+  const { data } = await supabaseAdmin
+    .from('stock_notifications')
+    .select('email')
+    .eq('urun_id', urunId)
+  return data || []
 }
 
-export function addNotification(urunId, email) {
-  const list = read()
-  const zatenVar = list.some(
-    (n) => n.urunId === urunId && n.email.toLowerCase() === email.toLowerCase()
-  )
-  if (zatenVar) return false
-  list.push({ urunId, email, tarih: new Date().toISOString() })
-  write(list)
-  return true
-}
-
-export function getNotificationsForUrun(urunId) {
-  return read().filter((n) => n.urunId === urunId)
-}
-
-export function clearNotificationsForUrun(urunId) {
-  const list = read().filter((n) => n.urunId !== urunId)
-  write(list)
+export async function clearNotificationsForUrun(urunId) {
+  await supabaseAdmin
+    .from('stock_notifications')
+    .delete()
+    .eq('urun_id', urunId)
 }

@@ -10,12 +10,14 @@ function ayMetni(gun) {
 }
 
 export async function GET(req) {
+  // CRON_SECRET zorunlu — ayarlanmamışsa endpoint'i kapat
   const cronSecret = process.env.CRON_SECRET
-  if (cronSecret) {
-    const auth = req.headers.get('authorization')
-    if (auth !== `Bearer ${cronSecret}`) {
-      return Response.json({ error: 'Yetkisiz' }, { status: 401 })
-    }
+  if (!cronSecret) {
+    return Response.json({ error: 'CRON_SECRET yapılandırılmamış' }, { status: 503 })
+  }
+  const auth = req.headers.get('authorization')
+  if (auth !== `Bearer ${cronSecret}`) {
+    return Response.json({ error: 'Yetkisiz' }, { status: 401 })
   }
 
   const hatirlaticilar = getDueReminders()

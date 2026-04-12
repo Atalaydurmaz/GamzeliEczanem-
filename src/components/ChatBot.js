@@ -6,6 +6,7 @@ const GREETING = 'Merhaba! Ben Gamzelieczanem eczacı asistanınızım. Size nas
 
 export default function ChatBot() {
   const [isOpen, setIsOpen] = useState(false)
+  const [showBubble, setShowBubble] = useState(false)
   const [messages, setMessages] = useState([
     { role: 'assistant', content: GREETING },
   ])
@@ -25,6 +26,18 @@ export default function ChatBot() {
     const handler = () => setIsOpen(true)
     window.addEventListener('openChatBot', handler)
     return () => window.removeEventListener('openChatBot', handler)
+  }, [])
+
+  // 2 sn sonra göster, 10 sn sonra gizle — her oturumda bir kez
+  useEffect(() => {
+    const seen = sessionStorage.getItem('chatbot_bubble_seen')
+    if (seen) return
+    const show = setTimeout(() => setShowBubble(true), 2000)
+    const hide = setTimeout(() => {
+      setShowBubble(false)
+      sessionStorage.setItem('chatbot_bubble_seen', '1')
+    }, 12000)
+    return () => { clearTimeout(show); clearTimeout(hide) }
   }, [])
 
   async function sendMessage(e) {
@@ -82,11 +95,57 @@ export default function ChatBot() {
   const isStreaming =
     isLoading && messages[messages.length - 1]?.role === 'assistant'
 
+  const dismissBubble = () => {
+    setShowBubble(false)
+    sessionStorage.setItem('chatbot_bubble_seen', '1')
+  }
+
   return (
     <>
+      {/* Karşılama Bubble */}
+      {showBubble && !isOpen && (
+        <div className="fixed bottom-24 right-6 z-50 max-w-[260px]"
+          style={{ animation: 'slideUpFade 0.4s ease-out' }}>
+          <div className="bg-white rounded-2xl rounded-br-none shadow-xl border border-rose-100 p-4 relative">
+            <button
+              onClick={dismissBubble}
+              className="absolute top-2 right-2 text-stone-300 hover:text-stone-500 transition-colors"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="w-8 h-8 rounded-full bg-rose-100 flex items-center justify-center text-sm flex-shrink-0">
+                💊
+              </div>
+              <div>
+                <p className="text-xs font-bold text-stone-800 leading-none">Eczacı Asistanı</p>
+                <p className="text-xs text-rose-600 flex items-center gap-1 mt-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
+                  7/24 çevrimiçi
+                </p>
+              </div>
+            </div>
+            <p className="text-xs text-stone-600 leading-relaxed mb-3">
+              👋 Merhaba! Ürünler veya cilt bakımı hakkında sorularınızı yanıtlamak için buradayım.
+            </p>
+            <button
+              onClick={() => { dismissBubble(); setIsOpen(true) }}
+              className="w-full bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold py-2 rounded-xl transition-colors"
+            >
+              Sohbet Başlat 💬
+            </button>
+            <div className="absolute -bottom-2 right-5 w-4 h-2 overflow-hidden">
+              <div className="w-3 h-3 bg-white border-r border-b border-rose-100 rotate-45 translate-x-0.5 -translate-y-1.5 shadow-sm" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Button */}
       <button
-        onClick={() => setIsOpen((o) => !o)}
+        onClick={() => { dismissBubble(); setIsOpen((o) => !o) }}
         aria-label={isOpen ? 'Sohbeti kapat' : 'Eczacı asistanını aç'}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-rose-500 text-white rounded-full shadow-xl hover:bg-rose-600 active:scale-95 transition-all flex items-center justify-center"
       >

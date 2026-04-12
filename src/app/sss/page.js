@@ -13,7 +13,7 @@ const kategoriler = [
       },
       {
         soru: 'Kargo ücreti ne kadar?',
-        cevap: '1.250₺ ve üzeri siparişlerde kargo tamamen ücretsizdir. 1.250₺ altındaki siparişler için kargo ücreti 110₺\'dir.',
+        cevap: '1.500₺ ve üzeri siparişlerde kargo tamamen ücretsizdir. 1.500₺ altındaki siparişler için kargo ücreti 130₺\'dir.',
       },
       {
         soru: 'Hangi kargo şirketleriyle çalışıyorsunuz?',

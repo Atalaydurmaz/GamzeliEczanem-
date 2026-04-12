@@ -10,7 +10,7 @@ const ekip = [
   { isim: 'Atalay Durmaz', unvan: 'Kurucu & CEO', renk: 'bg-rose-100 text-rose-700' },
   { isim: 'Gamze Durmaz', unvan: 'Cilt Bakım ve Kozmetik Uzmanı', renk: 'bg-pink-100 text-pink-700' },
   { isim: 'Kübra Turgut', unvan: 'Müşteri İlişkileri Yönetimi Sorumlusu', renk: 'bg-purple-100 text-purple-700' },
-  { isim: 'Hilal Başoğlu', unvan: 'Ürün ve Stok Yönetimi Sorumlusu', renk: 'bg-amber-100 text-amber-700' },
+ 
   { isim: 'Çağatay Durmaz', unvan: 'Teknoloji Direktörü & CTO', renk: 'bg-blue-100 text-blue-700' },
 ]
 

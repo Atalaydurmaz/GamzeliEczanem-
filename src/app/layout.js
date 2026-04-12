@@ -10,13 +10,23 @@ import { FavoriProvider } from '@/context/FavoriContext'
 import { ReviewProvider } from '@/context/ReviewContext'
 import { StockProvider } from '@/context/StockContext'
 import NextAuthProvider from '@/components/NextAuthProvider'
+import CookieBanner from '@/components/CookieBanner'
+import ScrollRestorer from '@/components/ScrollRestorer'
 
 const geist = Geist({
   variable: '--font-geist',
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
+  display: 'swap',
 })
 
 const BASE_URL = 'https://gamzelieczanem.com'
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover', // iPhone notch / safe area için
+  themeColor: '#f43f5e', // Safari adres çubuğu ve PWA rengi
+}
 
 export const metadata = {
   metadataBase: new URL(BASE_URL),
@@ -55,6 +65,8 @@ export default function RootLayout({ children }) {
                 <Footer />
                 <ChatBotLazy />
                 <PushManager />
+                <CookieBanner />
+                <ScrollRestorer />
                 </StockProvider>
                 </ReviewProvider>
               </FavoriProvider>

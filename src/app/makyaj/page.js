@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import ProductCard from '@/components/ProductCard'
-import { getMakyajUrunleri, makyajKategorileri } from '@/lib/data'
+import { makyajKategorileri } from '@/lib/data'
 
 const siralamaSecenekleri = [
   { value: 'varsayilan', label: 'Önerilen' },
@@ -12,12 +12,19 @@ const siralamaSecenekleri = [
   { value: 'puan', label: 'En Yüksek Puan' },
 ]
 
-const tumMakyajUrunleri = getMakyajUrunleri()
-
 export default function MakyajSayfasi() {
+  const [tumMakyajUrunleri, setTumMakyajUrunleri] = useState([])
+  const [yukleniyor, setYukleniyor] = useState(true)
   const [aktifKategori, setAktifKategori] = useState('tumu')
   const [siralama, setSiralama] = useState('varsayilan')
   const [aramaMetni, setAramaMetni] = useState('')
+
+  useEffect(() => {
+    fetch('/api/products?kategori=makyaj')
+      .then(r => r.json())
+      .then(d => { setTumMakyajUrunleri(Array.isArray(d) ? d : []); setYukleniyor(false) })
+      .catch(() => setYukleniyor(false))
+  }, [])
 
   const filtreliUrunler = useMemo(() => {
     let liste = [...tumMakyajUrunleri]
@@ -29,7 +36,7 @@ export default function MakyajSayfasi() {
     if (aramaMetni.trim()) {
       const kucuk = aramaMetni.toLowerCase()
       liste = liste.filter(
-        (u) => u.ad.toLowerCase().includes(kucuk) || u.aciklama.toLowerCase().includes(kucuk)
+        (u) => u.ad.toLowerCase().includes(kucuk) || u.aciklama?.toLowerCase().includes(kucuk)
       )
     }
 
@@ -40,7 +47,7 @@ export default function MakyajSayfasi() {
     }
 
     return liste
-  }, [aktifKategori, siralama, aramaMetni])
+  }, [aktifKategori, siralama, aramaMetni, tumMakyajUrunleri])
 
   return (
     <div className="bg-white min-h-screen">
@@ -138,7 +145,7 @@ export default function MakyajSayfasi() {
 
         {/* Ürün grid */}
         {filtreliUrunler.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-6">
             {filtreliUrunler.map((urun) => (
               <ProductCard key={urun.id} urun={urun} />
             ))}

@@ -48,6 +48,9 @@ export function FavoriProvider({ children }) {
 
 export function useFavori() {
   const ctx = useContext(FavoriContext)
-  if (!ctx) throw new Error('useFavori must be used within FavoriProvider')
+  if (!ctx) {
+    // Provider dışında çağrılırsa boş fallback döndür (crash etme)
+    return { favoriler: [], favoriEkle: () => {}, favoriKaldir: () => {}, favoriMi: () => false, favoriToggle: () => {} }
+  }
   return ctx
 }

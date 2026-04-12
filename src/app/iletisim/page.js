@@ -12,7 +12,7 @@ const konular = [
 ]
 
 export default function IletisimSayfasi() {
-  const [form, setForm] = useState({ ad: '', email: '', telefon: '', konu: '', mesaj: '' })
+  const [form, setForm] = useState({ ad: '', email: '', telefon: '', konu: '', mesaj: '', website: '' })
   const [hatalar, setHatalar] = useState({})
   const [gonderildi, setGonderildi] = useState(false)
   const [yukleniyor, setYukleniyor] = useState(false)
@@ -35,19 +35,22 @@ export default function IletisimSayfasi() {
     e.preventDefault()
     const h = dogrula()
     if (Object.keys(h).length > 0) { setHatalar(h); return }
+    if (form.website) { setGonderildi(true); return } // Honeypot — botu susturarak reddet
     setYukleniyor(true)
     try {
-      await fetch('/api/iletisim', {
+      const res = await fetch('/api/iletisim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-    } catch (err) {
-      console.error('Mesaj gönderilemedi:', err)
+      if (!res.ok) throw new Error()
+      setGonderildi(true)
+      setForm({ ad: '', email: '', telefon: '', konu: '', mesaj: '', website: '' })
+    } catch {
+      setHatalar({ genel: 'Mesajınız gönderilemedi. Lütfen tekrar deneyin.' })
+    } finally {
+      setYukleniyor(false)
     }
-    setYukleniyor(false)
-    setGonderildi(true)
-    setForm({ ad: '', email: '', telefon: '', konu: '', mesaj: '' })
   }
 
   return (
@@ -167,6 +170,19 @@ export default function IletisimSayfasi() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} noValidate className="space-y-5">
+                  {/* Honeypot — botlar bu alanı doldurur, insanlar görmez */}
+                  <div style={{ position: 'absolute', left: '-9999px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
+                    <label htmlFor="website">Website</label>
+                    <input
+                      id="website"
+                      type="text"
+                      name="website"
+                      value={form.website}
+                      onChange={(e) => setForm((o) => ({ ...o, website: e.target.value }))}
+                      tabIndex={-1}
+                      autoComplete="off"
+                    />
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-1">Ad Soyad *</label>
@@ -208,6 +224,18 @@ export default function IletisimSayfasi() {
                       <p className="text-xs text-stone-400">{form.mesaj.length} karakter</p>
                     </div>
                   </div>
+
+                  {hatalar.genel && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
+                      {hatalar.genel}
+                    </div>
+                  )}
+
+                  {/* KVKK Aydınlatma Metni */}
+                  <p className="text-xs text-stone-400 leading-relaxed">
+                    Gönderdiğiniz mesaj, yalnızca talebinizi yanıtlamak amacıyla <strong className="text-stone-500">Atalay Durmaz (Şahıs Şirketi)</strong> tarafından işlenecektir.{' '}
+                    <a href="/gizlilik-politikasi" className="text-rose-500 hover:underline">Gizlilik Politikamızı</a> inceleyebilirsiniz.
+                  </p>
 
                   <button type="submit" disabled={yukleniyor}
                     className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all disabled:bg-stone-300 disabled:cursor-not-allowed">

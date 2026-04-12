@@ -1,8 +1,9 @@
-import { urunler } from '@/lib/data'
+import { getProducts } from '@/lib/products'
 
 const BASE_URL = 'https://gamzelieczanem.com'
 
-export default function sitemap() {
+export default async function sitemap() {
+  const urunler = await getProducts().catch(() => [])
   const kategoriler = [
     { yol: '/makyaj', priority: 0.9, changeFrequency: 'weekly' },
     { yol: '/cilt-bakimi', priority: 0.9, changeFrequency: 'weekly' },

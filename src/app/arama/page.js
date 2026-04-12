@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import ProductCard from '@/components/ProductCard'
-import { urunler } from '@/lib/data'
 
 const ORNEKLER = [
   'kuru cilt için nemlendirici',
@@ -80,9 +79,7 @@ function AramaIcerigi() {
     }
   }
 
-  const onerilenUrunler = sonuc
-    ? (sonuc.urunIdleri || []).map((id) => urunler.find((u) => u.id === id)).filter(Boolean)
-    : []
+  const onerilenUrunler = sonuc?.urunler ?? []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -196,7 +193,7 @@ function AramaIcerigi() {
                   )}{' '}
                   için {onerilenUrunler.length} ürün önerildi
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
                   {onerilenUrunler.map((urun) => (
                     <ProductCard key={urun.id} urun={urun} />
                   ))}

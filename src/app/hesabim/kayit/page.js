@@ -10,6 +10,8 @@ export default function KayitSayfasi() {
   const { kayitOl } = useAuth()
   const router = useRouter()
   const [form, setForm] = useState({ ad: '', email: '', sifre: '', sifreTekrar: '' })
+  const [onaylar, setOnaylar] = useState({ email: false, sms: false, telefon: false })
+  const [kvkkOnay, setKvkkOnay] = useState(false)
   const [hatalar, setHatalar] = useState({})
   const [yukleniyor, setYukleniyor] = useState(false)
   const [googleYukleniyor, setGoogleYukleniyor] = useState(false)
@@ -23,8 +25,10 @@ export default function KayitSayfasi() {
     const h = {}
     if (!form.ad.trim() || form.ad.trim().length < 2) h.ad = 'Adınızı girin'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) h.email = 'Geçerli bir e-posta girin'
-    if (form.sifre.length < 6) h.sifre = 'Şifre en az 6 karakter olmalı'
+    const SIFRE_RE = /^(?=.*[a-zA-ZğüşıöçĞÜŞİÖÇ])(?=.*\d).{8,32}$/
+    if (!SIFRE_RE.test(form.sifre)) h.sifre = 'Şifreniz 8-32 karakter arasında olmalı, en az bir harf ve rakam içermelidir.'
     if (form.sifre !== form.sifreTekrar) h.sifreTekrar = 'Şifreler eşleşmiyor'
+    if (!kvkkOnay) h.kvkk = 'KVKK metnini onaylamanız zorunludur'
     return h
   }
 
@@ -33,11 +37,16 @@ export default function KayitSayfasi() {
     const h = dogrula()
     if (Object.keys(h).length > 0) { setHatalar(h); return }
     setYukleniyor(true)
-    await new Promise((r) => setTimeout(r, 600))
-    const sonuc = kayitOl(form.ad.trim(), form.email, form.sifre)
-    setYukleniyor(false)
-    if (sonuc.basarili) router.push('/hesabim')
-    else setHatalar({ genel: sonuc.hata })
+    try {
+      await new Promise((r) => setTimeout(r, 600))
+      const sonuc = await kayitOl(form.ad.trim(), form.email, form.sifre, onaylar)
+      if (sonuc.basarili) router.push('/hesabim')
+      else setHatalar({ genel: sonuc.hata })
+    } catch {
+      setHatalar({ genel: 'Bağlantı hatası. İnternet bağlantınızı kontrol edip tekrar deneyin.' })
+    } finally {
+      setYukleniyor(false)
+    }
   }
 
   function guncelle(alan, deger) {
@@ -86,7 +95,7 @@ export default function KayitSayfasi() {
               <label className="block text-sm font-medium text-stone-700 mb-1">Şifre *</label>
               <input
                 type="password"
-                placeholder="En az 6 karakter"
+                placeholder="8-32 karakter, harf ve rakam içermeli"
                 value={form.sifre}
                 onChange={(e) => guncelle('sifre', e.target.value)}
                 className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${hatalar.sifre ? 'border-red-300 focus:ring-red-100' : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'}`}
@@ -104,6 +113,64 @@ export default function KayitSayfasi() {
                 className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all ${hatalar.sifreTekrar ? 'border-red-300 focus:ring-red-100' : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'}`}
               />
               {hatalar.sifreTekrar && <p className="mt-1 text-xs text-red-500">{hatalar.sifreTekrar}</p>}
+            </div>
+
+            {/* KVKK ve Ticari İletişim Onayları */}
+            <div className="space-y-3 pt-1">
+              {/* Zorunlu: KVKK */}
+              <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border transition-colors ${hatalar.kvkk ? 'border-red-200 bg-red-50' : 'border-stone-100 hover:bg-stone-50'}`}>
+                <input
+                  type="checkbox"
+                  checked={kvkkOnay}
+                  onChange={e => { setKvkkOnay(e.target.checked); if (hatalar.kvkk) setHatalar(h => ({ ...h, kvkk: '' })) }}
+                  className="mt-0.5 w-4 h-4 accent-rose-500 shrink-0"
+                />
+                <span className="text-xs text-stone-600 leading-relaxed">
+                  <Link href="/gizlilik-politikasi" className="text-rose-600 font-semibold hover:underline">Kişisel Verilerin Korunması (KVKK)</Link> kapsamında kişisel verilerimin işlenmesini ve saklanmasını kabul ediyorum. <span className="text-red-500 font-semibold">*</span>
+                </span>
+              </label>
+              {hatalar.kvkk && <p className="text-xs text-red-500 -mt-1 px-1">{hatalar.kvkk}</p>}
+
+              <p className="text-xs font-semibold text-stone-500 px-1 pt-1">Ticari İletişim İzinleri (İsteğe bağlı)</p>
+
+              {/* E-posta onayı */}
+              <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-stone-100 hover:bg-stone-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={onaylar.email}
+                  onChange={e => setOnaylar(o => ({ ...o, email: e.target.checked }))}
+                  className="mt-0.5 w-4 h-4 accent-rose-500 shrink-0"
+                />
+                <span className="text-xs text-stone-600 leading-relaxed">
+                  Kampanya, indirim ve yeni ürün bilgilendirmeleri için <strong>e-posta</strong> ile iletişime geçilmesini kabul ediyorum.
+                </span>
+              </label>
+
+              {/* SMS onayı */}
+              <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-stone-100 hover:bg-stone-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={onaylar.sms}
+                  onChange={e => setOnaylar(o => ({ ...o, sms: e.target.checked }))}
+                  className="mt-0.5 w-4 h-4 accent-rose-500 shrink-0"
+                />
+                <span className="text-xs text-stone-600 leading-relaxed">
+                  Kampanya ve sipariş bilgilendirmeleri için <strong>SMS</strong> ile iletişime geçilmesini kabul ediyorum.
+                </span>
+              </label>
+
+              {/* Telefon onayı */}
+              <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-stone-100 hover:bg-stone-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={onaylar.telefon}
+                  onChange={e => setOnaylar(o => ({ ...o, telefon: e.target.checked }))}
+                  className="mt-0.5 w-4 h-4 accent-rose-500 shrink-0"
+                />
+                <span className="text-xs text-stone-600 leading-relaxed">
+                  Müşteri hizmetleri ve bilgilendirme amaçlı <strong>telefon</strong> ile iletişime geçilmesini kabul ediyorum.
+                </span>
+              </label>
             </div>
 
             {hatalar.genel && (

@@ -1,15 +1,32 @@
-'use client'
-
-import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { getOrderBySiparisNo } from '@/lib/orders'
+import OdemeSnapshotTemizle from './OdemeSnapshotTemizle'
 
-function BasariliIcerik() {
-  const params = useSearchParams()
-  const siparisNo = params.get('siparis') || ('GM' + Date.now().toString().slice(-8))
+export const dynamic = 'force-dynamic'
+
+export default async function BasariliSayfasi({ searchParams }) {
+  const { siparis: siparisNo } = await searchParams
+
+  // Parametre yoksa ana sayfaya yönlendir
+  if (!siparisNo) {
+    redirect('/')
+  }
+
+  // DB'den doğrula — sahte URL ile başarı sayfası açılmasını engelle
+  const siparis = await getOrderBySiparisNo(siparisNo)
+  if (!siparis) {
+    redirect('/')
+  }
+
+  const genelToplam = siparis.genelToplam
+  const odemeYontemi = siparis.odemeYontemi
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-rose-50 to-pink-50 px-4 py-16">
+      {/* Snapshot temizleyici — sessionStorage'daki 3DS kurtarma verisini sil */}
+      <OdemeSnapshotTemizle />
+
       <div className="max-w-lg w-full text-center">
         {/* Başarı ikonu */}
         <div className="flex items-center justify-center w-24 h-24 bg-emerald-100 rounded-full mx-auto mb-6">
@@ -24,13 +41,17 @@ function BasariliIcerik() {
           Kargonuz 1–3 iş günü içinde kapınıza teslim edilecektir.
         </p>
 
-        {/* Sipariş numarası */}
+        {/* Sipariş numarası + tutar */}
         <div className="bg-white border border-rose-100 rounded-2xl px-6 py-4 mb-8 shadow-sm">
           <p className="text-xs text-stone-400 uppercase tracking-widest mb-1">Sipariş Numarası</p>
-          <p className="text-2xl font-bold text-rose-600 tracking-widest">{siparisNo}</p>
+          <p className="text-2xl font-bold text-rose-600 tracking-widest mb-3">{siparisNo}</p>
+          <div className="flex justify-between items-center border-t border-rose-50 pt-3 text-sm">
+            <span className="text-stone-400">{odemeYontemi}</span>
+            <span className="font-bold text-stone-800">{genelToplam.toLocaleString('tr-TR')} ₺</span>
+          </div>
         </div>
 
-        {/* Bilgi kutuları */}
+        {/* Durum adımları */}
         <div className="grid grid-cols-3 gap-3 mb-8">
           {[
             { ikon: '📦', baslik: 'Hazırlanıyor', aciklama: 'Siparişiniz hazırlanıyor' },
@@ -70,13 +91,5 @@ function BasariliIcerik() {
         </p>
       </div>
     </div>
-  )
-}
-
-export default function BasariliSayfasi() {
-  return (
-    <Suspense fallback={<div className="min-h-[80vh] flex items-center justify-center"><div className="animate-spin w-8 h-8 border-4 border-rose-300 border-t-rose-500 rounded-full" /></div>}>
-      <BasariliIcerik />
-    </Suspense>
   )
 }

@@ -1,56 +1,50 @@
-import fs from 'fs'
-import path from 'path'
+import { supabaseAdmin } from './supabase'
 
-const STOCK_FILE = path.join(process.cwd(), 'data', 'stock.json')
+export async function getStock() {
+  const { data } = await supabaseAdmin.from('stock').select('urun_id, stok')
+  return Object.fromEntries((data || []).map(r => [String(r.urun_id), r.stok]))
+}
 
-function readStock() {
-  try {
-    return JSON.parse(fs.readFileSync(STOCK_FILE, 'utf-8'))
-  } catch {
-    return {}
+export async function getUrunStock(urunId) {
+  const { data } = await supabaseAdmin
+    .from('stock')
+    .select('stok')
+    .eq('urun_id', Number(urunId))
+    .single()
+  return data?.stok ?? 0
+}
+
+export async function updateStock(urunId, yeniStok) {
+  await supabaseAdmin
+    .from('stock')
+    .upsert({ urun_id: Number(urunId), stok: Math.max(0, yeniStok) }, { onConflict: 'urun_id' })
+}
+
+// Atomik stok düşümü — race condition korumalı.
+// Supabase'de 005_atomic_stock.sql migration'ı çalıştırılmış olmalı.
+// Başarılıysa yeni stok değerini, yetersizse -1 döner.
+export async function decrementStock(urunId, miktar = 1) {
+  const { data, error } = await supabaseAdmin
+    .rpc('decrement_stock_safe', { p_urun_id: Number(urunId), p_miktar: miktar })
+  if (error) {
+    // RPC yoksa (migration henüz çalışmadıysa) eski yönteme düş
+    console.warn('decrement_stock_safe RPC bulunamadı, fallback:', error.message)
+    const mevcutStok = await getUrunStock(urunId)
+    await updateStock(urunId, mevcutStok - miktar)
+    return mevcutStok - miktar
   }
+  return data // -1 ise stok yetersiz demek
 }
 
-function writeStock(data) {
-  fs.writeFileSync(STOCK_FILE, JSON.stringify(data, null, 2), 'utf-8')
+export async function incrementStock(urunId, miktar = 1) {
+  const mevcutStok = await getUrunStock(urunId)
+  await updateStock(urunId, mevcutStok + miktar)
 }
 
-export function getStock() {
-  return readStock()
-}
-
-export function getUrunStock(urunId) {
-  const stock = readStock()
-  const stok = stock[String(urunId)]
-  return stok === undefined ? 0 : stok
-}
-
-export function updateStock(urunId, yeniStok) {
-  const stock = readStock()
-  stock[String(urunId)] = Math.max(0, yeniStok)
-  writeStock(stock)
-  return stock[String(urunId)]
-}
-
-export function decrementStock(urunId, adet = 1) {
-  const stock = readStock()
-  const mevcutStok = stock[String(urunId)] ?? 0
-  stock[String(urunId)] = Math.max(0, mevcutStok - adet)
-  writeStock(stock)
-  return stock[String(urunId)]
-}
-
-export function incrementStock(urunId, adet = 1) {
-  const stock = readStock()
-  const mevcutStok = stock[String(urunId)] ?? 0
-  stock[String(urunId)] = mevcutStok + adet
-  writeStock(stock)
-  return stock[String(urunId)]
-}
-
-export function getLowStockUrunler(esik = 5) {
-  const stock = readStock()
-  return Object.entries(stock)
-    .filter(([, stok]) => stok > 0 && stok < esik)
-    .map(([id, stok]) => ({ id: Number(id), stok }))
+export async function getLowStockUrunler(esik = 5) {
+  const { data } = await supabaseAdmin
+    .from('stock')
+    .select('urun_id, stok')
+    .lte('stok', esik)
+  return (data || []).map(r => ({ id: r.urun_id, stok: r.stok }))
 }

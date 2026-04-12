@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import ProductCard from '@/components/ProductCard'
-import { urunler } from '@/lib/data'
 
 const siralamaSecenekleri = [
   { value: 'varsayilan', label: 'Önerilen' },
@@ -10,8 +9,6 @@ const siralamaSecenekleri = [
   { value: 'fiyat-azalan', label: 'Fiyat: Yüksekten Düşüğe' },
   { value: 'puan', label: 'En Yüksek Puan' },
 ]
-
-const tumUrunler = urunler.filter((u) => u.kategori === 'gunes-bakimi')
 
 const altKategoriler = [
   { id: 'gunes-kremi', ad: 'Güneş Kremi' },
@@ -21,16 +18,25 @@ const altKategoriler = [
 ]
 
 export default function GunesKoruyucuSayfasi() {
+  const [tumUrunler, setTumUrunler] = useState([])
+  const [yukleniyor, setYukleniyor] = useState(true)
   const [aktifKategori, setAktifKategori] = useState('tumu')
   const [siralama, setSiralama] = useState('varsayilan')
   const [aramaMetni, setAramaMetni] = useState('')
+
+  useEffect(() => {
+    fetch('/api/products?kategori=gunes-bakimi')
+      .then(r => r.json())
+      .then(d => { setTumUrunler(Array.isArray(d) ? d : []); setYukleniyor(false) })
+      .catch(() => setYukleniyor(false))
+  }, [])
 
   const filtreliUrunler = useMemo(() => {
     let liste = [...tumUrunler]
     if (aktifKategori !== 'tumu') liste = liste.filter((u) => u.altKategori === aktifKategori)
     if (aramaMetni.trim()) {
       const k = aramaMetni.toLowerCase()
-      liste = liste.filter((u) => u.ad.toLowerCase().includes(k) || u.aciklama.toLowerCase().includes(k))
+      liste = liste.filter((u) => u.ad.toLowerCase().includes(k) || u.aciklama?.toLowerCase().includes(k))
     }
     switch (siralama) {
       case 'fiyat-artan': liste.sort((a, b) => a.fiyat - b.fiyat); break
@@ -38,7 +44,7 @@ export default function GunesKoruyucuSayfasi() {
       case 'puan': liste.sort((a, b) => b.puan - a.puan); break
     }
     return liste
-  }, [aktifKategori, siralama, aramaMetni])
+  }, [aktifKategori, siralama, aramaMetni, tumUrunler])
 
   return (
     <div className="bg-white min-h-screen">
@@ -85,7 +91,7 @@ export default function GunesKoruyucuSayfasi() {
         </div>
 
         {filtreliUrunler.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-6">
             {filtreliUrunler.map((urun) => <ProductCard key={urun.id} urun={urun} />)}
           </div>
         ) : (

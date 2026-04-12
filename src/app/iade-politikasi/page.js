@@ -11,7 +11,7 @@ const BOLUMLER = [
     baslik: 'İade Hakkı',
     icerik: [
       { soru: 'İade Süresi', cevap: 'Teslim tarihinden itibaren 30 gün içinde iade talebinde bulunabilirsiniz.' },
-      { soru: 'İade Koşulları', cevap: 'Ürünün orijinal ambalajında, kullanılmamış ve eksiksiz olması gerekmektedir. Ürünle birlikte gelen tüm aksesuarlar ve fatura iade paketine eklenmelidir.' },
+      { soru: 'İade Koşulları', cevap: 'Ürünün orijinal ambalajında, kullanılmamış, açılmamış ve eksiksiz olması gerekmektedir. Ambalajı açılmış kozmetik ürünler hijyen nedeniyle iade kabul edilmez. Ürünle birlikte gelen tüm aksesuarlar ve fatura iade paketine eklenmelidir.' },
     ],
   },
   {
@@ -54,6 +54,20 @@ export default function IadePolitikasiPage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12 space-y-8">
+
+        {/* Hijyen Uyarısı — yasal zorunluluk, belirgin gösterilmeli */}
+        <div className="flex items-start gap-4 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
+          <span className="text-2xl shrink-0">⚠️</span>
+          <div>
+            <p className="text-sm font-bold text-amber-800 mb-1">Hijyen Nedeniyle İade Edilemeyen Ürünler</p>
+            <p className="text-sm text-amber-700 leading-relaxed">
+              6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği uyarınca; <strong>ambalajı açılmış veya kullanılmış kozmetik ürünler</strong> (ruj, fondöten, maskara, serum, krem vb.) sağlık ve hijyen koşulları nedeniyle <strong>iade edilememektedir.</strong>
+            </p>
+            <p className="text-xs text-amber-600 mt-2">
+              Ürün hasarlı, bozuk veya yanlış gönderilmişse bu kural geçerli değildir — bu durumlarda iade talebinizi kabul ederiz.
+            </p>
+          </div>
+        </div>
 
         {/* Özet */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

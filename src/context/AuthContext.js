@@ -16,74 +16,84 @@ export function AuthProvider({ children }) {
     setYukleniyor(false)
   }, [])
 
-  function girisYap(email, sifre) {
+  async function girisYap(email, sifre) {
     try {
-      const uyeler = JSON.parse(localStorage.getItem('gec_uyeler') || '[]')
-      const uye = uyeler.find((u) => u.email === email && u.sifre === sifre)
-      if (!uye) return { basarili: false, hata: 'E-posta veya şifre hatalı.' }
-      const { sifre: _, ...guvenliUye } = uye
-      setKullanici(guvenliUye)
-      localStorage.setItem('gec_kullanici', JSON.stringify(guvenliUye))
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, sifre }),
+      })
+      const data = await res.json()
+      if (!data.basarili) return { basarili: false, hata: data.hata, googleHesabi: !!data.googleHesabi }
+      setKullanici(data.kullanici)
+      localStorage.setItem('gec_kullanici', JSON.stringify(data.kullanici))
       return { basarili: true }
     } catch {
-      return { basarili: false, hata: 'Bir hata oluştu.' }
+      return { basarili: false, hata: 'Bağlantı hatası oluştu.' }
     }
   }
 
-  function kayitOl(ad, email, sifre) {
+  async function kayitOl(ad, email, sifre, onaylar = {}) {
     try {
-      const uyeler = JSON.parse(localStorage.getItem('gec_uyeler') || '[]')
-      if (uyeler.find((u) => u.email === email)) {
-        return { basarili: false, hata: 'Bu e-posta adresi zaten kayıtlı.' }
-      }
-      const yeniUye = { id: Date.now(), ad, email, sifre, kayitTarihi: new Date().toISOString() }
-      uyeler.push(yeniUye)
-      localStorage.setItem('gec_uyeler', JSON.stringify(uyeler))
-      const { sifre: _, ...guvenliUye } = yeniUye
-      setKullanici(guvenliUye)
-      localStorage.setItem('gec_kullanici', JSON.stringify(guvenliUye))
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ad, email, sifre, onaylar }),
+      })
+      const data = await res.json()
+      if (!data.basarili) return { basarili: false, hata: data.hata }
+      setKullanici(data.kullanici)
+      localStorage.setItem('gec_kullanici', JSON.stringify(data.kullanici))
       return { basarili: true }
     } catch {
-      return { basarili: false, hata: 'Bir hata oluştu.' }
+      return { basarili: false, hata: 'Bağlantı hatası oluştu.' }
     }
   }
 
-  function profilGuncelle(guncelBilgiler) {
+  async function profilGuncelle(guncelBilgiler) {
     try {
-      const uyeler = JSON.parse(localStorage.getItem('gec_uyeler') || '[]')
-      const idx = uyeler.findIndex((u) => u.id === kullanici.id)
-      if (idx === -1) return { basarili: false, hata: 'Kullanıcı bulunamadı.' }
-      uyeler[idx] = { ...uyeler[idx], ...guncelBilgiler }
-      localStorage.setItem('gec_uyeler', JSON.stringify(uyeler))
-      const { sifre: _, ...guvenliUye } = uyeler[idx]
-      setKullanici(guvenliUye)
-      localStorage.setItem('gec_kullanici', JSON.stringify(guvenliUye))
+      const res = await fetch('/api/auth/update', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: kullanici.id, ...guncelBilgiler }),
+      })
+      const data = await res.json()
+      if (!data.basarili) return { basarili: false, hata: data.hata }
+      setKullanici(data.kullanici)
+      localStorage.setItem('gec_kullanici', JSON.stringify(data.kullanici))
       return { basarili: true }
     } catch {
-      return { basarili: false, hata: 'Bir hata oluştu.' }
+      return { basarili: false, hata: 'Bağlantı hatası oluştu.' }
     }
   }
 
-  function sifreSifirla(email, yeniSifre) {
+  async function onaylariGuncelle(yeniOnaylar) {
+    return profilGuncelle({ onaylar: { ...kullanici?.onaylar, ...yeniOnaylar } })
+  }
+
+  async function sifreSifirla(email, yeniSifre) {
+    // Şifre sıfırlama — e-posta doğrulaması olmadan (basit versiyon)
     try {
-      const uyeler = JSON.parse(localStorage.getItem('gec_uyeler') || '[]')
-      const idx = uyeler.findIndex((u) => u.email === email)
-      if (idx === -1) return { basarili: false, hata: 'Bu e-posta adresiyle kayıtlı bir hesap bulunamadı.' }
-      uyeler[idx].sifre = yeniSifre
-      localStorage.setItem('gec_uyeler', JSON.stringify(uyeler))
-      return { basarili: true }
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, yeniSifre }),
+      })
+      const data = await res.json()
+      return data
     } catch {
-      return { basarili: false, hata: 'Bir hata oluştu.' }
+      return { basarili: false, hata: 'Bağlantı hatası oluştu.' }
     }
   }
 
   function cikisYap() {
     setKullanici(null)
     localStorage.removeItem('gec_kullanici')
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {})
   }
 
   return (
-    <AuthContext.Provider value={{ kullanici, yukleniyor, girisYap, kayitOl, profilGuncelle, sifreSifirla, cikisYap }}>
+    <AuthContext.Provider value={{ kullanici, yukleniyor, girisYap, kayitOl, profilGuncelle, onaylariGuncelle, sifreSifirla, cikisYap }}>
       {children}
     </AuthContext.Provider>
   )

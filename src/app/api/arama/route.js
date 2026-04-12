@@ -1,21 +1,20 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { urunler } from '@/lib/data'
+import { getProducts } from '@/lib/products'
 
 const client = new Anthropic()
 
-function buildCatalog() {
-  const kategoriAdlari = {
-    'cilt-bakimi': 'Cilt Bakımı',
-    makyaj: 'Makyaj',
-    parfum: 'Parfüm',
-    'sac-bakimi': 'Saç Bakımı',
-    'gunes-bakimi': 'Güneş Koruyucu',
-  }
+const KATEGORI_ADLARI = {
+  'cilt-bakimi': 'Cilt Bakımı',
+  makyaj: 'Makyaj',
+  parfum: 'Parfüm',
+  'sac-bakimi': 'Saç Bakımı',
+  'gunes-bakimi': 'Güneş Koruyucu',
+  'anne-bebek': 'Anne & Bebek',
+}
+
+function buildCatalog(urunler) {
   return urunler
-    .map(
-      (u) =>
-        `${u.id}|${u.ad}|${kategoriAdlari[u.kategori] ?? u.kategori}|${u.altKategori}|${u.fiyat}₺|${u.aciklama}`
-    )
+    .map(u => `${u.id}|${u.ad}|${KATEGORI_ADLARI[u.kategori] ?? u.kategori}|${u.altKategori ?? ''}|${u.fiyat}₺|${u.aciklama ?? ''}`)
     .join('\n')
 }
 
@@ -26,15 +25,14 @@ Yalnızca verilen katalogdaki ürün ID'lerini kullan.`
 export async function POST(request) {
   try {
     const { sorgu } = await request.json()
+    if (!sorgu?.trim()) return Response.json({ error: 'Sorgu boş' }, { status: 400 })
 
-    if (!sorgu?.trim()) {
-      return Response.json({ error: 'Sorgu boş' }, { status: 400 })
-    }
+    const tumUrunler = await getProducts()
 
     const prompt = `Kullanıcı Arama Sorgusu: "${sorgu}"
 
 ÜRÜN KATALOĞU (ID|Ad|Kategori|AltKategori|Fiyat|Açıklama):
-${buildCatalog()}
+${buildCatalog(tumUrunler)}
 
 Kullanıcının doğal dil sorgusunu analiz et ve en uygun 4-8 ürünü bul.
 SADECE şu JSON formatında yanıt ver, başka hiçbir şey ekleme:
@@ -52,9 +50,13 @@ SADECE şu JSON formatında yanıt ver, başka hiçbir şey ekleme:
 
     const raw = response.content[0].text.trim()
     const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-    const data = JSON.parse(cleaned)
+    const parsed = JSON.parse(cleaned)
 
-    return Response.json(data)
+    const urunler = (parsed.urunIdleri || [])
+      .map(id => tumUrunler.find(u => u.id === id))
+      .filter(Boolean)
+
+    return Response.json({ aciklama: parsed.aciklama, urunler })
   } catch (error) {
     console.error('Arama API error:', error)
     return Response.json({ error: 'Arama yapılırken bir hata oluştu' }, { status: 500 })

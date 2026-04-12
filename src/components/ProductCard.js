@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useFavori } from '@/context/FavoriContext'
 import { useReviews } from '@/context/ReviewContext'
@@ -15,8 +16,9 @@ export default function ProductCard({ urun, index = 0 }) {
   const stok = getUrunStok(urun.id)
   const stokTukendi = stok !== null && stok === 0
   const reviewStats = getUrunStats(urun.id)
-  const puan = reviewStats?.puan ?? urun.puan
-  const yorumSayisi = reviewStats?.yorumSayisi ?? urun.yorumSayisi
+  const puan = reviewStats ? reviewStats.puan : 0
+  const yorumSayisi = reviewStats ? reviewStats.yorumSayisi : 0
+  const [gorselHata, setGorselHata] = useState(false)
 
   function handleFavori(e) {
     e.preventDefault()
@@ -39,13 +41,23 @@ export default function ProductCard({ urun, index = 0 }) {
         >
           {/* Görsel */}
           <div className="relative aspect-square bg-rose-50 overflow-hidden">
-            <Image
-              src={urun.gorsel}
-              alt={urun.ad}
-              fill
-              className={`object-cover transition-transform duration-500 ${stokTukendi ? '' : 'group-hover:scale-105'}`}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-            />
+            {gorselHata ? (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-rose-200">
+                <svg className="w-12 h-12" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <span className="text-xs text-rose-300">Görsel yok</span>
+              </div>
+            ) : (
+              <Image
+                src={urun.gorsel}
+                alt={`${urun.ad} – ${{ 'cilt-bakimi': 'Cilt Bakımı', makyaj: 'Makyaj', parfum: 'Parfüm', 'sac-bakimi': 'Saç Bakımı', 'gunes-bakimi': 'Güneş Koruyucu', 'anne-bebek': 'Anne & Bebek', 'agiz-bakimi': 'Ağız Bakımı' }[urun.kategori] ?? urun.kategori} | GAMZELİECZANEM`}
+                fill
+                className={`object-cover transition-transform duration-500 ${stokTukendi ? '' : 'group-hover:scale-105'}`}
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                onError={() => setGorselHata(true)}
+              />
+            )}
             {stokTukendi ? (
               <span className="absolute top-3 left-3 px-2.5 py-1 bg-stone-600 text-white text-xs font-semibold rounded-full">
                 Stok Tükendi
@@ -79,17 +91,17 @@ export default function ProductCard({ urun, index = 0 }) {
           </div>
 
           {/* Bilgi */}
-          <div className="p-4">
-            <p className="text-xs text-rose-400 font-medium uppercase tracking-wider mb-1">
+          <div className="p-2 sm:p-4">
+            <p className="text-xs text-rose-400 font-medium uppercase tracking-wider mb-1 hidden sm:block">
               {{ 'cilt-bakimi': 'Cilt Bakımı', makyaj: 'Makyaj', parfum: 'Parfüm', 'sac-bakimi': 'Saç Bakımı', 'gunes-bakimi': 'Güneş Koruyucu' }[urun.kategori] ?? urun.kategori}
             </p>
-            <h3 className="text-sm font-semibold text-stone-800 mb-2 line-clamp-2 group-hover:text-rose-600 transition-colors">
+            <h3 className="text-xs sm:text-sm font-semibold text-stone-800 mb-1 sm:mb-2 line-clamp-2 group-hover:text-rose-600 transition-colors">
               {urun.ad}
             </h3>
-            <p className="text-xs text-stone-400 mb-3 line-clamp-2">{urun.aciklama}</p>
+            <p className="text-xs text-stone-400 mb-2 sm:mb-3 line-clamp-2 hidden sm:block">{urun.aciklama}</p>
 
             {/* Puan */}
-            <div className="flex items-center gap-1 mb-3">
+            <div className="flex items-center gap-1 mb-2 sm:mb-3">
               {[1, 2, 3, 4, 5].map((yildiz) => (
                 <svg
                   key={yildiz}
@@ -106,7 +118,7 @@ export default function ProductCard({ urun, index = 0 }) {
             {/* Fiyat */}
             <div className="flex items-center justify-between">
               <div className="flex items-baseline gap-2">
-                <span className="text-base font-bold text-stone-900">
+                <span className="text-sm sm:text-base font-bold text-stone-900">
                   {urun.fiyat.toLocaleString('tr-TR')} ₺
                 </span>
                 {urun.eskiFiyat && (

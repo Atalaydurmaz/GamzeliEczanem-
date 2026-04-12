@@ -24,22 +24,62 @@ function GirisSayfasiIcerik() {
   const [hata, setHata] = useState('')
   const [yukleniyor, setYukleniyor] = useState(false)
   const [googleYukleniyor, setGoogleYukleniyor] = useState(false)
+  const [sifreBelirle, setSifreBelirle] = useState(false)
+  const [yeniSifre, setYeniSifre] = useState('')
+  const [yeniSifreTekrar, setYeniSifreTekrar] = useState('')
+  const [sifreYukleniyor, setSifreYukleniyor] = useState(false)
+  const [sifreBasarili, setSifreBasarili] = useState(false)
 
   async function handleSubmit(e) {
     e.preventDefault()
     if (!form.email || !form.sifre) { setHata('Tüm alanları doldurun.'); return }
     setYukleniyor(true)
     setHata('')
-    await new Promise((r) => setTimeout(r, 600))
-    const sonuc = girisYap(form.email, form.sifre)
+    const sonuc = await girisYap(form.email, form.sifre)
     setYukleniyor(false)
-    if (sonuc.basarili) router.push('/hesabim')
-    else setHata(sonuc.hata)
+    if (sonuc.basarili) {
+      router.push('/hesabim')
+    } else if (sonuc.googleHesabi) {
+      setHata('__google__')
+    } else {
+      setHata(sonuc.hata)
+    }
   }
 
   async function handleGoogle() {
     setGoogleYukleniyor(true)
     await signIn('google', { callbackUrl: '/hesabim' })
+  }
+
+  async function handleSifreBelirle(e) {
+    e.preventDefault()
+    const SIFRE_RE = /^(?=.*[a-zA-ZğüşıöçĞÜŞİÖÇ])(?=.*\d).{8,32}$/
+    if (!SIFRE_RE.test(yeniSifre)) { setHata('Şifreniz 8-32 karakter arasında olmalı, en az bir harf ve rakam içermelidir.'); return }
+    if (yeniSifre !== yeniSifreTekrar) { setHata('Şifreler eşleşmiyor.'); return }
+    setSifreYukleniyor(true)
+    setHata('')
+    try {
+      const res = await fetch('/api/auth/set-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, yeniSifre }),
+      })
+      const data = await res.json()
+      if (data.basarili) {
+        setSifreBasarili(true)
+        setSifreBelirle(false)
+        setYeniSifre('')
+        setYeniSifreTekrar('')
+        const sonuc = await girisYap(form.email, yeniSifre)
+        if (sonuc.basarili) router.push('/hesabim')
+      } else {
+        setHata(data.hata)
+      }
+    } catch {
+      setHata('Bağlantı hatası. İnternet bağlantınızı kontrol edip tekrar deneyin.')
+    } finally {
+      setSifreYukleniyor(false)
+    }
   }
 
   return (
@@ -95,11 +135,16 @@ function GirisSayfasiIcerik() {
               </div>
             </div>
 
-            {hata && (
+            {hata === '__google__' ? (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-4 text-sm text-blue-700">
+                <p className="font-semibold mb-1">Bu hesap Google ile oluşturulmuş.</p>
+                <p>Lütfen aşağıdaki <strong>Google ile Giriş Yap</strong> butonunu kullanın. Şifre ile giriş yapmak istiyorsanız profil sayfanızdan şifre belirleyebilirsiniz.</p>
+              </div>
+            ) : hata ? (
               <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
                 {hata}
               </div>
-            )}
+            ) : null}
 
             <button
               type="submit"

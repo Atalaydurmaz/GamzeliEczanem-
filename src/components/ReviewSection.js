@@ -1,10 +1,30 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useSession } from 'next-auth/react'
 import { useAuth } from '@/context/AuthContext'
 import { useReviews } from '@/context/ReviewContext'
+
+function ReviewFoto({ url, alt }) {
+  const [hata, setHata] = useState(false)
+  if (hata) {
+    return (
+      <div className="w-20 h-20 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center shrink-0">
+        <svg className="w-6 h-6 text-rose-200" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+    )
+  }
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      className="relative block w-20 h-20 rounded-xl overflow-hidden border border-rose-100 hover:opacity-90 transition-opacity shrink-0">
+      <Image src={url} alt={alt} fill sizes="80px" className="object-cover" onError={() => setHata(true)} />
+    </a>
+  )
+}
 
 function Yildizlar({ puan, boyut = 'w-5 h-5', interactive = false, onSelect }) {
   const [hover, setHover] = useState(0)
@@ -219,6 +239,10 @@ function ReviewForm({ urunId, onYorum }) {
 
 export default function ReviewSection({ urunId, urunPuan, urunYorumSayisi }) {
   const [yorumlar, setYorumlar] = useState(null) // null = loading
+  const [silOnay, setSilOnay] = useState(null) // yorum id veya null
+  const { kullanici } = useAuth()
+  const { data: session } = useSession()
+  const aktifKullanici = kullanici || (session?.user ? { ad: session.user.name || session.user.email } : null)
 
   useEffect(() => {
     fetch(`/api/reviews?urunId=${urunId}`)
@@ -231,13 +255,20 @@ export default function ReviewSection({ urunId, urunPuan, urunYorumSayisi }) {
     setYorumlar((prev) => [yeniYorum, ...(prev ?? [])])
   }
 
-  // Hesapla: gerçek yorumlar varsa onları kullan, yoksa static
+  async function handleYorumSil() {
+    if (!silOnay) return
+    await fetch(`/api/reviews/${silOnay}`, { method: 'DELETE' })
+    setYorumlar((prev) => prev.filter((r) => r.id !== silOnay))
+    setSilOnay(null)
+  }
+
+  // Hesapla: gerçek yorumlar varsa onları kullan, yoksa 0
   const gercekYorumlar = yorumlar ?? []
   const gercekSayi = gercekYorumlar.length
   const gercekPuan = gercekSayi > 0
     ? Math.round((gercekYorumlar.reduce((a, r) => a + r.puan, 0) / gercekSayi) * 10) / 10
-    : urunPuan
-  const toplamSayi = gercekSayi > 0 ? gercekSayi : urunYorumSayisi
+    : 0
+  const toplamSayi = gercekSayi
 
   // Dağılım
   const dagilim = [5, 4, 3, 2, 1].map((y) => ({
@@ -249,6 +280,35 @@ export default function ReviewSection({ urunId, urunPuan, urunYorumSayisi }) {
   }))
 
   return (
+    <>
+    {silOnay && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4" onClick={() => setSilOnay(null)}>
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+        <div className="relative bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-center w-12 h-12 bg-red-50 rounded-full mx-auto mb-4">
+            <svg className="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </div>
+          <h3 className="text-base font-bold text-stone-900 text-center mb-1">Yorumu Sil</h3>
+          <p className="text-sm text-stone-500 text-center mb-6">Bu yorumu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setSilOnay(null)}
+              className="flex-1 py-2.5 border border-stone-200 text-stone-600 text-sm font-semibold rounded-xl hover:bg-stone-50 transition-colors"
+            >
+              Vazgeç
+            </button>
+            <button
+              onClick={handleYorumSil}
+              className="flex-1 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-xl transition-colors"
+            >
+              Evet, Sil
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <section className="py-14">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-2xl font-bold text-stone-900 mb-8">Müşteri Yorumları</h2>
@@ -307,26 +367,36 @@ export default function ReviewSection({ urunId, urunPuan, urunYorumSayisi }) {
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 bg-rose-100 rounded-full flex items-center justify-center shrink-0">
                           <span className="text-rose-500 font-bold text-sm">
-                            {r.kullaniciAd.charAt(0).toUpperCase()}
+                            {(r.kullaniciAd || r.kullanici_adi || '?').charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-stone-800">{r.kullaniciAd}</p>
+                          <p className="text-sm font-semibold text-stone-800">{r.kullaniciAd || r.kullanici_adi}</p>
                           <p className="text-xs text-stone-400">
                             {new Date(r.tarih).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
                           </p>
                         </div>
                       </div>
-                      <Yildizlar puan={r.puan} boyut="w-4 h-4" />
+                      <div className="flex items-center gap-2">
+                        <Yildizlar puan={r.puan} boyut="w-4 h-4" />
+                        {aktifKullanici && (r.kullaniciAd || r.kullanici_adi) === aktifKullanici.ad && (
+                          <button
+                            onClick={() => setSilOnay(r.id)}
+                            title="Yorumu sil"
+                            className="text-stone-300 hover:text-red-500 transition-colors p-1"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <p className="text-sm text-stone-600 leading-relaxed">{r.yorum}</p>
                     {r.fotolar?.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3">
                         {r.fotolar.map((url, i) => (
-                          <a key={i} href={url} target="_blank" rel="noopener noreferrer"
-                            className="block w-20 h-20 rounded-xl overflow-hidden border border-rose-100 hover:opacity-90 transition-opacity shrink-0">
-                            <img src={url} alt={`Fotoğraf ${i + 1}`} className="w-full h-full object-cover" />
-                          </a>
+                          <ReviewFoto key={i} url={url} alt={`Fotoğraf ${i + 1}`} />
                         ))}
                       </div>
                     )}
@@ -338,5 +408,6 @@ export default function ReviewSection({ urunId, urunPuan, urunYorumSayisi }) {
         </div>
       </div>
     </section>
+    </>
   )
 }

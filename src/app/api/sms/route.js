@@ -4,8 +4,8 @@ export async function POST(req) {
   // 05321234567 → 905321234567
   const gsmno = telefon.replace(/\s/g, '').replace(/^0/, '90')
 
-  const mesaj = // Profesyonel ve BTK Uyumlu Mesaj
-const mesaj = `Sayin ${adSoyad}, Gamzelieczanem'den verdiginiz #${siparisNo} nolu siparisiniz alinmistir. Tutar: ${genelToplam.toFixed(2)} TL. Bizi tercih ettiginiz icin tesekkur ederiz. B002`;
+  // Profesyonel ve BTK Uyumlu Mesaj
+  const mesaj = `Sayin ${adSoyad}, Gamzelieczanem'den verdiginiz #${siparisNo} nolu siparisiniz alinmistir. Tutar: ${genelToplam.toFixed(2)} TL. Bizi tercih ettiginiz icin tesekkur ederiz. B002`;
 
   const url = new URL('https://api.netgsm.com.tr/sms/send/get/')
   url.searchParams.set('usercode', process.env.NETGSM_USER)

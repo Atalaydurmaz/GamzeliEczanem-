@@ -1,22 +1,102 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect } from 'react'
+import { urunler } from '@/lib/data'
 
 const CartContext = createContext(null)
 
 export function CartProvider({ children }) {
+  const [hydrated, setHydrated] = useState(false)
   const [sepet, setSepet] = useState([])
 
+  // Mount sonrası localStorage'dan oku (SSR ile uyumlu)
   useEffect(() => {
-    const kayitliSepet = localStorage.getItem('gamzelieczanem-sepet')
-    if (kayitliSepet) {
-      try { setSepet(JSON.parse(kayitliSepet)) } catch {}
-    }
+    try {
+      const kayitli = localStorage.getItem('gamzelieczanem-sepet')
+      if (kayitli) {
+        const parsed = JSON.parse(kayitli)
+        // Fiyatı güncel katalogdan al; katalogdan kalkmış ürünleri filtrele
+        const temiz = parsed
+          .map((item) => {
+            const urun = urunler.find((u) => u.id === item.id || u.id === Number(item.id))
+            if (!urun) return null // ürün kaldırılmış
+            return {
+              ...item,
+              id: urun.id,
+              ad: urun.ad,
+              fiyat: urun.fiyat, // localStorage fiyatı değil, güncel fiyat
+              adet: Math.max(1, Math.floor(Number(item.adet) || 1)),
+            }
+          })
+          .filter(Boolean)
+        setSepet(temiz)
+      }
+    } catch {}
+    setHydrated(true)
   }, [])
 
+  // Hydrate olduktan sonra yaz — boş initial state'i localStorage'a yazmaz
   useEffect(() => {
+    if (!hydrated) return
     localStorage.setItem('gamzelieczanem-sepet', JSON.stringify(sepet))
-  }, [sepet])
+  }, [sepet, hydrated])
+
+  // ── Çoklu Sekme Senkronizasyonu ───────────────────────────────────────
+  //
+  // `storage` event: başka bir sekme/pencere localStorage'ı değiştirince
+  // SADECE diğer sekmeler bu eventi alır (kendi sekmene gelmez).
+  // Bu sayede Tab 2'deki sepet değişikliği Tab 1'e anında yansır.
+  //
+  // `visibilitychange`: Kullanıcı sekmeye geri döndüğünde localStorage'ı
+  // yeniden okur. `storage` event'inin işlenmemiş olduğu edge case'leri
+  // (arka plan sekme kısıtlamaları, iOS Safari vb.) için belt-and-suspenders.
+  useEffect(() => {
+    if (!hydrated) return
+
+    function sepetParse(raw) {
+      try {
+        const parsed = raw ? JSON.parse(raw) : []
+        return parsed
+          .map((item) => {
+            const urun = urunler.find((u) => u.id === item.id || u.id === Number(item.id))
+            if (!urun) return null
+            return {
+              ...item,
+              id:    urun.id,
+              ad:    urun.ad,
+              fiyat: urun.fiyat,
+              adet:  Math.max(1, Math.floor(Number(item.adet) || 1)),
+            }
+          })
+          .filter(Boolean)
+      } catch {
+        return null
+      }
+    }
+
+    // Başka sekmedeki localStorage değişikliğini yakala
+    function handleStorage(e) {
+      if (e.key !== 'gamzelieczanem-sepet') return
+      const yeni = sepetParse(e.newValue)
+      if (yeni !== null) setSepet(yeni)
+    }
+
+    // Sekmeye geri dönüldüğünde localStorage'dan senkronize et
+    function handleVisibility() {
+      if (document.visibilityState !== 'visible') return
+      const yeni = sepetParse(localStorage.getItem('gamzelieczanem-sepet'))
+      if (yeni !== null) setSepet(yeni)
+    }
+
+    window.addEventListener('storage', handleStorage)
+    document.addEventListener('visibilitychange', handleVisibility)
+
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [hydrated])
+  // ─────────────────────────────────────────────────────────────────────
 
   function sepeteEkle(urun) {
     setSepet((onceki) => {
@@ -35,13 +115,14 @@ export function CartProvider({ children }) {
   }
 
   function adediGuncelle(urunId, yeniAdet) {
-    if (yeniAdet < 1) {
+    const adet = Math.floor(Number(yeniAdet))
+    if (!Number.isFinite(adet) || adet < 1) {
       sepettenCikar(urunId)
       return
     }
     setSepet((onceki) =>
       onceki.map((item) =>
-        item.id === urunId ? { ...item, adet: yeniAdet } : item
+        item.id === urunId ? { ...item, adet } : item
       )
     )
   }
@@ -51,8 +132,8 @@ export function CartProvider({ children }) {
   }
 
   const toplamAdet = sepet.reduce((acc, item) => acc + item.adet, 0)
-  const toplamFiyat = sepet.reduce((acc, item) => acc + item.fiyat * item.adet, 0)
-  const kargoUcreti = toplamFiyat >= 1250 ? 0 : 110
+  const toplamFiyat = Math.round(sepet.reduce((acc, item) => acc + item.fiyat * item.adet, 0) * 100) / 100
+  const kargoUcreti = toplamFiyat >= 1500 ? 0 : 130
 
   return (
     <CartContext.Provider
@@ -65,6 +146,7 @@ export function CartProvider({ children }) {
         toplamAdet,
         toplamFiyat,
         kargoUcreti,
+        hydrated,
       }}
     >
       {children}

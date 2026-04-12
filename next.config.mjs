@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['iyzipay'],
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
@@ -22,10 +23,15 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'us.lazartigue.com',
       },
-      // BURAYA EKLEDİK:
       {
         protocol: 'https',
         hostname: 'witcdn.dermoeczanem.com',
+      },
+      // Supabase Storage
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
       },
     ],
   },

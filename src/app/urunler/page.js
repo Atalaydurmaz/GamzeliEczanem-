@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import ProductCard from '@/components/ProductCard'
-import { urunler, kategoriler } from '@/lib/data'
+import { kategoriler } from '@/lib/data'
 
 const siralamaSecenekleri = [
   { value: 'varsayilan', label: 'Önerilen' },
@@ -12,12 +12,21 @@ const siralamaSecenekleri = [
 ]
 
 export default function UrunlerSayfasi() {
+  const [tumUrunler, setTumUrunler] = useState([])
+  const [yukleniyor, setYukleniyor] = useState(true)
   const [aktifKategori, setAktifKategori] = useState('tumu')
   const [siralama, setSiralama] = useState('varsayilan')
   const [aramaMetni, setAramaMetni] = useState('')
 
+  useEffect(() => {
+    fetch('/api/products')
+      .then(r => r.json())
+      .then(d => { setTumUrunler(Array.isArray(d) ? d : []); setYukleniyor(false) })
+      .catch(() => setYukleniyor(false))
+  }, [])
+
   const filtreliUrunler = useMemo(() => {
-    let liste = [...urunler]
+    let liste = [...tumUrunler]
 
     if (aktifKategori !== 'tumu') {
       liste = liste.filter((u) => u.kategori === aktifKategori)
@@ -28,7 +37,7 @@ export default function UrunlerSayfasi() {
       liste = liste.filter(
         (u) =>
           u.ad.toLowerCase().includes(kucuk) ||
-          u.aciklama.toLowerCase().includes(kucuk)
+          u.aciklama?.toLowerCase().includes(kucuk)
       )
     }
 
@@ -45,7 +54,7 @@ export default function UrunlerSayfasi() {
     }
 
     return liste
-  }, [aktifKategori, siralama, aramaMetni])
+  }, [aktifKategori, siralama, aramaMetni, tumUrunler])
 
   return (
     <div className="bg-white min-h-screen">
@@ -103,10 +112,10 @@ export default function UrunlerSayfasi() {
                 : 'bg-rose-50 text-stone-600 hover:bg-rose-100'
             }`}
           >
-            Tümü ({urunler.length})
+            Tümü ({tumUrunler.length})
           </button>
           {kategoriler.map((kat) => {
-            const sayi = urunler.filter((u) => u.kategori === kat.id).length
+            const sayi = tumUrunler.filter((u) => u.kategori === kat.id).length
             return (
               <button
                 key={kat.id}
@@ -125,7 +134,7 @@ export default function UrunlerSayfasi() {
 
         {/* Products Grid */}
         {filtreliUrunler.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-6">
             {filtreliUrunler.map((urun) => (
               <ProductCard key={urun.id} urun={urun} />
             ))}

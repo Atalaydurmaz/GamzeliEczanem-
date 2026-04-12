@@ -1,17 +1,15 @@
-import { cookies } from 'next/headers'
+import { isAdmin } from '@/lib/adminAuth'
 import { getStock, updateStock, getUrunStock } from '@/lib/stock'
 import { getNotificationsForUrun, clearNotificationsForUrun } from '@/lib/stockNotifications'
+import { adminStokUyariGonder, ESIK } from '@/lib/adminStokUyari'
 import { urunler } from '@/lib/data'
 import nodemailer from 'nodemailer'
 
-async function isAdmin() {
-  const cookieStore = await cookies()
-  return cookieStore.get('gla_admin')?.value === process.env.ADMIN_PASSWORD
-}
-
 export async function GET() {
-  const stock = getStock()
-  return Response.json(stock)
+  const stock = await getStock()
+  return Response.json(stock, {
+    headers: { 'Cache-Control': 'no-store' },
+  })
 }
 
 export async function PATCH(req) {
@@ -21,12 +19,18 @@ export async function PATCH(req) {
     return Response.json({ error: 'Eksik parametre' }, { status: 400 })
   }
 
-  const eskiStok = getUrunStock(urunId)
-  const yeniStok = updateStock(urunId, stok)
+  const eskiStok = await getUrunStock(urunId)
+  await updateStock(urunId, stok)
+  const yeniStok = Math.max(0, stok)
+
+  // Stok eşiğin altına yeni düştüyse admin'e uyarı gönder
+  if (eskiStok > ESIK && yeniStok <= ESIK) {
+    adminStokUyariGonder([{ id: urunId, stok: yeniStok }]).catch(() => {})
+  }
 
   // Stok sıfırdan fazlaya geçtiyse abonelere bildirim gönder
   if (eskiStok === 0 && yeniStok > 0) {
-    const bildirimler = getNotificationsForUrun(urunId)
+    const bildirimler = await getNotificationsForUrun(urunId)
     if (bildirimler.length > 0) {
       const urun = urunler.find((u) => u.id === urunId || u.id === Number(urunId))
       const urunAd = urun?.ad ?? `Ürün #${urunId}`
@@ -76,7 +80,7 @@ export async function PATCH(req) {
         )
       )
 
-      clearNotificationsForUrun(urunId)
+      await clearNotificationsForUrun(urunId)
     }
   }
 

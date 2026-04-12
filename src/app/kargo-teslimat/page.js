@@ -10,8 +10,8 @@ const BOLUMLER = [
     ikon: '🚚',
     baslik: 'Kargo Ücretleri',
     icerik: [
-      { soru: 'Ücretsiz Kargo', cevap: '1.250₺ ve üzeri siparişlerde kargo tamamen ücretsizdir.' },
-      { soru: 'Standart Kargo', cevap: '1.250₺ altındaki siparişler için kargo ücreti 110₺\'dir.' },
+      { soru: 'Ücretsiz Kargo', cevap: '1.500₺ ve üzeri siparişlerde kargo tamamen ücretsizdir.' },
+      { soru: 'Standart Kargo', cevap: '1.500₺ altındaki siparişler için kargo ücreti 130₺\'dir.' },
     ],
   },
   {
@@ -57,7 +57,7 @@ export default function KargoTeslimatPage() {
         {/* Özet Kartları */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { ikon: '✅', baslik: '1.250₺ Üzeri', alt: 'Ücretsiz kargo' },
+            { ikon: '✅', baslik: '1.500₺ Üzeri', alt: 'Ücretsiz kargo' },
             { ikon: '⚡', baslik: '2–5 İş Günü', alt: 'Teslimat süresi' },
             { ikon: '📍', baslik: 'Kapıya Teslim', alt: 'Trendyol Express & Yurtiçi' },
           ].map((k) => (

@@ -1,9 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
+import { useAuth } from '@/context/AuthContext'
+import { useSession } from 'next-auth/react'
+import { IL_LISTESI, getIlceler } from '@/lib/tr-iller'
+import MobilOdemeButonu from './MobilOdemeButonu'
+
+const UYE_INDIRIMI_ORANI = 0.05
 
 function InputField({ label, id, error, ...props }) {
   return (
@@ -27,7 +33,11 @@ function InputField({ label, id, error, ...props }) {
 
 export default function OdemeSayfasi() {
   const router = useRouter()
-  const { sepet, toplamFiyat, kargoUcreti, sepetiBosalt } = useCart()
+  const { sepet, toplamFiyat, kargoUcreti, sepetiBosalt, hydrated } = useCart()
+  const { kullanici } = useAuth()
+  const { data: session } = useSession()
+  const girisYapti = !!(kullanici || session?.user)
+  const uyeIndirimi = girisYapti ? Math.round(toplamFiyat * UYE_INDIRIMI_ORANI) : 0
 
   const [form, setForm] = useState({
     adSoyad: '',
@@ -40,18 +50,87 @@ export default function OdemeSayfasi() {
   })
   const [hatalar, setHatalar] = useState({})
   const [yukleniyor, setYukleniyor] = useState(false)
+  const [zamanAsimi, setZamanAsimi] = useState(false)
+  const [odemeYontemi, setOdemeYontemi] = useState('kart') // 'kart' | 'kapida' | 'havale'
+  const [kayitliAdresler, setKayitliAdresler] = useState([])
+  const [seciliAdresId, setSeciliAdresId] = useState(null)
   const [kart, setKart] = useState({ numara: '', isim: '', son: '', cvv: '' })
+  const [sozlesmeOnay, setSozlesmeOnay] = useState(false)
   const [indirimKodu, setIndirimKodu] = useState('')
   const [indirimGirisi, setIndirimGirisi] = useState('')
   const [indirimTutari, setIndirimTutari] = useState(0)
   const [indirimHata, setIndirimHata] = useState('')
   const [indirimYukleniyor, setIndirimYukleniyor] = useState(false)
+  const [sepetDegistiUyari, setSepetDegistiUyari] = useState(false)
 
-  const genelToplam = toplamFiyat - indirimTutari + kargoUcreti
+  // Idempotency key — bu "sipariş girişimi" için bir kez üretilir.
+  // Ağ hatası nedeniyle aynı isteği yeniden gönderirken aynı key kullanılır;
+  // sunucu daha önce işlenmiş siparişi yeniden kaydetmeden döndürür.
+  // Sayfa yenilenirse veya sepet değişirse yeni key üretilir (useState lazy init).
+  const [idempotencyKey] = useState(() => crypto.randomUUID())
+
+  const genelToplam = Math.round((toplamFiyat - uyeIndirimi - indirimTutari + kargoUcreti) * 100) / 100
+
+  // Boş sepet koruması — hydrate olduktan sonra sepet hâlâ boşsa ana sayfaya yönlendir
+  useEffect(() => {
+    if (hydrated && sepet.length === 0) {
+      router.replace('/')
+    }
+  }, [hydrated, sepet.length, router])
+
+  // Çoklu sekme uyarısı — ödeme sayfasındayken başka sekmede sepet değişirse bildir
+  // CartContext'teki storage/visibilitychange listener zaten state'i günceller;
+  // burada sadece kullanıcıya görsel uyarı gösteriyoruz.
+  const sepetToplamRef = useRef(null)
+  useEffect(() => {
+    if (!hydrated) return
+    if (sepetToplamRef.current === null) {
+      sepetToplamRef.current = toplamFiyat
+      return
+    }
+    if (sepetToplamRef.current !== toplamFiyat) {
+      sepetToplamRef.current = toplamFiyat
+      setSepetDegistiUyari(true)
+    }
+  }, [toplamFiyat, hydrated])
+
+  // Giriş yapılmışsa kayıtlı adresleri çek
+  useEffect(() => {
+    if (!girisYapti) return
+    fetch('/api/hesabim/adresler')
+      .then((r) => r.ok ? r.json() : [])
+      .then((d) => setKayitliAdresler(Array.isArray(d) ? d : []))
+      .catch(() => {})
+  }, [girisYapti])
+
+  function adresUygula(adres) {
+    if (seciliAdresId === adres.id) {
+      // İkinci tıklamada seçimi kaldır
+      setSeciliAdresId(null)
+      return
+    }
+    setSeciliAdresId(adres.id)
+    setForm((prev) => ({
+      ...prev,
+      adSoyad: adres.ad || prev.adSoyad,
+      telefon: adres.telefon || prev.telefon,
+      adres:   adres.adres + (adres.mahalle ? `, ${adres.mahalle}` : ''),
+      sehir:   adres.il,
+      ilce:    adres.ilce,
+      postaKodu: adres.postaKodu || '',
+    }))
+    // Adrese ait alanların hatalarını temizle
+    setHatalar((h) => ({ ...h, adres: '', sehir: '', ilce: '', postaKodu: '', adSoyad: '', telefon: '' }))
+  }
 
   function guncelle(alan, deger) {
-    setForm((o) => ({ ...o, [alan]: deger }))
-    if (hatalar[alan]) setHatalar((o) => ({ ...o, [alan]: '' }))
+    if (alan === 'sehir') {
+      setForm((o) => ({ ...o, sehir: deger, ilce: '' }))
+      setHatalar((o) => ({ ...o, sehir: '', ilce: '' }))
+    } else {
+      setForm((o) => ({ ...o, [alan]: deger }))
+      if (hatalar[alan]) setHatalar((o) => ({ ...o, [alan]: '' }))
+    }
   }
 
   async function indirimUygula() {
@@ -87,6 +166,34 @@ export default function OdemeSayfasi() {
     setIndirimHata('')
   }
 
+  // Sepet toplamı değişince aktif kuponu yeniden doğrula
+  const oncekiToplamRef = useRef(toplamFiyat)
+  useEffect(() => {
+    if (!indirimKodu || toplamFiyat === oncekiToplamRef.current) {
+      oncekiToplamRef.current = toplamFiyat
+      return
+    }
+    oncekiToplamRef.current = toplamFiyat
+    fetch('/api/indirim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kod: indirimKodu, toplamFiyat }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.gecerli) {
+          setIndirimTutari(data.indirimTutari)
+          setIndirimHata('')
+        } else {
+          setIndirimKodu('')
+          setIndirimTutari(0)
+          setIndirimGirisi('')
+          setIndirimHata(data.hata || 'Kupon bu sepet için artık geçerli değil, kaldırıldı.')
+        }
+      })
+      .catch(() => {})
+  }, [toplamFiyat, indirimKodu])
+
   function dogrula() {
     const h = {}
     if (!form.adSoyad.trim() || form.adSoyad.trim().split(' ').length < 2)
@@ -103,15 +210,24 @@ export default function OdemeSayfasi() {
       h.ilce = 'İlçe gerekli'
     if (!/^\d{5}$/.test(form.postaKodu))
       h.postaKodu = '5 haneli posta kodu girin'
-    const numaraTemiz = kart.numara.replace(/\s/g, '')
-    if (!/^\d{16}$/.test(numaraTemiz))
-      h.kartNumara = 'Geçerli bir kart numarası girin'
-    if (!kart.isim.trim() || kart.isim.trim().split(' ').length < 2)
-      h.kartIsim = 'Kart üzerindeki adı soyadı girin'
-    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(kart.son))
-      h.kartSon = 'GG/YY formatında girin (örn: 08/27)'
-    if (!/^\d{3,4}$/.test(kart.cvv))
-      h.kartCvv = 'CVV 3 veya 4 haneli olmalı'
+    if (odemeYontemi === 'kart') {
+      const numaraTemiz = kart.numara.replace(/\s/g, '')
+      if (!/^\d{16}$/.test(numaraTemiz))
+        h.kartNumara = 'Geçerli bir kart numarası girin'
+      const isimTemiz = kart.isim.trim()
+      if (!isimTemiz || isimTemiz.split(' ').filter(Boolean).length < 2)
+        h.kartIsim = 'Kart üzerindeki adı soyadı girin'
+      else if (isimTemiz.length < 2 || isimTemiz.length > 50)
+        h.kartIsim = 'İsim 2-50 karakter arasında olmalıdır'
+      else if (/\d/.test(isimTemiz))
+        h.kartIsim = 'İsim rakam içeremez'
+      if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(kart.son))
+        h.kartSon = 'GG/YY formatında girin (örn: 08/27)'
+      if (!/^\d{3,4}$/.test(kart.cvv))
+        h.kartCvv = 'CVV 3 veya 4 haneli olmalı'
+    }
+    if (!sozlesmeOnay)
+      h.sozlesme = 'Mesafeli Satış Sözleşmesi\'ni onaylamanız zorunludur'
     return h
   }
 
@@ -140,32 +256,115 @@ export default function OdemeSayfasi() {
     }
     setYukleniyor(true)
 
-    const siparisNo = 'GM' + Date.now().toString().slice(-8)
+    // Kapıda ödeme veya havale/EFT — iyzico'ya gerek yok
+    if (odemeYontemi !== 'kart') {
+      try {
+        // siparisNo artık sunucu tarafında üretilir (response'da gelir)
+        const res = await fetch('/api/siparis', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            // Her "sipariş girişimi" için aynı key; retry'larda tekrar kayıt olmaz
+            'Idempotency-Key': idempotencyKey,
+          },
+          body: JSON.stringify({
+            adSoyad: form.adSoyad,
+            email: form.email,
+            telefon: form.telefon,
+            adres: form.adres,
+            sehir: form.sehir,
+            ilce: form.ilce,
+            postaKodu: form.postaKodu,
+            sepet,
+            toplamFiyat,
+            kargoUcreti,
+            genelToplam,
+            indirimKodu: indirimKodu || null,
+            indirimTutari,
+            uyeIndirimi,
+            odemeTipi: odemeYontemi,
+          }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          setHatalar({ genel: data.hata || 'Sipariş oluşturulamadı, lütfen tekrar deneyin.' })
+          setYukleniyor(false)
+          return
+        }
+        // siparisNo her zaman sunucudan gelir (ilk istek veya idempotent retry)
+        const gercekSiparisNo = data.siparisNo
+        sepetiBosalt()
+        // replace: Geri tuşu /odeme'ye değil, /sepet'e (veya önceki sayfaya) döner
+        router.replace(`/odeme/basarili?siparis=${gercekSiparisNo}`)
+      } catch {
+        setHatalar({ genel: 'Bağlantı hatası, lütfen tekrar deneyin.' })
+        setYukleniyor(false)
+      }
+      return
+    }
 
-    // Siparişi kaydet, e-posta ve SMS gönder
-    await fetch('/api/siparis', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: form.email,
-        adSoyad: form.adSoyad,
-        telefon: form.telefon,
-        siparisNo,
-        sepet,
-        toplamFiyat,
-        indirimKodu: indirimKodu || null,
-        indirimTutari,
-        kargoUcreti,
-        genelToplam,
-        adres: form.adres,
-        sehir: form.sehir,
-        ilce: form.ilce,
-        postaKodu: form.postaKodu,
-      }),
-    }).catch((e) => console.error('Sipariş kaydı hatası:', e))
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000)
 
-    sepetiBosalt()
-    router.push(`/odeme/basarili?siparis=${siparisNo}`)
+    try {
+      const res = await fetch('/api/odeme/initialize', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          adSoyad: form.adSoyad,
+          email: form.email,
+          telefon: form.telefon,
+          adres: form.adres,
+          sehir: form.sehir,
+          ilce: form.ilce,
+          postaKodu: form.postaKodu,
+          kart,
+          sepet,
+          toplamFiyat,
+          kargoUcreti,
+          genelToplam,
+          indirimKodu: indirimKodu || null,
+          indirimTutari,
+          uyeIndirimi,
+        }),
+      })
+      clearTimeout(timeoutId)
+
+      const data = await res.json()
+
+      if (!res.ok || data.hata) {
+        setHatalar({ genel: data.hata || 'Ödeme başlatılamadı, lütfen tekrar deneyin.' })
+        setYukleniyor(false)
+        return
+      }
+
+      // 3DS akışında React uygulaması document.write ile yerini alır; sepet
+      // context'i kaybolur. Kullanıcı banka sayfasından geri dönerse sepetini
+      // kurtarabilmek için snapshot'ı sessionStorage'a kaydet (30 dk — pending
+      // order süresiyle aynı). Ödeme başarılıysa basarili sayfası siler.
+      try {
+        sessionStorage.setItem('gec_odeme_snapshot', JSON.stringify({
+          sepet,
+          expiresAt: Date.now() + 30 * 60 * 1000,
+        }))
+      } catch {}
+
+      // iyzico 3DS sayfasını render et; sepeti önceden boşalt
+      sepetiBosalt()
+      const html = atob(data.htmlContent)
+      document.open()
+      document.write(html)
+      document.close()
+    } catch (err) {
+      clearTimeout(timeoutId)
+      if (err.name === 'AbortError') {
+        setZamanAsimi(true)
+      } else {
+        setHatalar({ genel: 'Bağlantı hatası, lütfen tekrar deneyin.' })
+      }
+      setYukleniyor(false)
+    }
   }
 
   if (sepet.length === 0 && !yukleniyor) {
@@ -181,7 +380,7 @@ export default function OdemeSayfasi() {
   }
 
   return (
-    <div className="bg-rose-50/30 min-h-screen py-10">
+    <div className="bg-rose-50/30 min-h-screen py-10 pb-24 lg:pb-10">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Adım göstergesi */}
         <div className="flex items-center gap-2 mb-8 text-sm">
@@ -196,7 +395,37 @@ export default function OdemeSayfasi() {
           <span className="text-stone-400">Onay</span>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate>
+        <form id="odeme-form" onSubmit={handleSubmit} noValidate>
+          {/* Çoklu sekme uyarısı — başka sekmede sepet değiştiğinde CartContext
+              zaten güncel state'i yansıtır; bu banner sadece kullanıcıyı bilgilendirir */}
+          {sepetDegistiUyari && (
+            <div className="mb-6 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800 flex items-start gap-3">
+              <svg className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+              <div className="flex-1">
+                <span className="font-semibold">Sepetiniz güncellendi.</span>{' '}
+                Başka bir sekmede değişiklik yapıldı; ödeme tutarı otomatik olarak güncellendi.
+              </div>
+              <button
+                type="button"
+                onClick={() => setSepetDegistiUyari(false)}
+                className="text-amber-500 hover:text-amber-700 shrink-0 text-lg leading-none"
+                aria-label="Kapat"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {hatalar.genel && (
+            <div className="mb-6 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 flex items-center gap-2">
+              <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {hatalar.genel}
+            </div>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Sol: Form */}
             <div className="lg:col-span-2 space-y-6">
@@ -214,6 +443,7 @@ export default function OdemeSayfasi() {
                       id="adSoyad"
                       type="text"
                       placeholder="Örn: Ayşe Yılmaz"
+                      maxLength={100}
                       value={form.adSoyad}
                       onChange={(e) => guncelle('adSoyad', e.target.value)}
                       error={hatalar.adSoyad}
@@ -225,6 +455,7 @@ export default function OdemeSayfasi() {
                       id="email"
                       type="email"
                       placeholder="ornek@email.com"
+                      maxLength={200}
                       value={form.email}
                       onChange={(e) => guncelle('email', e.target.value)}
                       error={hatalar.email}
@@ -236,6 +467,7 @@ export default function OdemeSayfasi() {
                       id="telefon"
                       type="tel"
                       placeholder="0532 123 45 67"
+                      maxLength={20}
                       value={form.telefon}
                       onChange={(e) => guncelle('telefon', e.target.value)}
                       error={hatalar.telefon}
@@ -243,6 +475,48 @@ export default function OdemeSayfasi() {
                   </div>
                 </div>
               </div>
+
+              {/* Kayıtlı adresler — sadece giriş yapmış kullanıcılara */}
+              {girisYapti && kayitliAdresler.length > 0 && (
+                <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-6">
+                  <h2 className="text-base font-bold text-stone-900 mb-4 flex items-center gap-2">
+                    <span className="text-rose-500">📍</span> Kayıtlı Adreslerim
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {kayitliAdresler.map((a) => {
+                      const secili = seciliAdresId === a.id
+                      return (
+                        <button
+                          key={a.id}
+                          type="button"
+                          onClick={() => adresUygula(a)}
+                          className={`text-left p-4 rounded-xl border-2 transition-all ${
+                            secili
+                              ? 'border-rose-400 bg-rose-50'
+                              : 'border-stone-200 hover:border-rose-200 hover:bg-rose-50/40'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <span className="text-xs font-bold text-rose-700 bg-rose-100 rounded-full px-2 py-0.5">
+                              {a.baslik}
+                            </span>
+                            {secili && (
+                              <svg className="w-4 h-4 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                          <p className="text-sm font-medium text-stone-800 truncate">{a.ad}</p>
+                          <p className="text-xs text-stone-500 mt-0.5 line-clamp-2 leading-relaxed">
+                            {a.adres}{a.mahalle ? `, ${a.mahalle}` : ''}, {a.ilce}/{a.il}
+                          </p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p className="text-xs text-stone-400 mt-3">Bir adrese tıklayarak formu otomatik doldurabilirsiniz.</p>
+                </div>
+              )}
 
               {/* Teslimat Adresi */}
               <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-6">
@@ -257,6 +531,7 @@ export default function OdemeSayfasi() {
                       id="adres"
                       rows={3}
                       placeholder="Mahalle, cadde, sokak, bina no, daire no..."
+                      maxLength={500}
                       value={form.adres}
                       onChange={(e) => guncelle('adres', e.target.value)}
                       className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all resize-none ${
@@ -268,26 +543,35 @@ export default function OdemeSayfasi() {
                     {hatalar.adres && <p className="mt-1 text-xs text-red-500">{hatalar.adres}</p>}
                   </div>
                   <div data-hata={hatalar.sehir ? 'true' : undefined}>
-                    <InputField
-                      label="Şehir *"
+                    <label htmlFor="sehir" className="block text-sm font-medium text-stone-700 mb-1">Şehir *</label>
+                    <select
                       id="sehir"
-                      type="text"
-                      placeholder="İstanbul"
                       value={form.sehir}
                       onChange={(e) => guncelle('sehir', e.target.value)}
-                      error={hatalar.sehir}
-                    />
+                      className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all bg-white ${hatalar.sehir ? 'border-red-300 focus:ring-red-100' : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'}`}
+                    >
+                      <option value="">İl seçin</option>
+                      {IL_LISTESI.map((il) => (
+                        <option key={il} value={il}>{il}</option>
+                      ))}
+                    </select>
+                    {hatalar.sehir && <p className="mt-1 text-xs text-red-500">{hatalar.sehir}</p>}
                   </div>
                   <div data-hata={hatalar.ilce ? 'true' : undefined}>
-                    <InputField
-                      label="İlçe *"
+                    <label htmlFor="ilce" className="block text-sm font-medium text-stone-700 mb-1">İlçe *</label>
+                    <select
                       id="ilce"
-                      type="text"
-                      placeholder="Kadıköy"
                       value={form.ilce}
                       onChange={(e) => guncelle('ilce', e.target.value)}
-                      error={hatalar.ilce}
-                    />
+                      disabled={!form.sehir}
+                      className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all bg-white disabled:bg-stone-50 disabled:text-stone-400 disabled:cursor-not-allowed ${hatalar.ilce ? 'border-red-300 focus:ring-red-100' : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'}`}
+                    >
+                      <option value="">{form.sehir ? 'İlçe seçin' : 'Önce il seçin'}</option>
+                      {getIlceler(form.sehir).map((ilce) => (
+                        <option key={ilce} value={ilce}>{ilce}</option>
+                      ))}
+                    </select>
+                    {hatalar.ilce && <p className="mt-1 text-xs text-red-500">{hatalar.ilce}</p>}
                   </div>
                   <div data-hata={hatalar.postaKodu ? 'true' : undefined}>
                     <InputField
@@ -308,7 +592,7 @@ export default function OdemeSayfasi() {
               <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
                   <span className="flex items-center justify-center w-7 h-7 bg-rose-500 text-white text-xs font-bold rounded-full">3</span>
-                  İndirim Kodu
+                  İndirim Kodu (İsteğe Bağlı)
                 </h2>
 
                 {indirimKodu ? (
@@ -368,7 +652,7 @@ export default function OdemeSayfasi() {
                   Ödeme Yöntemi
                 </h2>
 
-                {/* Kredi / Banka Kartı — aktif */}
+                {/* Kredi / Banka Kartı */}
                 <div className="relative flex items-start gap-4 p-4 rounded-xl border-2 border-rose-400 bg-rose-50 mb-5">
                   <div className="flex items-center justify-center w-10 h-10 bg-rose-100 rounded-full shrink-0">
                     <span className="text-xl">💳</span>
@@ -405,8 +689,9 @@ export default function OdemeSayfasi() {
                       id="kartIsim"
                       type="text"
                       placeholder="AYŞE YILMAZ"
+                      maxLength={50}
                       value={kart.isim}
-                      onChange={(e) => kartGuncelle('isim', e.target.value.toUpperCase())}
+                      onChange={(e) => kartGuncelle('isim', e.target.value.replace(/[0-9]/g, '').toUpperCase())}
                       error={hatalar.kartIsim}
                     />
                   </div>
@@ -446,6 +731,18 @@ export default function OdemeSayfasi() {
               <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-6 sticky top-20">
                 <h2 className="text-lg font-bold text-stone-900 mb-4">Sipariş Özeti</h2>
 
+                {/* Giriş yapmamış kullanıcıya üye fiyatı CTA'sı */}
+                {!girisYapti && (
+                  <a href="/hesabim/giris"
+                    className="flex items-center gap-2 p-3 mb-4 bg-rose-50 border border-rose-200 rounded-xl hover:bg-rose-100 transition-colors group">
+                    <span className="text-lg">🏷️</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-rose-700">Üye Fiyatı ile {Math.round(toplamFiyat * UYE_INDIRIMI_ORANI).toLocaleString('tr-TR')} ₺ Tasarruf Et!</p>
+                      <p className="text-xs text-rose-500">Giriş yap veya üye ol →</p>
+                    </div>
+                  </a>
+                )}
+
                 <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
                   {sepet.map((item) => (
                     <div key={item.id} className="flex justify-between items-center gap-2 text-sm">
@@ -463,6 +760,12 @@ export default function OdemeSayfasi() {
                     <span>Ara Toplam</span>
                     <span>{toplamFiyat.toLocaleString('tr-TR')} ₺</span>
                   </div>
+                  {uyeIndirimi > 0 && (
+                    <div className="flex justify-between text-sm text-emerald-600 font-medium">
+                      <span className="flex items-center gap-1">🏷️ Üye İndirimi (%5)</span>
+                      <span>−{uyeIndirimi.toLocaleString('tr-TR')} ₺</span>
+                    </div>
+                  )}
                   {indirimTutari > 0 && (
                     <div className="flex justify-between text-sm text-emerald-600 font-medium">
                       <span>İndirim ({indirimKodu})</span>
@@ -481,29 +784,72 @@ export default function OdemeSayfasi() {
                     <span>Toplam</span>
                     <span className="text-rose-600 text-lg">{genelToplam.toLocaleString('tr-TR')} ₺</span>
                   </div>
+                  <p className="text-xs text-stone-400 text-right mt-1">KDV dahildir</p>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={yukleniyor}
-                  className={`w-full py-4 rounded-full font-bold text-white transition-all ${
-                    yukleniyor
-                      ? 'bg-stone-300 cursor-not-allowed'
-                      : 'bg-rose-500 hover:bg-rose-600 hover:shadow-lg hover:shadow-rose-200 active:scale-95'
-                  }`}
-                >
-                  {yukleniyor ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      İşleniyor...
-                    </span>
+                {/* Mesafeli Satış Sözleşmesi onayı */}
+                <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border transition-colors ${hatalar.sozlesme ? 'border-red-200 bg-red-50' : 'border-stone-100 hover:bg-stone-50'}`}>
+                  <input
+                    type="checkbox"
+                    checked={sozlesmeOnay}
+                    onChange={(e) => {
+                      setSozlesmeOnay(e.target.checked)
+                      if (hatalar.sozlesme) setHatalar((h) => ({ ...h, sozlesme: '' }))
+                    }}
+                    className="mt-0.5 w-4 h-4 accent-rose-500 shrink-0"
+                  />
+                  <span className="text-xs text-stone-600 leading-relaxed">
+                    <a href="/mesafeli-satis-sozlesmesi" target="_blank" rel="noopener noreferrer" className="text-rose-600 font-semibold hover:underline">
+                      Mesafeli Satış Sözleşmesi
+                    </a>'ni okudum ve kabul ediyorum. <span className="text-red-500 font-semibold">*</span>
+                  </span>
+                </label>
+                {hatalar.sozlesme && (
+                  <p className="text-xs text-red-500 px-1">{hatalar.sozlesme}</p>
+                )}
+
+                {/* Masaüstü submit butonu — mobilde MobilOdemeButonu bileşeni devreye girer */}
+                <div className="hidden lg:block">
+                  {zamanAsimi ? (
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-center space-y-3">
+                      <p className="text-sm font-semibold text-amber-800">
+                        İşleminiz zaman aşımına uğradı, lütfen tekrar deneyin.
+                      </p>
+                      <p className="text-xs text-amber-600">
+                        İnternet bağlantınızı kontrol edip aşağıdaki butona tıklayın.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => { setZamanAsimi(false); setHatalar({}) }}
+                        className="w-full py-3 rounded-full font-bold text-white bg-amber-500 hover:bg-amber-600 transition-colors"
+                      >
+                        Tekrar Dene
+                      </button>
+                    </div>
                   ) : (
-                    `Siparişi Tamamla – ${genelToplam.toLocaleString('tr-TR')} ₺`
+                    <button
+                      type="submit"
+                      disabled={yukleniyor}
+                      className={`w-full py-4 rounded-full font-bold text-white transition-all ${
+                        yukleniyor
+                          ? 'bg-stone-300 cursor-not-allowed'
+                          : 'bg-rose-500 hover:bg-rose-600 hover:shadow-lg hover:shadow-rose-200 active:scale-95'
+                      }`}
+                    >
+                      {yukleniyor ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                          </svg>
+                          İşleniyor...
+                        </span>
+                      ) : (
+                        `Siparişi Tamamla – ${genelToplam.toLocaleString('tr-TR')} ₺`
+                      )}
+                    </button>
                   )}
-                </button>
+                </div>
 
                 <div className="mt-4 flex items-center justify-center gap-2 text-xs text-stone-400">
                   <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -514,6 +860,13 @@ export default function OdemeSayfasi() {
               </div>
             </div>
           </div>
+        {/* Mobil klavye-aware alt buton — lg ekranlarda gizlenir */}
+        <MobilOdemeButonu
+          yukleniyor={yukleniyor}
+          genelToplam={genelToplam}
+          zamanAsimi={zamanAsimi}
+          onZamanAsimiReset={() => { setZamanAsimi(false); setHatalar({}) }}
+        />
         </form>
       </div>
     </div>

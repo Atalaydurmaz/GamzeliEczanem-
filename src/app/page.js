@@ -14,11 +14,14 @@ import Link from 'next/link'
 import ProductCard from '@/components/ProductCard'
 import HeroSection from '@/components/HeroSection'
 import AnimatedCategories from '@/components/AnimatedCategories'
-import { urunler, getOnecikarUrunler } from '@/lib/data'
+import { getProducts } from '@/lib/products'
 
+export const dynamic = 'force-dynamic'
 
-export default function AnaSayfa() {
-  const onecikarUrunler = getOnecikarUrunler()
+export default async function AnaSayfa() {
+  const tumUrunler = await getProducts().catch(() => [])
+  const onecikarUrunler = tumUrunler.filter(u => u.etiket).slice(0, 6)
+  const urunler = tumUrunler
 
   return (
     <>
@@ -100,7 +103,7 @@ export default function AnaSayfa() {
               <p className="text-stone-400">En çok tercih edilen ürünlerimiz</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {onecikarUrunler.map((urun, i) => (
               <ProductCard key={urun.id} urun={urun} index={i} />
             ))}
@@ -117,12 +120,12 @@ export default function AnaSayfa() {
               Müşterilerimize en iyi alışveriş deneyimini sunmak için çalışıyoruz.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6">
             {[
               {
                 ikon: '🚚',
                 baslik: 'Ücretsiz Kargo',
-                aciklama: '1.250₺ ve üzeri tüm siparişlerde ücretsiz, hızlı kargo.',
+                aciklama: '1.500₺ ve üzeri tüm siparişlerde ücretsiz, hızlı kargo.',
                 renk: 'bg-rose-50 border-rose-100',
               },
               {
@@ -209,7 +212,7 @@ export default function AnaSayfa() {
           <div className="flex items-end justify-between mb-10">
             <h2 className="text-3xl font-bold text-stone-900">Tüm Koleksiyon</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {urunler.slice(0, 8).map((urun, i) => (
               <ProductCard key={urun.id} urun={urun} index={i} />
             ))}

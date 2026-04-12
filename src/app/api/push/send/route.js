@@ -2,10 +2,15 @@ import { NextResponse } from 'next/server'
 import webpush from 'web-push'
 import fs from 'fs'
 import path from 'path'
+import { isAdmin } from '@/lib/adminAuth'
 
 const FILE = path.join(process.cwd(), 'data', 'push-subscriptions.json')
 
 export async function POST(req) {
+  if (!await isAdmin()) {
+    return NextResponse.json({ ok: false, error: 'Yetkisiz' }, { status: 401 })
+  }
+
   if (!process.env.VAPID_EMAIL || !process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
     return NextResponse.json({ ok: false, error: 'VAPID keys not configured' }, { status: 500 })
   }
@@ -14,7 +19,14 @@ export async function POST(req) {
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   )
-  const { title, body } = await req.json()
+
+  const body = await req.json()
+  const title = typeof body.title === 'string' ? body.title.trim().slice(0, 200) : ''
+  const pushBody = typeof body.body === 'string' ? body.body.trim().slice(0, 500) : ''
+
+  if (!title) {
+    return NextResponse.json({ ok: false, error: 'Bildirim başlığı zorunludur.' }, { status: 400 })
+  }
 
   let list = []
   try {
@@ -23,7 +35,7 @@ export async function POST(req) {
     return NextResponse.json({ ok: true })
   }
 
-  const payload = JSON.stringify({ title, body })
+  const payload = JSON.stringify({ title, body: pushBody })
 
   const results = await Promise.allSettled(
     list.map((sub) => webpush.sendNotification(sub, payload))

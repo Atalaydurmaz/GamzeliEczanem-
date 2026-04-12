@@ -1,8 +1,6 @@
-import fs from 'fs'
-import path from 'path'
+import { supabaseAdmin } from '@/lib/supabase'
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads', 'reviews')
-const MAX_SIZE = 5 * 1024 * 1024 // 5 MB
+const MAX_SIZE = 5 * 1024 * 1024
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
 export async function POST(req) {
@@ -19,14 +17,19 @@ export async function POST(req) {
     return Response.json({ error: 'Dosya en fazla 5 MB olabilir' }, { status: 400 })
   }
 
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true })
-
   const ext = file.name.split('.').pop().toLowerCase().replace('jpeg', 'jpg')
-  const dosyaAdi = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-  const dosyaYolu = path.join(UPLOAD_DIR, dosyaAdi)
-
+  const dosyaAdi = `reviews/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
   const buffer = Buffer.from(await file.arrayBuffer())
-  fs.writeFileSync(dosyaYolu, buffer)
 
-  return Response.json({ url: `/uploads/reviews/${dosyaAdi}` }, { status: 201 })
+  const { error } = await supabaseAdmin.storage
+    .from('uploads')
+    .upload(dosyaAdi, buffer, { contentType: file.type, upsert: false })
+
+  if (error) return Response.json({ error: error.message }, { status: 500 })
+
+  const { data: { publicUrl } } = supabaseAdmin.storage
+    .from('uploads')
+    .getPublicUrl(dosyaAdi)
+
+  return Response.json({ url: publicUrl }, { status: 201 })
 }

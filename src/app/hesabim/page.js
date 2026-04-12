@@ -1,7 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { Suspense } from 'react'
 
 const ozet = [
   { href: '/hesabim/siparisler', label: 'Siparişlerim', ikon: '📦', renk: 'bg-rose-50 text-rose-700 border-rose-100' },
@@ -10,16 +14,40 @@ const ozet = [
   { href: '/hesabim/profil', label: 'Profilim', ikon: '👤', renk: 'bg-purple-50 text-purple-700 border-purple-100' },
 ]
 
-export default function HesabimSayfasi() {
+function HesabimIcerik() {
   const { kullanici } = useCurrentUser()
+  const { data: session } = useSession()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const mesaj = searchParams.get('mesaj')
+
+  useEffect(() => {
+    // Google ile ilk kez giriş yaptıysa ve şifresi yoksa şifre kurulum sayfasına yönlendir
+    // SADECE mesaj parametresi yoksa yönlendir (sonsuz döngüyü önle)
+    if (session?.user?.sifreKurulumu && !mesaj) {
+      router.push('/hesabim/sifre-olustur')
+    }
+  }, [session, router, mesaj])
+
   if (!kullanici) return null
 
-  const kayitTarihi = kullanici.kayitTarihi
-    ? new Date(kullanici.kayitTarihi).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+  const kayitTarihi = (kullanici.kayit_tarihi || kullanici.kayitTarihi)
+    ? new Date(kullanici.kayit_tarihi || kullanici.kayitTarihi).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
     : null
 
   return (
     <div className="space-y-6">
+      {/* Şifre oluşturuldu başarı mesajı */}
+      {mesaj === 'sifre-olusturuldu' && (
+        <div className="bg-green-50 border border-green-200 rounded-2xl px-5 py-4 text-sm text-green-700 flex items-center gap-3">
+          <span className="text-xl">✅</span>
+          <div>
+            <p className="font-semibold">Şifreniz başarıyla oluşturuldu!</p>
+            <p className="text-green-600 text-xs mt-0.5">Artık e-posta ve şifrenizle de giriş yapabilirsiniz.</p>
+          </div>
+        </div>
+      )}
+
       {/* Hoş geldin kartı */}
       <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-6">
         <h1 className="text-xl font-bold text-stone-900 mb-1">
@@ -62,5 +90,13 @@ export default function HesabimSayfasi() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function HesabimSayfasi() {
+  return (
+    <Suspense fallback={null}>
+      <HesabimIcerik />
+    </Suspense>
   )
 }
