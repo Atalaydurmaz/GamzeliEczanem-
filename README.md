@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 💊 Gamze Lieczanem — Kozmetik E-Ticaret
 
-## Getting Started
+![Hero](public/hero-skincare.png)
 
-First, run the development server:
+Eczacı güvencesiyle kozmetik ve kişisel bakım ürünleri sunan modern e-ticaret platformu.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## ✨ Öne Çıkan Özellikler
+
+- **🤖 AI Cilt Analizi** — Anket tabanlı kişiselleştirilmiş ürün önerileri
+- **💄 Sanal Makyaj Deneme** — Face API ile gerçek zamanlı ruj, allık ve far simülasyonu
+- **💳 Güvenli Ödeme** — Iyzico entegrasyonu ile kredi kartı / banka kartı
+- **👤 Kullanıcı Hesabı** — Email/şifre + Google OAuth, sipariş geçmişi, favoriler
+- **🛒 Tam E-Ticaret** — Sepet, indirim kodları, sipariş takibi, stok yönetimi
+- **📧 Bildirimler** — Email (SMTP) ve SMS (Netgsm) ile sipariş bildirimleri
+- **🔐 Admin Paneli** — Ürün, sipariş ve kullanıcı yönetimi
+
+## 🛠️ Teknoloji
+
+| Katman | Teknoloji |
+|--------|-----------|
+| Frontend | Next.js 16, React 19, Tailwind CSS, Framer Motion |
+| Backend | Next.js API Routes, NextAuth |
+| Veritabanı | Supabase (PostgreSQL) |
+| Ödeme | Iyzico |
+| AI | Anthropic Claude SDK, face-api.js |
+| Deploy | Vercel |
+
+## 📁 Proje Yapısı
+
+```
+app/
+├── (shop)/           # Ana mağaza sayfaları
+│   ├── urunler/      # Ürün listesi ve detay
+│   ├── cilt-analizi/ # AI cilt analizi
+│   ├── sanal-deneme/ # Sanal makyaj deneme
+│   ├── sepet/        # Alışveriş sepeti
+│   └── hesabim/      # Kullanıcı hesabı
+├── admin/            # Admin paneli
+├── api/              # API routes
+└── odeme/            # Ödeme sayfaları
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Kurulum
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```bash
+# Bağımlılıkları yükle
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# .env.local dosyasını oluştur
+cp .env.example .env.local
 
-## Learn More
+# Geliştirme sunucusunu başlat
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Tarayıcıda [http://localhost:3000](http://localhost:3000) adresini aç.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## ⚙️ Ortam Değişkenleri
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 
-## Deploy on Vercel
+# NextAuth
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Google OAuth
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Iyzico
+IYZICO_API_KEY=
+IYZICO_SECRET_KEY=
+
+# Email (SMTP)
+SMTP_HOST=
+SMTP_USER=
+SMTP_PASS=
+```
+
+## 📦 Kategoriler
+
+| Kategori | Açıklama |
+|----------|----------|
+| Cilt Bakım | Temizleyici, nemlendirici, serum |
+| Makyaj | Ruj, fondöten, maskara |
+| Güneş Bakım | SPF koruma ürünleri |
+| Saç Bakım | Şampuan, saç maskesi |
+| Ağız Bakım | Diş macunu, gargara |
+| Bebek Bakım | Bebek şampuanı, krem |
+
+## 📄 Lisans
+
+Bu proje özel kullanım içindir. Tüm hakları saklıdır.
