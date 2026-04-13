@@ -1,4 +1,4 @@
-# 💊 Gamze Lieczanem — Kozmetik E-Ticaret
+# 💊 Gamzelieczanem — Kozmetik E-Ticaret
 
 ![Hero](public/hero-skincare.png)
 
