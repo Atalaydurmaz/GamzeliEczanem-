@@ -6,13 +6,6 @@ export const metadata = {
   description: 'GAMZELİECZANEM\'in hikayesi, misyonu ve vizyonu hakkında bilgi edinin.',
 }
 
-const ekip = [
-  { isim: 'Atalay Durmaz', unvan: 'Kurucu & CEO', renk: 'bg-rose-100 text-rose-700' },
-  { isim: 'Gamze Durmaz', unvan: 'Cilt Bakım ve Kozmetik Uzmanı', renk: 'bg-pink-100 text-pink-700' },
-  { isim: 'Kübra Turgut', unvan: 'Müşteri İlişkileri Yönetimi Sorumlusu', renk: 'bg-purple-100 text-purple-700' },
- 
-  { isim: 'Çağatay Durmaz', unvan: 'Teknoloji Direktörü & CTO', renk: 'bg-blue-100 text-blue-700' },
-]
 
 export default function HakkimizdaSayfasi() {
   return (
@@ -134,25 +127,6 @@ export default function HakkimizdaSayfasi() {
         </div>
       </section>
 
-      {/* Ekip */}
-      {/* Ekip */}
-      <section className="py-16 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-stone-900 text-center mb-10 text-stone-900">Ekibimiz</h2>
-          {/* lg:grid-cols-5 yaparak 5 kişiyi yan yana getirdik */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-            {ekip.map((kisi) => (
-              <div key={kisi.isim} className="text-center group">
-                <div className={`w-20 h-20 rounded-full ${kisi.renk} flex items-center justify-center mx-auto mb-3 text-2xl font-bold transition-transform group-hover:scale-110`}>
-                  {kisi.isim.split(' ').map((n) => n[0]).join('')}
-                </div>
-                <h3 className="text-sm font-bold text-stone-800">{kisi.isim}</h3>
-                <p className="text-xs text-stone-400 mt-0.5">{kisi.unvan}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA */}
       <section className="py-16 bg-gradient-to-r from-rose-500 to-pink-600 text-white text-center">

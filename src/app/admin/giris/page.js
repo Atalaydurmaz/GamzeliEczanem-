@@ -63,7 +63,7 @@ export default function AdminGiris() {
               <label className="block text-sm font-medium text-stone-700 mb-1">E-posta</label>
               <input
                 type="email"
-                value="durmazatalay6@gmail.com"
+                value="destek.gamzelieczanem@gmail.com"
                 readOnly
                 className="w-full px-4 py-3 border border-stone-200 rounded-xl text-sm bg-stone-50 text-stone-500 cursor-default"
               />

@@ -254,7 +254,7 @@ async function _processCallback({ paymentId, conversationData, conversationId })
     </div>
   </div>
   <div style="background:#fff1f2;padding:20px 32px;text-align:center;border-top:1px solid #fce7f3">
-    <a href="mailto:destek@gamzelieczanem.com" style="color:#f43f5e;font-size:13px;font-weight:600;text-decoration:none">destek@gamzelieczanem.com</a>
+    <a href="mailto:destek.gamzelieczanem@gmail.com" style="color:#f43f5e;font-size:13px;font-weight:600;text-decoration:none">destek.gamzelieczanem@gmail.com</a>
     <p style="margin:8px 0 0;font-size:12px;color:#d1d5db">0262 412 6928 · Gölcük / Kocaeli</p>
   </div>
 </div></body></html>`
@@ -305,7 +305,7 @@ async function _processCallback({ paymentId, conversationData, conversationId })
           }).catch((e) => console.error('E-posta hatası:', e.message)),
           transporter.sendMail({
             from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-            to: 'durmazatalay6@gmail.com',
+            to: 'destek.gamzelieczanem@gmail.com',
             subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`,
             html: adminHtml,
           }).catch((e) => console.error('Admin bildirim hatası:', e.message)),
@@ -321,7 +321,7 @@ async function _processCallback({ paymentId, conversationData, conversationId })
           promises.push(
             transporter.sendMail({
               from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-              to: 'durmazatalay6@gmail.com',
+              to: 'destek.gamzelieczanem@gmail.com',
               subject: `⚠️ Düşük Stok Uyarısı – ${lowStockMails.length} ürün`,
               html: `<!DOCTYPE html><html lang="tr"><body style="font-family:Arial,sans-serif;background:#fff7f7"><div style="max-width:520px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden"><div style="background:linear-gradient(135deg,#f97316,#ef4444);padding:24px;text-align:center"><p style="margin:0;font-size:18px;font-weight:800;color:#fff">⚠️ Düşük Stok Uyarısı</p></div><div style="padding:24px"><p style="color:#44403c">${siparisNo} nolu sipariş sonrası stok azaldı:</p><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#fff7ed"><th style="padding:8px 12px;text-align:left;font-size:12px;color:#9ca3af">Ürün</th><th style="padding:8px 12px;text-align:center;font-size:12px;color:#9ca3af">Durum</th></tr></thead><tbody>${lowStockRows}</tbody></table></div></div></body></html>`,
             }).catch((e) => console.error('Stok e-posta hatası:', e.message))

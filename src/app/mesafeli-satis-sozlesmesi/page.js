@@ -20,11 +20,11 @@ export default function MesafeliSatisSozlesmesi() {
             <h2 className="text-base font-bold text-stone-900 mb-3">MADDE 1 – TARAFLAR</h2>
             <div className="space-y-2">
               <p><strong>SATICI:</strong></p>
-              <p>Ünvan: Atalay Durmaz (Şahıs Şirketi)</p>
-              <p>Adres: Yüzbaşılar Mah. 3013. Sokak Reverans Evleri D Blok Daire 7, Gölcük / Kocaeli</p>
+              <p>Ünvan: GAMZELİECZANEM</p>
+              <p>Adres: Yeni Çiftlik, Kazım Karabekir Cd. No:12, 41650 Gölcük / Kocaeli</p>
               <p>Tel: 0262 412 6928</p>
-              <p>E-posta: destek@gamzelieczanem.com.tr</p>
-              <p>Web: gamzelieczanem.com.tr</p>
+              <p>E-posta: destek.gamzelieczanem@gmail.com</p>
+              <p>Web: gamzelikozmetik.com</p>
             </div>
             <div className="mt-4 space-y-2">
               <p><strong>ALICI:</strong></p>
@@ -59,7 +59,7 @@ export default function MesafeliSatisSozlesmesi() {
             <ul className="list-disc pl-5 space-y-1 mt-2">
               <li>Ürünün kullanılmamış, açılmamış ve orijinal ambalajında olması gerekir.</li>
               <li>Hijyen ve sağlık koruması nedeniyle ambalajı açılmış kozmetik ürünlerde cayma hakkı kullanılamaz.</li>
-              <li>Cayma bildirimi destek@gamzelieczanem.com.tr adresine e-posta ile yapılabilir.</li>
+              <li>Cayma bildirimi destek.gamzelieczanem@gmail.com adresine e-posta ile yapılabilir.</li>
             </ul>
             <p className="mt-2">Cayma halinde ürün bedeli, iade kargosunun ulaşmasından itibaren <strong>14 gün</strong> içinde iade edilir.</p>
           </section>

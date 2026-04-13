@@ -59,7 +59,8 @@ export default function Footer() {
                 { href: '/sss', label: 'Sıkça Sorulan Sorular' },
                 { href: '/kargo-teslimat', label: 'Kargo & Teslimat' },
                 { href: '/iade-politikasi', label: 'İade Politikası' },
-                { href: '/gizlilik-politikasi', label: 'Gizlilik Politikası' },
+                { href: '/gizlilik-politikasi', label: 'KVKK Aydınlatma Metni' },
+                { href: '/mesafeli-satis-sozlesmesi', label: 'Mesafeli Satış Sözleşmesi' },
               ].map((l) => (
                 <li key={l.label}>
                   <Link href={l.href} className="text-sm text-stone-400 hover:text-rose-400 transition-colors">{l.label}</Link>
@@ -80,12 +81,12 @@ export default function Footer() {
                 </svg>
                 0262 412 6928
               </a>
-              <a href="mailto:destek@gamzelieczanem.com" className="flex items-center gap-2 text-sm text-stone-400 hover:text-rose-400 transition-colors">
+              <a href="/iletisim" className="flex items-center gap-2 text-sm text-stone-400 hover:text-rose-400 transition-colors">
                 <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
-                destek@gamzelieczanem.com
+                destek.gamzelieczanem@gmail.com
               </a>
             </div>
           </div>

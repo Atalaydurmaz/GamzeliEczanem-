@@ -115,9 +115,9 @@ export const IletisimSchema = z.object({
   mesaj: z
     .string({ required_error: 'Mesaj zorunludur.' })
     .trim()
-    .min(10, 'Mesaj en az 10 karakter olmalıdır.')
+    .min(1, 'Mesaj boş olamaz.')
     .max(2000, 'Mesaj en fazla 2000 karakter olabilir.'),
-  website: z.string().optional(), // honeypot — doğrulanmaz, sadece kontrol edilir
+  faxNumber: z.string().optional(), // honeypot — doğrulanmaz, sadece kontrol edilir
 })
 
 // ─── Yorum ────────────────────────────────────────────────────────────────────

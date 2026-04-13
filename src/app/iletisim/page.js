@@ -12,10 +12,10 @@ const konular = [
 ]
 
 export default function IletisimSayfasi() {
-  const [form, setForm] = useState({ ad: '', email: '', telefon: '', konu: '', mesaj: '', website: '' })
+  const [form, setForm] = useState({ ad: '', email: '', telefon: '', konu: '', mesaj: '', faxNumber: '' })
   const [hatalar, setHatalar] = useState({})
-  const [gonderildi, setGonderildi] = useState(false)
-  const [yukleniyor, setYukleniyor] = useState(false)
+  const [durum, setDurum] = useState('bos') // bos | yukleniyor | basarili | hata
+  const [sunucuHata, setSunucuHata] = useState('')
 
   function guncelle(alan, deger) {
     setForm((o) => ({ ...o, [alan]: deger }))
@@ -24,32 +24,59 @@ export default function IletisimSayfasi() {
 
   function dogrula() {
     const h = {}
-    if (!form.ad.trim() || form.ad.trim().length < 2) h.ad = 'Adınızı girin'
+    if (!form.ad.trim() || form.ad.trim().length < 2) h.ad = 'Adınızı girin (en az 2 karakter)'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) h.email = 'Geçerli bir e-posta girin'
     if (!form.konu) h.konu = 'Konu seçin'
-    if (!form.mesaj.trim() || form.mesaj.trim().length < 20) h.mesaj = 'En az 20 karakter yazın'
+    if (!form.mesaj.trim()) h.mesaj = 'Mesajınızı yazın'
     return h
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
+    setSunucuHata('')
+
     const h = dogrula()
-    if (Object.keys(h).length > 0) { setHatalar(h); return }
-    if (form.website) { setGonderildi(true); return } // Honeypot — botu susturarak reddet
-    setYukleniyor(true)
+    if (Object.keys(h).length > 0) {
+      setHatalar(h)
+      return
+    }
+
+    // Honeypot — botu susturarak reddet
+    if (form.faxNumber) {
+      setDurum('basarili')
+      return
+    }
+
+    setDurum('yukleniyor')
+
     try {
       const res = await fetch('/api/iletisim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ad: form.ad.trim(),
+          email: form.email.trim(),
+          telefon: form.telefon.trim(),
+          konu: form.konu,
+          mesaj: form.mesaj.trim(),
+          faxNumber: form.faxNumber,
+        }),
       })
-      if (!res.ok) throw new Error()
-      setGonderildi(true)
-      setForm({ ad: '', email: '', telefon: '', konu: '', mesaj: '', website: '' })
-    } catch {
-      setHatalar({ genel: 'Mesajınız gönderilemedi. Lütfen tekrar deneyin.' })
-    } finally {
-      setYukleniyor(false)
+
+      const data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        setSunucuHata(data.error || 'Mesajınız gönderilemedi. Lütfen tekrar deneyin.')
+        setDurum('hata')
+        return
+      }
+
+      setDurum('basarili')
+      setForm({ ad: '', email: '', telefon: '', konu: '', mesaj: '', faxNumber: '' })
+    } catch (err) {
+      console.error('İletişim formu hatası:', err)
+      setSunucuHata('Bağlantı hatası. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.')
+      setDurum('hata')
     }
   }
 
@@ -88,8 +115,8 @@ export default function IletisimSayfasi() {
                       </svg>
                     ),
                     baslik: 'E-posta',
-                    deger: 'destek@gamzelieczanem.com',
-                    href: 'mailto:destek@gamzelieczanem.com',
+                    deger: 'destek.gamzelieczanem@gmail.com',
+                    href: null,
                   },
                   {
                     ikon: (
@@ -158,12 +185,16 @@ export default function IletisimSayfasi() {
             <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-8">
               <h2 className="text-xl font-bold text-stone-900 mb-6">Mesaj Gönderin</h2>
 
-              {gonderildi ? (
+              {durum === 'basarili' ? (
                 <div className="text-center py-12">
-                  <div className="text-5xl mb-4">✅</div>
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
                   <h3 className="text-xl font-bold text-stone-800 mb-2">Mesajınız İletildi!</h3>
                   <p className="text-stone-500 mb-6">En kısa sürede size dönüş yapacağız (genellikle 24 saat içinde).</p>
-                  <button onClick={() => setGonderildi(false)}
+                  <button onClick={() => { setDurum('bos'); setSunucuHata('') }}
                     className="px-6 py-2.5 border border-rose-200 text-rose-600 rounded-full text-sm font-medium hover:bg-rose-50 transition-colors">
                     Yeni Mesaj Gönder
                   </button>
@@ -172,17 +203,25 @@ export default function IletisimSayfasi() {
                 <form onSubmit={handleSubmit} noValidate className="space-y-5">
                   {/* Honeypot — botlar bu alanı doldurur, insanlar görmez */}
                   <div style={{ position: 'absolute', left: '-9999px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
-                    <label htmlFor="website">Website</label>
+                    <label htmlFor="faxNumber">Website</label>
                     <input
-                      id="website"
+                      id="faxNumber"
                       type="text"
-                      name="website"
-                      value={form.website}
-                      onChange={(e) => setForm((o) => ({ ...o, website: e.target.value }))}
+                      name="faxNumber"
+                      value={form.faxNumber}
+                      onChange={(e) => setForm((o) => ({ ...o, faxNumber: e.target.value }))}
                       tabIndex={-1}
                       autoComplete="off"
                     />
                   </div>
+
+                  {/* Sunucu hatası */}
+                  {sunucuHata && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
+                      {sunucuHata}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-1">Ad Soyad *</label>
@@ -221,25 +260,18 @@ export default function IletisimSayfasi() {
                       className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all resize-none ${hatalar.mesaj ? 'border-red-300 focus:ring-red-100' : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'}`} />
                     <div className="flex justify-between mt-1">
                       {hatalar.mesaj ? <p className="text-xs text-red-500">{hatalar.mesaj}</p> : <span />}
-                      <p className="text-xs text-stone-400">{form.mesaj.length} karakter</p>
                     </div>
                   </div>
 
-                  {hatalar.genel && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-600">
-                      {hatalar.genel}
-                    </div>
-                  )}
-
                   {/* KVKK Aydınlatma Metni */}
                   <p className="text-xs text-stone-400 leading-relaxed">
-                    Gönderdiğiniz mesaj, yalnızca talebinizi yanıtlamak amacıyla <strong className="text-stone-500">Atalay Durmaz (Şahıs Şirketi)</strong> tarafından işlenecektir.{' '}
+                    Gönderdiğiniz mesaj, yalnızca talebinizi yanıtlamak amacıyla <strong className="text-stone-500">GAMZELİECZANEM</strong> tarafından işlenecektir.{' '}
                     <a href="/gizlilik-politikasi" className="text-rose-500 hover:underline">Gizlilik Politikamızı</a> inceleyebilirsiniz.
                   </p>
 
-                  <button type="submit" disabled={yukleniyor}
+                  <button type="submit" disabled={durum === 'yukleniyor'}
                     className="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-semibold rounded-xl transition-all disabled:bg-stone-300 disabled:cursor-not-allowed">
-                    {yukleniyor ? (
+                    {durum === 'yukleniyor' ? (
                       <span className="flex items-center justify-center gap-2">
                         <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

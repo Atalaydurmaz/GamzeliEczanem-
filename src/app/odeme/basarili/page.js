@@ -84,8 +84,8 @@ export default async function BasariliSayfasi({ searchParams }) {
 
         <p className="mt-8 text-xs text-stone-400">
           Sorularınız için{' '}
-          <a href="mailto:destek@gamzelieczanem.com" className="text-rose-500 hover:underline">
-            destek@gamzelieczanem.com
+          <a href="/iletisim" className="text-rose-500 hover:underline">
+            destek.gamzelieczanem@gmail.com
           </a>{' '}
           adresine yazabilirsiniz.
         </p>

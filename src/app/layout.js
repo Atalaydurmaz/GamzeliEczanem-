@@ -1,17 +1,12 @@
 import { Geist } from 'next/font/google'
 import './globals.css'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import ChatBotLazy from '@/components/ChatBotLazy'
-import PushManager from '@/components/PushManager'
+import ShopShell from '@/components/ShopShell'
 import { CartProvider } from '@/context/CartContext'
 import { AuthProvider } from '@/context/AuthContext'
 import { FavoriProvider } from '@/context/FavoriContext'
 import { ReviewProvider } from '@/context/ReviewContext'
 import { StockProvider } from '@/context/StockContext'
 import NextAuthProvider from '@/components/NextAuthProvider'
-import CookieBanner from '@/components/CookieBanner'
-import ScrollRestorer from '@/components/ScrollRestorer'
 
 const geist = Geist({
   variable: '--font-geist',
@@ -60,13 +55,7 @@ export default function RootLayout({ children }) {
               <FavoriProvider>
                 <ReviewProvider>
                 <StockProvider>
-                <Header />
-                <main className="flex-1">{children}</main>
-                <Footer />
-                <ChatBotLazy />
-                <PushManager />
-                <CookieBanner />
-                <ScrollRestorer />
+                <ShopShell>{children}</ShopShell>
                 </StockProvider>
                 </ReviewProvider>
               </FavoriProvider>

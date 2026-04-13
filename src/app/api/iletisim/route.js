@@ -16,10 +16,10 @@ export async function POST(req) {
 
   const parsed = await parseBody(IletisimSchema, req)
   if (!parsed.ok) return parsed.response
-  const { ad, email, telefon, konu, mesaj, website } = parsed.data
+  const { ad, email, telefon, konu, mesaj, faxNumber } = parsed.data
 
   // Honeypot: botlar bu gizli alanı doldurur, insanlar doldurmaz
-  if (website) {
+  if (faxNumber) {
     return Response.json({ ok: true })
   }
 
