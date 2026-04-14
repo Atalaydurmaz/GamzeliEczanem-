@@ -17,7 +17,7 @@ export async function POST(req) {
   }
 
   // OTP doğrula — yanlış veya süresi dolmuşsa hata döndür
-  const dogrulama = validateResetOtp(email, token)
+  const dogrulama = await validateResetOtp(email, token)
   if (!dogrulama.ok) {
     return Response.json({ basarili: false, hata: dogrulama.hata }, { status: 401 })
   }

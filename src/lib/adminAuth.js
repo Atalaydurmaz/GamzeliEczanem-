@@ -18,11 +18,12 @@ export async function isAdmin() {
 
 export async function setAdminCookie() {
   const store = await cookies()
+  // Session cookie (maxAge yok) → tarayıcı kapanınca silinir.
+  // Her yeni oturumda admin şifre girmek ZORUNDA — kalıcı giriş yok.
   store.set(COOKIE_NAME, makeToken(process.env.ADMIN_PASSWORD), {
     httpOnly: true,
     sameSite: 'strict',
     secure: process.env.NODE_ENV === 'production',
-    maxAge: 60 * 60 * 24 * 7, // 7 gün
     path: '/',
   })
 }

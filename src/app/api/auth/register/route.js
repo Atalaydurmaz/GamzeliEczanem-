@@ -6,7 +6,7 @@ import { parseBody, RegisterSchema } from '@/lib/validate'
 export async function POST(req) {
   // Rate limit: IP başına saatte 10 kayıt denemesi
   const ip = getIp(req)
-  const rl = rateLimit(`register:${ip}`, 10, 60 * 60 * 1000)
+  const rl = await rateLimit(`register:${ip}`, 10, 60 * 60 * 1000)
   if (!rl.ok) {
     return Response.json(
       { basarili: false, hata: 'Çok fazla kayıt denemesi. Lütfen daha sonra tekrar deneyin.' },

@@ -6,7 +6,7 @@ import { parseBody, IletisimSchema } from '@/lib/validate'
 export async function POST(req) {
   // Rate limit: IP başına 10 dakikada 5 istek
   const ip = getIp(req)
-  const rl = rateLimit(`iletisim:${ip}`, 5, 10 * 60 * 1000)
+  const rl = await rateLimit(`iletisim:${ip}`, 5, 10 * 60 * 1000)
   if (!rl.ok) {
     return Response.json(
       { ok: false, error: `Çok fazla istek. ${Math.ceil(rl.retryAfterSec / 60)} dakika sonra tekrar deneyin.` },

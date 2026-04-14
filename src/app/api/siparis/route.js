@@ -22,7 +22,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 export async function POST(req) {
   // Rate limit: IP başına dakikada 10 sipariş isteği
   const ip = getIp(req)
-  const rl = rateLimit(`siparis:${ip}`, 10, 60 * 1000)
+  const rl = await rateLimit(`siparis:${ip}`, 10, 60 * 1000)
   if (!rl.ok) {
     return Response.json(
       { hata: 'Çok fazla istek. Lütfen bir dakika bekleyin.' },

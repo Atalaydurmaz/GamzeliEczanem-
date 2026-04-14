@@ -18,7 +18,7 @@ function durumToAdim(durum) {
 export async function POST(request) {
   // Rate limit: IP başına dakikada 10 sorgu
   const ip = getIp(request)
-  const rl = rateLimit(`takip:${ip}`, 10, 60_000)
+  const rl = await rateLimit(`takip:${ip}`, 10, 60_000)
   if (!rl.ok) {
     return Response.json({ hata: 'Çok fazla istek. Lütfen bir dakika bekleyin.' }, { status: 429 })
   }

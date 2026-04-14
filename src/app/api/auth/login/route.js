@@ -7,7 +7,7 @@ import { parseBody, LoginSchema } from '@/lib/validate'
 export async function POST(req) {
   // Rate limit: IP başına 15 dakikada 15 giriş denemesi
   const ip = getIp(req)
-  const rl = rateLimit(`login:${ip}`, 15, 15 * 60 * 1000)
+  const rl = await rateLimit(`login:${ip}`, 15, 15 * 60 * 1000)
   if (!rl.ok) {
     return Response.json(
       { basarili: false, hata: `Çok fazla giriş denemesi. ${Math.ceil(rl.retryAfterSec / 60)} dakika sonra tekrar deneyin.` },

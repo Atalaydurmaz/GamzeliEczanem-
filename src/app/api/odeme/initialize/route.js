@@ -23,7 +23,7 @@ function getIyzipay() {
 export async function POST(req) {
   // Rate limit: IP başına 5 dakikada 10 ödeme başlatma isteği
   const clientIp = getIp(req)
-  const rl = rateLimit(`odeme-init:${clientIp}`, 10, 5 * 60 * 1000)
+  const rl = await rateLimit(`odeme-init:${clientIp}`, 10, 5 * 60 * 1000)
   if (!rl.ok) {
     return NextResponse.json(
       { hata: 'Çok fazla ödeme denemesi. Lütfen birkaç dakika bekleyin.' },

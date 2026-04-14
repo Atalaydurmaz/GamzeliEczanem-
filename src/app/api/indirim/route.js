@@ -5,7 +5,7 @@ import { parseBody, IndirimSchema } from '@/lib/validate'
 export async function POST(req) {
   // Rate limit: IP başına dakikada 20 kupon denemesi (brute force koruması)
   const ip = getIp(req)
-  const rl = rateLimit(`indirim:${ip}`, 20, 60 * 1000)
+  const rl = await rateLimit(`indirim:${ip}`, 20, 60 * 1000)
   if (!rl.ok) {
     return Response.json(
       { gecerli: false, hata: 'Çok fazla deneme. Lütfen bekleyin.' },

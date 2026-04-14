@@ -8,7 +8,7 @@ import { parseBody, CheckEmailSchema } from '@/lib/validate'
 export async function POST(req) {
   // Rate limit: IP başına 15 dakikada 5 şifre sıfırlama isteği
   const ip = getIp(req)
-  const rl = rateLimit(`check-email:${ip}`, 5, 15 * 60 * 1000)
+  const rl = await rateLimit(`check-email:${ip}`, 5, 15 * 60 * 1000)
   if (!rl.ok) {
     return Response.json(
       { basarili: false, hata: `Çok fazla istek. ${Math.ceil(rl.retryAfterSec / 60)} dakika sonra tekrar deneyin.` },
@@ -39,7 +39,7 @@ export async function POST(req) {
     }, { status: 400 })
   }
 
-  const otp = generateResetOtp(email)
+  const otp = await generateResetOtp(email)
 
   // SMTP env eksikse sendMail sessizce false döner — dev ortamında dev_otp ile devam edilir
   await sendMail({
