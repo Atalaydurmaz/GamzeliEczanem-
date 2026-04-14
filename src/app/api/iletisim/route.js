@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer'
+import { sendMail } from '@/lib/notify'
 import { createMessage } from '@/lib/messages'
 import { rateLimit, getIp } from '@/lib/rateLimit'
 import { parseBody, IletisimSchema } from '@/lib/validate'
@@ -22,16 +22,6 @@ export async function POST(req) {
   if (faxNumber) {
     return Response.json({ ok: true })
   }
-
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  })
 
   const html = `
 <!DOCTYPE html>
@@ -117,18 +107,14 @@ export async function POST(req) {
   }
 
   // Sonra e-posta gönder (ikincil — başarısız olsa da 200 dön)
-  try {
-    await transporter.sendMail({
-      from: `"GAMZELİECZANEM İletişim" <${process.env.SMTP_USER}>`,
-      to: process.env.SMTP_USER,
-      replyTo: `"${ad}" <${email}>`,
-      subject: `[İletişim] ${konu} – ${ad}`,
-      html,
-    })
-  } catch (err) {
-    console.error('İletişim e-postası gönderilemedi:', err.message)
-    // Supabase kaydı başarılıysa 200 dön
-  }
+  await sendMail({
+    from:    `"GAMZELİECZANEM İletişim" <${process.env.SMTP_USER}>`,
+    to:      process.env.SMTP_USER,
+    replyTo: `"${ad}" <${email}>`,
+    subject: `[İletişim] ${konu} – ${ad}`,
+    html,
+    context: 'iletisim',
+  })
 
   return Response.json({ ok: true })
 }

@@ -1,6 +1,6 @@
 import { isAdmin } from '@/lib/adminAuth'
 import { updateOrderStatus, getOrderBySiparisNo, deleteOrder, updateKargoTakipNo, cancelOrderAtomic } from '@/lib/orders'
-import nodemailer from 'nodemailer'
+import { sendMail, sendSms } from '@/lib/notify'
 
 
 export async function PATCH(req, { params }) {
@@ -49,20 +49,12 @@ export async function PUT(req, { params }) {
     const { adSoyad, email, telefon } = siparis.musteri
     const takipUrl = `https://www.yurticikargo.com/tr/online-islemler/gonderi-sorgula?code=${kargoTakipNo}`
 
-    try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-      })
-
-      await Promise.allSettled([
-        transporter.sendMail({
-          from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-          to: email,
-          subject: `Siparişiniz Kargoya Verildi – ${id} 🚚`,
-          html: `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"></head>
+    await Promise.allSettled([
+      sendMail({
+        to: email,
+        subject: `Siparişiniz Kargoya Verildi – ${id} 🚚`,
+        context: 'kargo-bildirim',
+        html: `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#fff7f7;font-family:'Segoe UI',Arial,sans-serif">
 <div style="max-width:560px;margin:32px auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
   <div style="background:linear-gradient(135deg,#f43f5e,#fb7185);padding:32px;text-align:center">
@@ -92,14 +84,14 @@ export async function PUT(req, { params }) {
     <p style="margin:6px 0 0;font-size:12px;color:#d1d5db">0262 412 6928 · Gölcük / Kocaeli</p>
   </div>
 </div></body></html>`,
-        }).catch((e) => console.error('Kargo e-posta hatası:', e.message)),
+      }),
 
-        fetch(`https://api.netgsm.com.tr/sms/send/get/?usercode=${process.env.NETGSM_USER}&password=${process.env.NETGSM_PASS}&gsmno=${telefon.replace(/\s/g,'').replace(/^\+90/,'90').replace(/^0/,'90')}&message=${encodeURIComponent(`GAMZELİECZANEM: Siparişiniz kargoya verildi! Takip No: ${kargoTakipNo} - Yurtiçi Kargo`)}&msgheader=${encodeURIComponent(process.env.NETGSM_HEADER||'A.DURMAZ')}&filter=0`)
-          .catch((e) => console.error('Kargo SMS hatası:', e.message)),
-      ])
-    } catch (e) {
-      console.error('Kargo bildirim hatası:', e.message)
-    }
+      sendSms({
+        telefon,
+        mesaj:   `GAMZELİECZANEM: Siparişiniz kargoya verildi! Takip No: ${kargoTakipNo} - Yurtiçi Kargo`,
+        context: 'kargo-bildirim',
+      }),
+    ])
   }
 
   return Response.json({ ok })

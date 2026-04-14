@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer'
+import { sendMail } from '@/lib/notify'
 
 export async function POST(req) {
   const {
@@ -6,16 +6,6 @@ export async function POST(req) {
     sepet, toplamFiyat, kargoUcreti, genelToplam,
     adres, sehir, ilce, postaKodu,
   } = await req.json()
-
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  })
 
   const urunSatirlari = sepet.map((item) => `
     <tr>
@@ -106,16 +96,11 @@ export async function POST(req) {
 </body>
 </html>`
 
-  try {
-    await transporter.sendMail({
-      from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: `Siparişiniz Alındı – ${siparisNo} 🎉`,
-      html,
-    })
-    return Response.json({ ok: true })
-  } catch (err) {
-    console.error('E-posta gönderilemedi:', err.message)
-    return Response.json({ ok: false, error: err.message }, { status: 500 })
-  }
+  const ok = await sendMail({
+    to: email,
+    subject: `Siparişiniz Alındı – ${siparisNo} 🎉`,
+    html,
+    context: 'siparis-onay',
+  })
+  return Response.json({ ok }, { status: ok ? 200 : 500 })
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
+import { sendMail, sendSms } from '@/lib/notify'
 import { claimPendingOrder } from '@/lib/pendingOrders'
 import { createOrderAtomic, getOrderByPaymentId } from '@/lib/orders'
 import { getLowStockUrunler } from '@/lib/stock'
@@ -202,13 +202,6 @@ async function _processCallback({ paymentId, conversationData, conversationId })
 
       // E-posta ve SMS gönder
       try {
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: parseInt(process.env.SMTP_PORT || '587'),
-          secure: process.env.SMTP_SECURE === 'true',
-          auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-        })
-
         const urunSatirlari = sepet
           .map((item) => `<tr>
             <td style="padding:8px 12px;border-bottom:1px solid #fce7f3;font-size:14px;color:#44403c">${item.ad}</td>
@@ -259,7 +252,6 @@ async function _processCallback({ paymentId, conversationData, conversationId })
   </div>
 </div></body></html>`
 
-        const smsGsmno = telefon.replace(/\s/g, '').replace(/^\+90/, '90').replace(/^0/, '90')
         const smsMesaj = `GAMZELİECZANEM: Siparişiniz alindi! No: ${siparisNo}, Tutar: ${genelToplam.toFixed(2)} TL. Teşekkürler!`
 
         const dusukStoklar = await getLowStockUrunler(5)
@@ -297,21 +289,9 @@ async function _processCallback({ paymentId, conversationData, conversationId })
 </div></body></html>`
 
         const promises = [
-          transporter.sendMail({
-            from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: `Siparişiniz Alındı – ${siparisNo} 🎉`,
-            html,
-          }).catch((e) => console.error('E-posta hatası:', e.message)),
-          transporter.sendMail({
-            from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-            to: 'destek.gamzelieczanem@gmail.com',
-            subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`,
-            html: adminHtml,
-          }).catch((e) => console.error('Admin bildirim hatası:', e.message)),
-          fetch(`https://api.netgsm.com.tr/sms/send/get/?usercode=${process.env.NETGSM_USER}&password=${process.env.NETGSM_PASS}&gsmno=${smsGsmno}&message=${encodeURIComponent(smsMesaj)}&msgheader=${encodeURIComponent(process.env.NETGSM_HEADER || 'A.DURMAZ')}&filter=0`)
-            .then((r) => r.text()).then((t) => { if (!t.startsWith('00')) console.error('Netgsm hata kodu:', t) })
-            .catch((e) => console.error('SMS hatası:', e.message)),
+          sendMail({ to: email, subject: `Siparişiniz Alındı – ${siparisNo} 🎉`, html, context: 'siparis-onay' }),
+          sendMail({ to: 'destek.gamzelieczanem@gmail.com', subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`, html: adminHtml, context: 'admin-yeni-siparis' }),
+          sendSms({ telefon, mesaj: smsMesaj, context: 'siparis-onay' }),
         ]
 
         if (lowStockMails.length > 0) {
@@ -319,12 +299,12 @@ async function _processCallback({ paymentId, conversationData, conversationId })
             .map((u) => `<tr><td style="padding:8px 12px;border-bottom:1px solid #fce7f3">${u.ad}</td><td style="padding:8px 12px;border-bottom:1px solid #fce7f3;text-align:center;font-weight:bold;color:${u.stok === 0 ? '#ef4444' : '#f97316'}">${u.stok === 0 ? 'STOK TÜKENDİ' : u.stok + ' adet kaldı'}</td></tr>`)
             .join('')
           promises.push(
-            transporter.sendMail({
-              from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
+            sendMail({
               to: 'destek.gamzelieczanem@gmail.com',
               subject: `⚠️ Düşük Stok Uyarısı – ${lowStockMails.length} ürün`,
               html: `<!DOCTYPE html><html lang="tr"><body style="font-family:Arial,sans-serif;background:#fff7f7"><div style="max-width:520px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden"><div style="background:linear-gradient(135deg,#f97316,#ef4444);padding:24px;text-align:center"><p style="margin:0;font-size:18px;font-weight:800;color:#fff">⚠️ Düşük Stok Uyarısı</p></div><div style="padding:24px"><p style="color:#44403c">${siparisNo} nolu sipariş sonrası stok azaldı:</p><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#fff7ed"><th style="padding:8px 12px;text-align:left;font-size:12px;color:#9ca3af">Ürün</th><th style="padding:8px 12px;text-align:center;font-size:12px;color:#9ca3af">Durum</th></tr></thead><tbody>${lowStockRows}</tbody></table></div></div></body></html>`,
-            }).catch((e) => console.error('Stok e-posta hatası:', e.message))
+              context: 'dusuk-stok-uyari',
+            })
           )
         }
 

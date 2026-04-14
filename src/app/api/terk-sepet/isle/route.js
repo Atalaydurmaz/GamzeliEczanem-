@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer'
+import { sendMail } from '@/lib/notify'
 import { getAbandonedCarts, markEmailSent } from '@/lib/abandonedCarts'
 
 export async function GET(req) {
@@ -16,13 +16,6 @@ export async function GET(req) {
   if (terkSepetler.length === 0) {
     return Response.json({ gonderilen: 0 })
   }
-
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  })
 
   let gonderilen = 0
 
@@ -80,17 +73,15 @@ export async function GET(req) {
 
 </div></body></html>`
 
-      try {
-        await transporter.sendMail({
-          from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-          to: kayit.email,
-          subject: 'Sepetinizde ürünler sizi bekliyor! 🛒',
-          html,
-        })
+      const ok = await sendMail({
+        to: kayit.email,
+        subject: 'Sepetinizde ürünler sizi bekliyor! 🛒',
+        html,
+        context: 'terk-sepet',
+      })
+      if (ok) {
         markEmailSent(kayit.email)
         gonderilen++
-      } catch (e) {
-        console.error(`Terk sepet e-posta hatası (${kayit.email}):`, e.message)
       }
     })
   )

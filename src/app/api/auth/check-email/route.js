@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer'
+import { sendMail } from '@/lib/notify'
 import { supabaseAdmin } from '@/lib/supabase'
 import { generateResetOtp } from '@/lib/resetTokens'
 import { rateLimit, getIp } from '@/lib/rateLimit'
@@ -41,20 +41,11 @@ export async function POST(req) {
 
   const otp = generateResetOtp(email)
 
-  // SMTP yapılandırılmışsa e-posta gönder
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-      })
-      await transporter.sendMail({
-        from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-        to: email,
-        subject: 'Şifre Sıfırlama Kodunuz',
-        html: `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"></head>
+  // SMTP env eksikse sendMail sessizce false döner — dev ortamında dev_otp ile devam edilir
+  await sendMail({
+    to: email,
+    subject: 'Şifre Sıfırlama Kodunuz',
+    html: `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#fff7f7;font-family:'Segoe UI',Arial,sans-serif">
 <div style="max-width:480px;margin:32px auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
   <div style="background:linear-gradient(135deg,#f43f5e,#fb7185);padding:32px;text-align:center">
@@ -68,12 +59,8 @@ export async function POST(req) {
     <p style="font-size:13px;color:#9ca3af;margin:0">Bu kod 15 dakika geçerlidir. Talepte bulunmadıysanız dikkate almayın.</p>
   </div>
 </div></body></html>`,
-      })
-    } catch (e) {
-      console.error('OTP e-posta hatası:', e.message)
-      // E-posta hata verse de devam et — development'ta dev_otp dönecek
-    }
-  }
+    context: 'sifre-sifirlama',
+  })
 
   // Geliştirme ortamında OTP'yi response'a ekle (production'da hiçbir zaman dönme)
   if (process.env.NODE_ENV !== 'production') {

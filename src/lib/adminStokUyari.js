@@ -1,16 +1,7 @@
-import nodemailer from 'nodemailer'
+import { sendMail } from './notify'
 import { supabaseAdmin } from './supabase'
 
 const ESIK = 5 // bu değer altına düşünce uyarı gider
-
-function transporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  })
-}
 
 /**
  * Verilen ürün listesi için stok threshold kontrol eder,
@@ -93,16 +84,13 @@ export async function adminStokUyariGonder(urunIds) {
 </body>
 </html>`
 
-  try {
-    await transporter().sendMail({
-      from: `"GAMZELİECZANEM Stok" <${process.env.SMTP_USER}>`,
-      to: adminEmail,
-      subject: `⚠️ Stok Uyarısı – ${tukendi.length} tükendi, ${dusukStok.length} kritik`,
-      html,
-    })
-  } catch (err) {
-    console.error('Admin stok uyarı e-postası gönderilemedi:', err.message)
-  }
+  await sendMail({
+    from: `"GAMZELİECZANEM Stok" <${process.env.SMTP_USER}>`,
+    to: adminEmail,
+    subject: `⚠️ Stok Uyarısı – ${tukendi.length} tükendi, ${dusukStok.length} kritik`,
+    html,
+    context: 'admin-stok-uyari',
+  })
 }
 
 export { ESIK }

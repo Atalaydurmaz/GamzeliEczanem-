@@ -1324,6 +1324,7 @@ export default function AdminPaneli() {
   const [veriYukleniyor, setVeriYukleniyor] = useState(false)
   const [acikId, setAcikId] = useState(null)
   const [arama, setArama] = useState('')
+  const [kritikHepsi, setKritikHepsi] = useState(false)
 
   const fetchOrders = useCallback(async () => {
     setVeriYukleniyor(true)
@@ -1408,11 +1409,11 @@ export default function AdminPaneli() {
   // Okunmamış mesajlar
   const okunmamisMesajlar = mesajlar.filter(m => !m.okundu)
 
-  // Kritik stok uyarısı (stok < 5)
+  // Kritik stok uyarısı (sadece son 1 adet kalanlar)
   const kritikStokUrunler = adminUrunler.filter((u) => {
     const s = stoklar[String(u.id)] ?? 0
-    return s < 5
-  }).map((u) => ({ ...u, stok: stoklar[String(u.id)] ?? 0 })).sort((a, b) => a.stok - b.stok)
+    return s === 1
+  }).map((u) => ({ ...u, stok: stoklar[String(u.id)] ?? 0 }))
 
   // Filtreli siparişler
   const filtreliSiparisler = siparisler.filter((s) => {
@@ -1505,14 +1506,14 @@ export default function AdminPaneli() {
         </div>
 
         {/* Kritik Stok Uyarısı */}
-        {kritikStokUrunler.length > 0 && (
+        {aktifSekme === 'stok' && kritikStokUrunler.length > 0 && (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xl">🚨</span>
               <h3 className="text-sm font-bold text-red-700">Kritik Stok Uyarısı — {kritikStokUrunler.length} ürün</h3>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-              {kritikStokUrunler.slice(0, 12).map((u) => (
+              {(kritikHepsi ? kritikStokUrunler : kritikStokUrunler.slice(0, 12)).map((u) => (
                 <div key={u.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-red-100">
                   <span className="text-xs text-stone-700 font-medium truncate mr-2">{u.ad}</span>
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
@@ -1524,14 +1525,14 @@ export default function AdminPaneli() {
               ))}
             </div>
             {kritikStokUrunler.length > 12 && (
-              <p className="text-xs text-red-500 mt-2">+{kritikStokUrunler.length - 12} ürün daha...</p>
+              <button
+                type="button"
+                onClick={() => setKritikHepsi((v) => !v)}
+                className="mt-3 text-xs font-semibold text-red-600 hover:text-red-800 transition-colors"
+              >
+                {kritikHepsi ? 'Daha az göster ↑' : `+${kritikStokUrunler.length - 12} ürün daha göster ↓`}
+              </button>
             )}
-            <button
-              onClick={() => setAktifSekme('stok')}
-              className="mt-3 text-xs font-semibold text-red-600 hover:text-red-800 transition-colors"
-            >
-              Stok Yönetimine Git →
-            </button>
           </div>
         )}
 

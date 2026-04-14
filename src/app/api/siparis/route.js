@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer'
+import { sendMail, sendSms } from '@/lib/notify'
 import { rateLimit, getIp } from '@/lib/rateLimit'
 import { createOrderAtomic } from '@/lib/orders'
 import { getUrunStock, getLowStockUrunler } from '@/lib/stock'
@@ -149,13 +149,6 @@ export async function POST(req) {
   })
 
   // E-posta ve SMS paralel gönder
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  })
-
   const urunSatirlari = sepetSunucu.map((item) => `
     <tr>
       <td style="padding:10px 12px;border-bottom:1px solid #fce7f3;color:#44403c">${item.ad}</td>
@@ -205,7 +198,6 @@ export async function POST(req) {
   </div>
 </div></body></html>`
 
-  const smsGsmno = telefon.replace(/\s/g, '').replace(/^\+90/, '90').replace(/^0/, '90')
   // Türkçe özel karakter içermeyen mesaj (Netgsm GET API uyumluluğu için)
   const smsMesaj = `GAMZELİECZANEM: Siparişiniz alindi! No: ${siparisNo}, Tutar: ${genelToplam.toFixed(2)} TL. Teşekkürler!`
 
@@ -247,21 +239,9 @@ export async function POST(req) {
 </div></body></html>`
 
   const promises = [
-    transporter.sendMail({
-      from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-      to: email,
-      subject: `Siparişiniz Alındı – ${siparisNo} 🎉`,
-      html,
-    }).catch((e) => console.error('E-posta hatası:', e.message)),
-    transporter.sendMail({
-      from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-      to: 'destek.gamzelieczanem@gmail.com',
-      subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`,
-      html: adminHtml,
-    }).catch((e) => console.error('Admin bildirim hatası:', e.message)),
-    fetch(`https://api.netgsm.com.tr/sms/send/get/?usercode=${process.env.NETGSM_USER}&password=${process.env.NETGSM_PASS}&gsmno=${smsGsmno}&message=${encodeURIComponent(smsMesaj)}&msgheader=${encodeURIComponent(process.env.NETGSM_HEADER || 'A.DURMAZ')}&filter=0`)
-      .then((r) => r.text()).then((t) => { if (!t.startsWith('00')) console.error('Netgsm hata kodu:', t) })
-      .catch((e) => console.error('SMS hatası:', e.message)),
+    sendMail({ to: email, subject: `Siparişiniz Alındı – ${siparisNo} 🎉`, html, context: 'siparis-onay' }),
+    sendMail({ to: 'destek.gamzelieczanem@gmail.com', subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`, html: adminHtml, context: 'admin-yeni-siparis' }),
+    sendSms({ telefon, mesaj: smsMesaj, context: 'siparis-onay' }),
   ]
 
   if (lowStockMails.length > 0) {
@@ -285,12 +265,12 @@ export async function POST(req) {
 </div></body></html>`
 
     promises.push(
-      transporter.sendMail({
-        from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
+      sendMail({
         to: 'destek.gamzelieczanem@gmail.com',
         subject: `⚠️ Düşük Stok Uyarısı – ${lowStockMails.length} ürün`,
         html: lowStockHtml,
-      }).catch((e) => console.error('Stok e-posta hatası:', e.message))
+        context: 'dusuk-stok-uyari',
+      })
     )
   }
 

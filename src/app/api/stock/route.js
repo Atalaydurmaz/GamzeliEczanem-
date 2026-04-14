@@ -3,7 +3,7 @@ import { getStock, updateStock, getUrunStock } from '@/lib/stock'
 import { getNotificationsForUrun, clearNotificationsForUrun } from '@/lib/stockNotifications'
 import { adminStokUyariGonder, ESIK } from '@/lib/adminStokUyari'
 import { urunler } from '@/lib/data'
-import nodemailer from 'nodemailer'
+import { sendMail } from '@/lib/notify'
 
 export async function GET() {
   const stock = await getStock()
@@ -36,13 +36,6 @@ export async function PATCH(req) {
       const urunAd = urun?.ad ?? `Ürün #${urunId}`
       const urunUrl = `https://gamzelieczanem.com/urunler/${urunId}`
 
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-      })
-
       const html = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#fff7f7;font-family:'Segoe UI',Arial,sans-serif">
 <div style="max-width:520px;margin:32px auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
@@ -71,12 +64,12 @@ export async function PATCH(req) {
 
       await Promise.allSettled(
         bildirimler.map((n) =>
-          transporter.sendMail({
-            from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
+          sendMail({
             to: n.email,
             subject: `${urunAd} tekrar stokta! 🎉`,
             html,
-          }).catch((e) => console.error('Stok bildirimi e-posta hatası:', e.message))
+            context: 'stok-bildirim',
+          })
         )
       )
 

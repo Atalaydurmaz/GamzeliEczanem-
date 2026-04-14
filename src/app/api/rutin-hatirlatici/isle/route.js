@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer'
+import { sendMail } from '@/lib/notify'
 import { getDueReminders, markReminderSent } from '@/lib/routineReminders'
 
 const BASE_URL = 'https://gamzelieczanem.com'
@@ -22,13 +22,6 @@ export async function GET(req) {
 
   const hatirlaticilar = getDueReminders()
   if (hatirlaticilar.length === 0) return Response.json({ gonderilen: 0 })
-
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  })
 
   let gonderilen = 0
 
@@ -88,17 +81,15 @@ export async function GET(req) {
 
 </div></body></html>`
 
-      try {
-        await transporter.sendMail({
-          from: `"GAMZELİECZANEM" <${process.env.SMTP_USER}>`,
-          to: h.email,
-          subject: `${h.adSoyad.split(' ')[0]}, ${sure} geçti — ${h.urunAd} yenileme vakti! 💆‍♀️`,
-          html,
-        })
+      const ok = await sendMail({
+        to: h.email,
+        subject: `${h.adSoyad.split(' ')[0]}, ${sure} geçti — ${h.urunAd} yenileme vakti! 💆‍♀️`,
+        html,
+        context: 'rutin-hatirlatici',
+      })
+      if (ok) {
         markReminderSent(h.id)
         gonderilen++
-      } catch (e) {
-        console.error(`Rutin hatırlatıcı e-posta hatası (${h.email}):`, e.message)
       }
     })
   )
