@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function AdminGiris() {
+function AdminGirisForm() {
   const router       = useRouter()
   const searchParams = useSearchParams()
 
@@ -15,7 +15,9 @@ export default function AdminGiris() {
   useEffect(() => {
     fetch('/api/admin/check').then((r) => {
       if (r.ok) router.replace('/admin')
-    }).catch(() => {})
+    }).catch((err) => {
+      console.warn('[admin/giris] check hatası:', err?.message)
+    })
   }, [router])
 
   async function handleSubmit(e) {
@@ -101,5 +103,13 @@ export default function AdminGiris() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function AdminGiris() {
+  return (
+    <Suspense fallback={null}>
+      <AdminGirisForm />
+    </Suspense>
   )
 }
