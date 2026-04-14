@@ -28,7 +28,7 @@ const BOLUMLER = [
     icerik: [
       { soru: '1. Talep Oluşturun', cevap: 'destek.gamzelieczanem@gmail.com adresine e-posta gönderin veya 0262 412 6928 numaralı hattı arayın. Sipariş numaranızı ve iade nedeninizi belirtin.' },
       { soru: '2. Kargo Kodu Alın', cevap: 'Size ücretsiz iade kargo kodu iletilir. İade kargosunu ödemek zorunda değilsiniz.' },
-      { soru: '3. Ürünü Gönderin', cevap: 'Ürünü orijinal ambalajında ve eksiksiz olarak belirtilen kargo firması aracılığıyla gönderin.' },
+      { soru: '3. Ürünü Gönderin', cevap: 'Ürünü orijinal ambalajında ve eksiksiz olarak belirtilen kargo firması aracılığıyla şu adrese gönderin: Yeni Çiftlik, Kazım Karabekir Cd. No:12, 41650 Gölcük / Kocaeli' },
       { soru: '4. Para İadesi', cevap: 'Ürün iade alındıktan ve kontrol edildikten sonra 3–5 iş günü içinde ödeme yönteminize iade yapılır.' },
     ],
   },

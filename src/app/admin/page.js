@@ -1320,6 +1320,7 @@ export default function AdminPaneli() {
   const [iadeler, setIadeler] = useState([])
   const [musteriler, setMusteriler] = useState([])
   const [mesajlar, setMesajlar] = useState([])
+  const [stoklar, setStoklar] = useState({})
   const [veriYukleniyor, setVeriYukleniyor] = useState(false)
   const [acikId, setAcikId] = useState(null)
   const [arama, setArama] = useState('')
@@ -1339,6 +1340,7 @@ export default function AdminPaneli() {
     fetch('/api/admin/iade').then(r => r.json()).then(d => setIadeler(Array.isArray(d) ? d : [])).catch(() => {})
     fetch('/api/admin/users').then(r => r.json()).then(d => setMusteriler(Array.isArray(d) ? d : [])).catch(() => {})
     fetch('/api/admin/mesajlar').then(r => r.json()).then(d => setMesajlar(Array.isArray(d) ? d : [])).catch(() => {})
+    fetch('/api/stock').then(r => r.json()).then(d => setStoklar(d || {})).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -1405,6 +1407,12 @@ export default function AdminPaneli() {
 
   // Okunmamış mesajlar
   const okunmamisMesajlar = mesajlar.filter(m => !m.okundu)
+
+  // Kritik stok uyarısı (stok < 5)
+  const kritikStokUrunler = adminUrunler.filter((u) => {
+    const s = stoklar[String(u.id)] ?? 0
+    return s < 5
+  }).map((u) => ({ ...u, stok: stoklar[String(u.id)] ?? 0 })).sort((a, b) => a.stok - b.stok)
 
   // Filtreli siparişler
   const filtreliSiparisler = siparisler.filter((s) => {
@@ -1495,6 +1503,37 @@ export default function AdminPaneli() {
           <StatKart ikon="🛒" baslik="Toplam Sipariş" deger={siparisler.length} alt="Tüm zamanlar" />
           <StatKart ikon="📈" baslik="Toplam Gelir" deger={`${toplamGelir.toLocaleString('tr-TR')} ₺`} alt="Tüm zamanlar" />
         </div>
+
+        {/* Kritik Stok Uyarısı */}
+        {kritikStokUrunler.length > 0 && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xl">🚨</span>
+              <h3 className="text-sm font-bold text-red-700">Kritik Stok Uyarısı — {kritikStokUrunler.length} ürün</h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {kritikStokUrunler.slice(0, 12).map((u) => (
+                <div key={u.id} className="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-red-100">
+                  <span className="text-xs text-stone-700 font-medium truncate mr-2">{u.ad}</span>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                    u.stok === 0 ? 'bg-red-500 text-white' : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    {u.stok === 0 ? 'Tükendi' : `${u.stok} adet`}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {kritikStokUrunler.length > 12 && (
+              <p className="text-xs text-red-500 mt-2">+{kritikStokUrunler.length - 12} ürün daha...</p>
+            )}
+            <button
+              onClick={() => setAktifSekme('stok')}
+              className="mt-3 text-xs font-semibold text-red-600 hover:text-red-800 transition-colors"
+            >
+              Stok Yönetimine Git →
+            </button>
+          </div>
+        )}
 
         {/* Stok Yönetimi */}
         {aktifSekme === 'stok' && (

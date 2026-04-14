@@ -20,8 +20,12 @@ export default function MesafeliSatisSozlesmesi() {
             <h2 className="text-base font-bold text-stone-900 mb-3">MADDE 1 – TARAFLAR</h2>
             <div className="space-y-2">
               <p><strong>SATICI:</strong></p>
-              <p>Ünvan: GAMZELİECZANEM</p>
-              <p>Adres: Yeni Çiftlik, Kazım Karabekir Cd. No:12, 41650 Gölcük / Kocaeli</p>
+              <p>Ticaret Unvanı: ATALAY DURMAZ (Gerçek Kişilere Ait Ticari İşletme)</p>
+              <p>Marka Adı: GAMZELİECZANEM</p>
+              <p>MERSİS No: 1017857069400001</p>
+              <p>Ticaret Sicil No: GÖLCÜK/6055</p>
+              <p>Vergi Dairesi / VKN: Gölcük / 3160931792</p>
+              <p>Adres: Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli</p>
               <p>Tel: 0262 412 6928</p>
               <p>E-posta: destek.gamzelieczanem@gmail.com</p>
               <p>Web: gamzelikozmetik.com</p>
