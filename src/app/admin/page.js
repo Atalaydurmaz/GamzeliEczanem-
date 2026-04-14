@@ -1361,6 +1361,7 @@ export default function AdminPaneli() {
   }, [ekran, fetchOrders])
 
   async function handleLogout() {
+    try { sessionStorage.removeItem('gla_admin_session') } catch {}
     await fetch('/api/admin/logout', { method: 'POST' })
     window.location.href = '/admin/giris'
   }

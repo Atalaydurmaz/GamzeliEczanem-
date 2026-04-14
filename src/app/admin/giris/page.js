@@ -11,8 +11,14 @@ function AdminGirisForm() {
   const [hata, setHata]             = useState('')
   const [yukleniyor, setYukleniyor] = useState(false)
 
-  // Zaten giriş yapılmışsa direkt panele yönlendir
+  // Zaten giriş yapılmışsa direkt panele yönlendir —
+  // AMA sadece aynı tarayıcı oturumundaysa (sessionStorage marker varsa).
+  // Browser-restore senaryosunda cookie var olsa da marker yoksa login
+  // form'u göster, kullanıcı şifreyi yeniden girsin.
   useEffect(() => {
+    const marker = typeof window !== 'undefined' && sessionStorage.getItem('gla_admin_session')
+    if (marker !== '1') return
+
     fetch('/api/admin/check').then((r) => {
       if (r.ok) router.replace('/admin')
     }).catch((err) => {
@@ -32,6 +38,11 @@ function AdminGirisForm() {
     })
 
     if (res.ok) {
+      // sessionStorage marker — tarayıcı tamamen kapanınca silinir, "continue
+      // where you left off" özelliği bunu geri getiremez. AdminSessionGuard
+      // bu marker yoksa zorla logout yapar.
+      try { sessionStorage.setItem('gla_admin_session', '1') } catch {}
+
       // Başarılı giriş: redirect parametresi varsa oraya, yoksa /admin'e git
       const redirect = searchParams.get('redirect') || '/admin'
       // Middleware cookie'yi artık tanıyacağından hard navigation yeterli
