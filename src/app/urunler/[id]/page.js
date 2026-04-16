@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { kategoriAdlari, kategoriSayfaYollari } from '@/lib/data'
 import { getProductById, getProducts } from '@/lib/products'
 import { getStats } from '@/lib/reviews'
+import { getEfektifStok } from '@/lib/stock'
 import AddToCartButton from '@/components/AddToCartButton'
 import ProductCard from '@/components/ProductCard'
 import ProductImage from '@/components/ProductImage'
@@ -50,9 +51,10 @@ export default async function UrunDetaySayfasi({ params }) {
 
   if (!urun) notFound()
 
-  const [kategoriUrunler, reviewStats] = await Promise.all([
+  const [kategoriUrunler, reviewStats, stok] = await Promise.all([
     getProducts({ kategori: urun.kategori }),
     getStats(),
+    getEfektifStok(urun.id),
   ])
   const stats = reviewStats[urun.id]
   const urunPuan = stats ? stats.puan : 0
@@ -79,7 +81,7 @@ export default async function UrunDetaySayfasi({ params }) {
       priceCurrency: 'TRY',
       price: urun.fiyat,
       priceValidUntil: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().slice(0, 10),
-      availability: 'https://schema.org/InStock',
+      availability: stok > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
       seller: { '@type': 'Organization', name: 'GAMZELİECZANEM' },
     },
     ...(urunYorumSayisi > 0 && {
