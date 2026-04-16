@@ -1,9 +1,37 @@
 import { supabaseAdmin } from '@/lib/supabase'
+import { rateLimit, getIp } from '@/lib/rateLimit'
+import { createClient } from '@supabase/supabase-js'
 
 const MAX_SIZE = 5 * 1024 * 1024
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+
 export async function POST(req) {
+  // Rate limit: IP başına saatte 10 yükleme
+  const ip = getIp(req)
+  const rl = await rateLimit(`upload:${ip}`, 10, 60 * 60 * 1000)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Çok fazla yükleme yaptınız. Lütfen bir saat sonra tekrar deneyin.' },
+      { status: 429 }
+    )
+  }
+
+  // Auth kontrolü: sadece giriş yapmış kullanıcılar yükleyebilir
+  const authHeader = req.headers.get('authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return Response.json({ error: 'Bu işlem için giriş yapmanız gerekiyor.' }, { status: 401 })
+  }
+  const token = authHeader.slice(7)
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+  if (authError || !user) {
+    return Response.json({ error: 'Geçersiz oturum. Lütfen tekrar giriş yapın.' }, { status: 401 })
+  }
+
   const formData = await req.formData()
   const file = formData.get('foto')
 

@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, after } from 'next/server'
 import { sendMail, sendSms } from '@/lib/notify'
 import { claimPendingOrder } from '@/lib/pendingOrders'
 import { createOrderAtomic } from '@/lib/orders'
@@ -68,60 +68,66 @@ export async function POST(req) {
   }
   // ────────────────────────────────────────────────────────────────
 
-  if (indirimKodu) await incrementUsage(indirimKodu)
-  await deleteAbandonedCart(email)
-
-  await scheduleReminders(siparisNo, email, adSoyad, sepet, siparisTarihi, (item) => {
-    const urunDetay = urunler.find((u) => u.id === item.id)
-    return urunDetay ? getRafOmruGun(urunDetay) : 90
-  })
-
-  // E-posta ve SMS gönder
-  try {
-    const html = musteriSiparisOnayMaili({
-      siparisNo, adSoyad, sepet,
-      toplamFiyat, kargoUcreti, genelToplam,
-      indirimKodu, indirimTutari,
-      adres, sehir, ilce, postaKodu,
-    })
-
-    const smsMesaj = siparisOnaySmsMetni({ siparisNo, genelToplam })
-
-    const dusukStoklar = await getLowStockUrunler(5)
-    const lowStockMails = dusukStoklar.map(({ id, stok }) => {
-      const urun = urunler.find((u) => u.id === id)
-      return { ad: urun?.ad ?? `Ürün #${id}`, stok }
-    })
-
-    const adminHtml = adminYeniSiparisMaili({
-      siparisNo, adSoyad, email, telefon,
-      adres, sehir, ilce,
-      sepet, genelToplam,
-      odemeYontemiHtml: '🧪 Test Ödemesi (Mock)',
-      siteUrl,
-    })
-
-    const promises = [
-      sendMail({ to: email, subject: `Siparişiniz Alındı – ${siparisNo} 🎉`, html, context: 'siparis-onay-mock' }),
-      sendMail({ to: 'destek.gamzelieczanem@gmail.com', subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`, html: adminHtml, context: 'admin-yeni-siparis-mock' }),
-      sendSms({ telefon, mesaj: smsMesaj, context: 'siparis-onay-mock' }),
-    ]
-
-    if (lowStockMails.length > 0) {
-      promises.push(
-        sendMail({
-          to: 'destek.gamzelieczanem@gmail.com',
-          subject: `⚠️ Düşük Stok Uyarısı – ${lowStockMails.length} ürün`,
-          html: dusukStokUyariMaili({ siparisNo, lowStockItems: lowStockMails }),
-          context: 'dusuk-stok-uyari-mock',
-        })
-      )
+  after(async () => {
+    if (indirimKodu) {
+      try { await incrementUsage(indirimKodu) }
+      catch (err) { console.warn('[mock] incrementUsage hatası — siparis:', siparisNo, '|', err?.message) }
     }
+    try { await deleteAbandonedCart(email) }
+    catch (err) { console.warn('[mock] deleteAbandonedCart hatası — email:', email, '|', err?.message) }
+    try {
+      await scheduleReminders(siparisNo, email, adSoyad, sepet, siparisTarihi, (item) => {
+        const urunDetay = urunler.find((u) => u.id === item.id)
+        return urunDetay ? getRafOmruGun(urunDetay) : 90
+      })
+    } catch (err) { console.warn('[mock] scheduleReminders hatası — siparis:', siparisNo, '|', err?.message) }
 
-    await Promise.allSettled(promises)
-  } catch (e) {
-    console.error('Bildirim hatası:', e.message)
-  }
+    try {
+      const html = musteriSiparisOnayMaili({
+        siparisNo, adSoyad, sepet,
+        toplamFiyat, kargoUcreti, genelToplam,
+        indirimKodu, indirimTutari,
+        adres, sehir, ilce, postaKodu,
+      })
+
+      const smsMesaj = siparisOnaySmsMetni({ siparisNo, genelToplam })
+
+      const dusukStoklar = await getLowStockUrunler(5)
+      const lowStockMails = dusukStoklar.map(({ id, stok }) => {
+        const urun = urunler.find((u) => u.id === id)
+        return { ad: urun?.ad ?? `Ürün #${id}`, stok }
+      })
+
+      const adminHtml = adminYeniSiparisMaili({
+        siparisNo, adSoyad, email, telefon,
+        adres, sehir, ilce,
+        sepet, genelToplam,
+        odemeYontemiHtml: '🧪 Test Ödemesi (Mock)',
+        siteUrl,
+      })
+
+      const promises = [
+        sendMail({ to: email, subject: `Siparişiniz Alındı – ${siparisNo} 🎉`, html, context: 'siparis-onay-mock' }),
+        sendMail({ to: 'destek.gamzelieczanem@gmail.com', subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`, html: adminHtml, context: 'admin-yeni-siparis-mock' }),
+        sendSms({ telefon, mesaj: smsMesaj, context: 'siparis-onay-mock' }),
+      ]
+
+      if (lowStockMails.length > 0) {
+        promises.push(
+          sendMail({
+            to: 'destek.gamzelieczanem@gmail.com',
+            subject: `⚠️ Düşük Stok Uyarısı – ${lowStockMails.length} ürün`,
+            html: dusukStokUyariMaili({ siparisNo, lowStockItems: lowStockMails }),
+            context: 'dusuk-stok-uyari-mock',
+          })
+        )
+      }
+
+      await Promise.allSettled(promises)
+    } catch (e) {
+      console.error('[mock] Bildirim hatası:', e.message)
+    }
+  })
 
   return NextResponse.redirect(`${siteUrl}/odeme/basarili?siparis=${siparisNo}`, { status: 302 })
 }

@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { urunler } from '@/lib/data'
+import { rateLimit, getIp } from '@/lib/rateLimit'
 
 const client = new Anthropic()
 
@@ -38,6 +39,15 @@ ${buildProductCatalog()}
 ÖNEMLİ: Listede olmayan ürün önerme. Müşteri sormadıkça uzun açıklamalar yapma.`
 
 export async function POST(request) {
+  const ip = getIp(request)
+  const rl = await rateLimit(`chat:${ip}`, 20, 60 * 60 * 1000)
+  if (!rl.ok) {
+    return Response.json(
+      { error: 'Saatlik mesaj limitine ulaştınız. Lütfen bir saat sonra tekrar deneyin.' },
+      { status: 429 }
+    )
+  }
+
   try {
     const { messages } = await request.json()
 

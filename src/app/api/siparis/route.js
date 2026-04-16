@@ -1,3 +1,4 @@
+import { after } from 'next/server'
 import { sendMail, sendSms } from '@/lib/notify'
 import { rateLimit, getIp } from '@/lib/rateLimit'
 import { createOrderAtomic } from '@/lib/orders'
@@ -130,79 +131,86 @@ export async function POST(req) {
   }
   // ────────────────────────────────────────────────────────────────
 
-  // Düşük stok uyarısı — transaction commit'inden sonra kontrol et
-  const dusukStokKontrol = []
-  for (const item of sepetSunucu) {
-    const mevcutStok = await getUrunStock(item.id)
-    if (mevcutStok !== null && mevcutStok <= ESIK) {
-      dusukStokKontrol.push({ id: item.id, stok: mevcutStok })
+  after(async () => {
+    // Düşük stok uyarısı — transaction commit'inden sonra kontrol et
+    const dusukStokKontrol = []
+    for (const item of sepetSunucu) {
+      const mevcutStok = await getUrunStock(item.id)
+      if (mevcutStok !== null && mevcutStok <= ESIK) {
+        dusukStokKontrol.push({ id: item.id, stok: mevcutStok })
+      }
     }
-  }
-  if (dusukStokKontrol.length > 0) {
-    adminStokUyariGonder(dusukStokKontrol).catch((err) => {
-      console.warn('[siparis] adminStokUyariGonder hatası:', err?.message)
-    })
-  }
-
-  // İndirim kodu kullanım kaydı (commit sonrası — stok+sipariş güvende)
-  if (gecerliIndirimKodu) {
-    incrementUsage(gecerliIndirimKodu, { email, telefon, siparisNo }).then((sonuc) => {
-      if (sonuc !== 'ok') console.warn('Kupon kaydı anomalisi — siparis:', siparisNo, '| sonuc:', sonuc)
-    }).catch((err) => {
-      console.warn('[siparis] incrementUsage hatası — siparis:', siparisNo, '|', err?.message)
-    })
-  }
-
-  deleteAbandonedCart(email)
-
-  scheduleReminders(siparisNo, email, adSoyad, sepetSunucu, siparisTarihi, (item) => {
-    const urunDetay = urunler.find((u) => u.id === item.id)
-    return urunDetay ? getRafOmruGun(urunDetay) : 90
-  })
-
-  // E-posta ve SMS paralel gönder
-  const html = musteriSiparisOnayMaili({
-    siparisNo, adSoyad, sepet: sepetSunucu,
-    toplamFiyat, kargoUcreti, genelToplam,
-    indirimKodu: gecerliIndirimKodu, indirimTutari,
-    adres, sehir, ilce, postaKodu,
-  })
-
-  const smsMesaj = siparisOnaySmsMetni({ siparisNo, genelToplam })
-
-  // Düşük stok kontrolü
-  const dusukStoklar = await getLowStockUrunler(5)
-  const lowStockMails = dusukStoklar.map(({ id, stok }) => {
-    const urun = urunler.find((u) => u.id === id)
-    return { ad: urun?.ad ?? `Ürün #${id}`, stok }
-  })
-
-  const adminHtml = adminYeniSiparisMaili({
-    siparisNo, adSoyad, email, telefon,
-    adres, sehir, ilce,
-    sepet: sepetSunucu, genelToplam,
-    odemeYontemiHtml: 'Kapıda / Havale',
-    siteUrl: SITE_URL,
-  })
-
-  const promises = [
-    sendMail({ to: email, subject: `Siparişiniz Alındı – ${siparisNo} 🎉`, html, context: 'siparis-onay' }),
-    sendMail({ to: 'destek.gamzelieczanem@gmail.com', subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`, html: adminHtml, context: 'admin-yeni-siparis' }),
-    sendSms({ telefon, mesaj: smsMesaj, context: 'siparis-onay' }),
-  ]
-
-  if (lowStockMails.length > 0) {
-    promises.push(
-      sendMail({
-        to: 'destek.gamzelieczanem@gmail.com',
-        subject: `⚠️ Düşük Stok Uyarısı – ${lowStockMails.length} ürün`,
-        html: dusukStokUyariMaili({ siparisNo, lowStockItems: lowStockMails }),
-        context: 'dusuk-stok-uyari',
+    if (dusukStokKontrol.length > 0) {
+      adminStokUyariGonder(dusukStokKontrol).catch((err) => {
+        console.warn('[siparis] adminStokUyariGonder hatası:', err?.message)
       })
-    )
-  }
+    }
 
-  await Promise.allSettled(promises)
+    // İndirim kodu kullanım kaydı (commit sonrası — stok+sipariş güvende)
+    if (gecerliIndirimKodu) {
+      try {
+        const sonuc = await incrementUsage(gecerliIndirimKodu, { email, telefon, siparisNo })
+        if (sonuc !== 'ok') console.warn('Kupon kaydı anomalisi — siparis:', siparisNo, '| sonuc:', sonuc)
+      } catch (err) {
+        console.warn('[siparis] incrementUsage hatası — siparis:', siparisNo, '|', err?.message)
+      }
+    }
+
+    try { await deleteAbandonedCart(email) }
+    catch (err) { console.warn('[siparis] deleteAbandonedCart hatası — email:', email, '|', err?.message) }
+    try {
+      await scheduleReminders(siparisNo, email, adSoyad, sepetSunucu, siparisTarihi, (item) => {
+        const urunDetay = urunler.find((u) => u.id === item.id)
+        return urunDetay ? getRafOmruGun(urunDetay) : 90
+      })
+    } catch (err) { console.warn('[siparis] scheduleReminders hatası — siparis:', siparisNo, '|', err?.message) }
+
+    try {
+      const html = musteriSiparisOnayMaili({
+        siparisNo, adSoyad, sepet: sepetSunucu,
+        toplamFiyat, kargoUcreti, genelToplam,
+        indirimKodu: gecerliIndirimKodu, indirimTutari,
+        adres, sehir, ilce, postaKodu,
+      })
+
+      const smsMesaj = siparisOnaySmsMetni({ siparisNo, genelToplam })
+
+      const dusukStoklar = await getLowStockUrunler(5)
+      const lowStockMails = dusukStoklar.map(({ id, stok }) => {
+        const urun = urunler.find((u) => u.id === id)
+        return { ad: urun?.ad ?? `Ürün #${id}`, stok }
+      })
+
+      const adminHtml = adminYeniSiparisMaili({
+        siparisNo, adSoyad, email, telefon,
+        adres, sehir, ilce,
+        sepet: sepetSunucu, genelToplam,
+        odemeYontemiHtml: 'Kapıda / Havale',
+        siteUrl: SITE_URL,
+      })
+
+      const promises = [
+        sendMail({ to: email, subject: `Siparişiniz Alındı – ${siparisNo} 🎉`, html, context: 'siparis-onay' }),
+        sendMail({ to: 'destek.gamzelieczanem@gmail.com', subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`, html: adminHtml, context: 'admin-yeni-siparis' }),
+        sendSms({ telefon, mesaj: smsMesaj, context: 'siparis-onay' }),
+      ]
+
+      if (lowStockMails.length > 0) {
+        promises.push(
+          sendMail({
+            to: 'destek.gamzelieczanem@gmail.com',
+            subject: `⚠️ Düşük Stok Uyarısı – ${lowStockMails.length} ürün`,
+            html: dusukStokUyariMaili({ siparisNo, lowStockItems: lowStockMails }),
+            context: 'dusuk-stok-uyari',
+          })
+        )
+      }
+
+      await Promise.allSettled(promises)
+    } catch (e) {
+      console.error('[siparis] Bildirim hatası:', e.message)
+    }
+  })
 
   // siparisNo döndür — client, sunucuda üretilen no'yu başarı sayfasına iletir
   return Response.json({ ok: true, siparisNo })
