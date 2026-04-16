@@ -51,7 +51,7 @@ export async function POST(req) {
   const { sepet, indirimKodu } = body
 
   // siparisNo sunucuda üretilir — client'tan gelmez (manipülasyon riski yok)
-  const siparisNo = 'SP' + Date.now() + Math.random().toString(36).slice(2, 5).toUpperCase()
+  const siparisNo = 'SP' + crypto.randomUUID().replace(/-/g, '').slice(0, 16).toUpperCase()
 
   // String alanları sanitize et ve uzunluk sınırlarını uygula
   let temizAlanlar

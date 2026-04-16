@@ -9,7 +9,12 @@ import ProductImage from '@/components/ProductImage'
 import ReviewSection from '@/components/ReviewSection'
 import ShareButtons from '@/components/ShareButtons'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60 // ISR: ürün 60 saniyede bir yenilenir
+
+export async function generateStaticParams() {
+  const urunler = await getProducts({ aktif: true }).catch(() => [])
+  return urunler.map((u) => ({ id: String(u.id) }))
+}
 
 const BASE_URL = 'https://gamzelieczanem.com'
 

@@ -16,7 +16,7 @@ import HeroSection from '@/components/HeroSection'
 import AnimatedCategories from '@/components/AnimatedCategories'
 import { getProducts } from '@/lib/products'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60 // ISR: ürün listesi 60 saniyede bir yenilenir
 
 export default async function AnaSayfa() {
   const tumUrunler = await getProducts().catch(() => [])
