@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect } from 'react'
-import { urunler } from '@/lib/data'
 
 const CartContext = createContext(null)
 
@@ -9,30 +8,41 @@ export function CartProvider({ children }) {
   const [hydrated, setHydrated] = useState(false)
   const [sepet, setSepet] = useState([])
 
-  // Mount sonrası localStorage'dan oku (SSR ile uyumlu)
+  // Mount sonrası localStorage'dan oku + Supabase'den güncel fiyatları al
   useEffect(() => {
-    try {
-      const kayitli = localStorage.getItem('gamzelieczanem-sepet')
-      if (kayitli) {
+    async function hydrate() {
+      try {
+        const kayitli = localStorage.getItem('gamzelieczanem-sepet')
+        if (!kayitli) { setHydrated(true); return }
+
         const parsed = JSON.parse(kayitli)
-        // Fiyatı güncel katalogdan al; katalogdan kalkmış ürünleri filtrele
+        if (!parsed?.length) { setHydrated(true); return }
+
+        // Güncel ürün verilerini API'den çek
+        let katalog = []
+        try {
+          const res = await fetch('/api/products')
+          if (res.ok) katalog = await res.json()
+        } catch {}
+
+        const katalogMap = Object.fromEntries(katalog.map((u) => [u.id, u]))
+
         const temiz = parsed
           .map((item) => {
-            const urun = urunler.find((u) => u.id === item.id || u.id === Number(item.id))
-            if (!urun) return null // ürün kaldırılmış
+            const id = Number(item.id)
+            const urun = katalogMap[id]
+            if (!urun) return null // ürün kaldırılmış veya pasife alınmış
             return {
-              ...item,
-              id: urun.id,
-              ad: urun.ad,
-              fiyat: urun.fiyat, // localStorage fiyatı değil, güncel fiyat
+              ...urun, // güncel ad, fiyat, kategori, gorsel vb.
               adet: Math.max(1, Math.floor(Number(item.adet) || 1)),
             }
           })
           .filter(Boolean)
         setSepet(temiz)
-      }
-    } catch {}
-    setHydrated(true)
+      } catch {}
+      setHydrated(true)
+    }
+    hydrate()
   }, [])
 
   // Hydrate olduktan sonra yaz — boş initial state'i localStorage'a yazmaz
@@ -53,22 +63,11 @@ export function CartProvider({ children }) {
   useEffect(() => {
     if (!hydrated) return
 
+    // Cross-tab sync için katalog gerekmez — diğer sekmeden gelen veri zaten
+    // o sekmedeki hydrate() tarafından doğrulanmış ve güncel fiyatları içeriyor.
     function sepetParse(raw) {
       try {
-        const parsed = raw ? JSON.parse(raw) : []
-        return parsed
-          .map((item) => {
-            const urun = urunler.find((u) => u.id === item.id || u.id === Number(item.id))
-            if (!urun) return null
-            return {
-              ...item,
-              id:    urun.id,
-              ad:    urun.ad,
-              fiyat: urun.fiyat,
-              adet:  Math.max(1, Math.floor(Number(item.adet) || 1)),
-            }
-          })
-          .filter(Boolean)
+        return raw ? JSON.parse(raw) : null
       } catch {
         return null
       }

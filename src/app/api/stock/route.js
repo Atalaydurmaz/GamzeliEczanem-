@@ -2,7 +2,7 @@ import { isAdmin } from '@/lib/adminAuth'
 import { getStock, updateStock, getUrunStock } from '@/lib/stock'
 import { getNotificationsForUrun, clearNotificationsForUrun } from '@/lib/stockNotifications'
 import { adminStokUyariGonder, ESIK } from '@/lib/adminStokUyari'
-import { urunler } from '@/lib/data'
+import { getProductById } from '@/lib/products'
 import { sendMail } from '@/lib/notify'
 
 export async function GET() {
@@ -32,7 +32,7 @@ export async function PATCH(req) {
   if (eskiStok === 0 && yeniStok > 0) {
     const bildirimler = await getNotificationsForUrun(urunId)
     if (bildirimler.length > 0) {
-      const urun = urunler.find((u) => u.id === urunId || u.id === Number(urunId))
+      const urun = await getProductById(urunId)
       const urunAd = urun?.ad ?? `Ürün #${urunId}`
       const urunUrl = `https://gamzelieczanem.com/urunler/${urunId}`
 

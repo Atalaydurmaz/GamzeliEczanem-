@@ -1,10 +1,16 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { urunler } from '@/lib/data'
+import { getProducts } from '@/lib/products'
 import { rateLimit, getIp } from '@/lib/rateLimit'
 
 const client = new Anthropic()
 
-function buildProductCatalog() {
+// ── Katalog cache (5 dakika) ─────────────────────────────────
+// Supabase'den her istekte çekmek yerine TTL-cache ile optimize.
+let _systemPrompt = null
+let _promptTime = 0
+const CATALOG_TTL = 5 * 60 * 1000
+
+function buildCatalogText(urunler) {
   const byCategory = {}
   for (const u of urunler) {
     if (!byCategory[u.kategori]) byCategory[u.kategori] = []
@@ -24,7 +30,10 @@ function buildProductCatalog() {
     .join('\n\n')
 }
 
-const SYSTEM_PROMPT = `Sen GAMZELİECZANEM online eczanesi için uzman bir eczacı asistanısın.
+async function getSystemPrompt() {
+  if (_systemPrompt && Date.now() - _promptTime < CATALOG_TTL) return _systemPrompt
+  const urunler = await getProducts()
+  _systemPrompt = `Sen GAMZELİECZANEM online eczanesi için uzman bir eczacı asistanısın.
 
 GÖREVIN:
 - Müşterilerin cilt tipi, saç sorunu veya güzellik ihtiyaçlarını anlayıp uygun ürünleri önermek
@@ -34,9 +43,12 @@ GÖREVIN:
 - Ürün önerirken fiyatı da belirtmek
 
 ÜRÜN KATALOĞU:
-${buildProductCatalog()}
+${buildCatalogText(urunler)}
 
 ÖNEMLİ: Listede olmayan ürün önerme. Müşteri sormadıkça uzun açıklamalar yapma.`
+  _promptTime = Date.now()
+  return _systemPrompt
+}
 
 export async function POST(request) {
   const ip = getIp(request)
@@ -55,13 +67,15 @@ export async function POST(request) {
       return Response.json({ error: 'Geçersiz mesaj' }, { status: 400 })
     }
 
+    const systemPrompt = await getSystemPrompt()
+
     const stream = client.messages.stream({
       model: 'claude-haiku-4-5',
       max_tokens: 1024,
       system: [
         {
           type: 'text',
-          text: SYSTEM_PROMPT,
+          text: systemPrompt,
           cache_control: { type: 'ephemeral' },
         },
       ],

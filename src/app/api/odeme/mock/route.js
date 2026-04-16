@@ -7,7 +7,7 @@ import { incrementUsage } from '@/lib/discountCodes'
 import { deleteAbandonedCart } from '@/lib/abandonedCarts'
 import { scheduleReminders } from '@/lib/routineReminders'
 import { getRafOmruGun } from '@/lib/rafOmru'
-import { urunler } from '@/lib/data'
+import { getProductsByIds } from '@/lib/products'
 import {
   musteriSiparisOnayMaili,
   adminYeniSiparisMaili,
@@ -76,10 +76,9 @@ export async function POST(req) {
     try { await deleteAbandonedCart(email) }
     catch (err) { console.warn('[mock] deleteAbandonedCart hatası — email:', email, '|', err?.message) }
     try {
-      await scheduleReminders(siparisNo, email, adSoyad, sepet, siparisTarihi, (item) => {
-        const urunDetay = urunler.find((u) => u.id === item.id)
-        return urunDetay ? getRafOmruGun(urunDetay) : 90
-      })
+      await scheduleReminders(siparisNo, email, adSoyad, sepet, siparisTarihi,
+        (item) => getRafOmruGun(item)
+      )
     } catch (err) { console.warn('[mock] scheduleReminders hatası — siparis:', siparisNo, '|', err?.message) }
 
     try {
@@ -93,10 +92,12 @@ export async function POST(req) {
       const smsMesaj = siparisOnaySmsMetni({ siparisNo, genelToplam })
 
       const dusukStoklar = await getLowStockUrunler(5)
-      const lowStockMails = dusukStoklar.map(({ id, stok }) => {
-        const urun = urunler.find((u) => u.id === id)
-        return { ad: urun?.ad ?? `Ürün #${id}`, stok }
-      })
+      const dusukUrunler = await getProductsByIds(dusukStoklar.map((s) => s.id))
+      const dusukUrunMap = Object.fromEntries(dusukUrunler.map((u) => [u.id, u]))
+      const lowStockMails = dusukStoklar.map(({ id, stok }) => ({
+        ad: dusukUrunMap[id]?.ad ?? `Ürün #${id}`,
+        stok,
+      }))
 
       const adminHtml = adminYeniSiparisMaili({
         siparisNo, adSoyad, email, telefon,

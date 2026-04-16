@@ -1,13 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { urunler } from '@/lib/data'
+import { getProducts } from '@/lib/products'
 
 const client = new Anthropic()
-
-function buildCatalog() {
-  return urunler
-    .map((u) => `${u.id}|${u.ad}|${u.kategori}|${u.aciklama}`)
-    .join('\n')
-}
 
 export async function POST(request) {
   try {
@@ -16,6 +10,11 @@ export async function POST(request) {
     if (!imageBase64) {
       return Response.json({ error: 'Görsel eksik' }, { status: 400 })
     }
+
+    const tumUrunler = await getProducts()
+    const catalog = tumUrunler
+      .map((u) => `${u.id}|${u.ad}|${u.kategori}|${u.aciklama}`)
+      .join('\n')
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5',
@@ -37,7 +36,7 @@ export async function POST(request) {
               text: `Bu görseli analiz et. Görselde kozmetik, cilt bakımı, makyaj veya güzellik ürünleri görünüyorsa bunları tanımla. Eğer bir kişi ya da cilt görünüyorsa cilt tipini ve ihtiyacını belirle.
 
 ÜRÜN KATALOĞU (ID|Ad|Kategori|Açıklama):
-${buildCatalog()}
+${catalog}
 
 Görsele en uygun 4-8 ürünü katalogdan seç.
 SADECE şu JSON formatında yanıt ver, başka hiçbir şey ekleme:
@@ -53,9 +52,14 @@ SADECE şu JSON formatında yanıt ver, başka hiçbir şey ekleme:
 
     const raw = response.content[0].text.trim()
     const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-    const data = JSON.parse(cleaned)
+    const parsed = JSON.parse(cleaned)
 
-    return Response.json(data)
+    // ID listesini tam ürün objelerine dönüştür
+    const urunler = (parsed.urunIdleri || [])
+      .map((id) => tumUrunler.find((u) => u.id === id))
+      .filter(Boolean)
+
+    return Response.json({ aciklama: parsed.aciklama, urunler })
   } catch (error) {
     console.error('Görsel arama hatası:', error)
     return Response.json({ error: 'Görsel analiz edilirken hata oluştu' }, { status: 500 })

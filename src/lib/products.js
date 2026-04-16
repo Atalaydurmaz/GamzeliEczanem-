@@ -34,6 +34,16 @@ export async function getProducts({ kategori, aktif = true } = {}) {
   return products.map(row => mapRow(row, stockMap))
 }
 
+export async function getProductsByIds(ids) {
+  if (!ids?.length) return []
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .select('*')
+    .in('id', ids.map(Number))
+  if (error) return []
+  return (data || []).map(row => mapRow(row))
+}
+
 export async function getProductById(id) {
   const { data, error } = await supabaseAdmin
     .from('products')

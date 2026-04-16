@@ -1,21 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { urunler } from '@/lib/data'
+import { getProducts } from '@/lib/products'
 
 const client = new Anthropic()
 
 const ILGILI_KATEGORILER = ['cilt-bakimi', 'gunes-bakimi', 'sac-bakimi']
 
-function buildProductList() {
-  const kategoriAdlari = {
-    'cilt-bakimi': 'Cilt Bakımı',
-    'gunes-bakimi': 'Güneş Koruyucu',
-    'sac-bakimi': 'Saç Bakımı',
-    makyaj: 'Makyaj',
-  }
-  return urunler
-    .filter((u) => ILGILI_KATEGORILER.includes(u.kategori))
-    .map((u) => `${u.id}|${u.ad}|${kategoriAdlari[u.kategori] ?? u.kategori}|${u.fiyat}₺`)
-    .join('\n')
+const KATEGORI_ADLARI = {
+  'cilt-bakimi': 'Cilt Bakımı',
+  'gunes-bakimi': 'Güneş Koruyucu',
+  'sac-bakimi': 'Saç Bakımı',
+  makyaj: 'Makyaj',
 }
 
 const SYSTEM = `Sen GAMZELİECZANEM eczanesinin uzman dermokozmetik eczacı asistanısın.
@@ -29,6 +23,12 @@ export async function POST(request) {
     if (!ciltTipi || !sorun || !yas || !rutin || !butce) {
       return Response.json({ error: 'Eksik parametreler' }, { status: 400 })
     }
+
+    const tumUrunler = await getProducts()
+    const ilgiliUrunler = tumUrunler.filter((u) => ILGILI_KATEGORILER.includes(u.kategori))
+    const productList = ilgiliUrunler
+      .map((u) => `${u.id}|${u.ad}|${KATEGORI_ADLARI[u.kategori] ?? u.kategori}|${u.fiyat}₺`)
+      .join('\n')
 
     const butceAciklama = {
       Ekonomik: 'Düşük fiyatlı ürünleri tercih et (0-200₺)',
@@ -44,7 +44,7 @@ export async function POST(request) {
 - Bütçe: ${butce} — ${butceAciklama[butce] ?? ''}
 
 ÜRÜN KATALOĞU (Format: ID|Ürün Adı|Kategori|Fiyat):
-${buildProductList()}
+${productList}
 
 Bu kullanıcı için kapsamlı bir cilt analizi yap ve katalogdan en uygun 4-5 ürün öner.
 SADECE ve SADECE aşağıdaki JSON formatında yanıt ver — başka hiçbir şey ekleme, açıklama yapma:
@@ -69,9 +69,14 @@ SADECE ve SADECE aşağıdaki JSON formatında yanıt ver — başka hiçbir şe
 
     const raw = response.content[0].text.trim()
     const cleaned = raw.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-    const data = JSON.parse(cleaned)
+    const parsed = JSON.parse(cleaned)
 
-    return Response.json(data)
+    // ID listesini tam ürün objelerine dönüştür — sayfa client-side lookup yapmasın
+    const urunler = (parsed.urunIdleri || [])
+      .map((id) => tumUrunler.find((u) => u.id === id))
+      .filter(Boolean)
+
+    return Response.json({ analiz: parsed.analiz, rutin: parsed.rutin, urunler })
   } catch (error) {
     console.error('Cilt analizi error:', error)
     return Response.json({ error: 'Analiz yapılırken bir hata oluştu' }, { status: 500 })

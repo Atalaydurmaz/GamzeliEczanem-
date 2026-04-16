@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import ProductCard from '@/components/ProductCard'
-import { urunler } from '@/lib/data'
 
 const SORULAR = [
   {
@@ -165,9 +164,7 @@ export default function CiltAnaliziPage() {
 
   // ── Sonuç ─────────────────────────────────────────────────────────────────
   if (fase === 'sonuc' && sonuc) {
-    const onerilenUrunler = (sonuc.urunIdleri || [])
-      .map((id) => urunler.find((u) => u.id === id))
-      .filter(Boolean)
+    const onerilenUrunler = sonuc.urunler || []
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-rose-50 via-pink-50 to-rose-100">
@@ -242,7 +239,7 @@ export default function CiltAnaliziPage() {
           <div className="w-14 h-14 bg-rose-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-2xl">🔬</span>
           </div>
-          <h1 className="text-3xl font-black text-stone-900 mb-2">AI Cilt Analizi</h1>
+          <h1 className="text-3xl font-black text-stone-900 mb-2">Yapay Zeka Cilt Analizi</h1>
           <p className="text-stone-500 text-sm">5 soruda kişisel cilt profilinizi oluşturun, size özel ürün önerisi alın.</p>
         </div>
 

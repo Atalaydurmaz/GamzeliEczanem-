@@ -43,8 +43,10 @@ export const sacBakimiKategorileri = [
   { id: 'sac-spreyi', ad: 'Sprey & Koruyucu' },
 ]
 
-// ── Ürün Listesi ────────────────────────────────────────────────────────────
-export const urunler = [
+// ── Ürün Listesi — KALDIRILDI ────────────────────────────────────────────────
+// Ürün verileri artık yalnızca Supabase'den gelir (getProducts / getProductById).
+// Statik dizi silindi; bu yorum ileride arama sırasında yönlendirme sağlar.
+const _kaldirildi = [
 
   // ── CİLT BAKIMI ─────────────────────────────────────────────────────────
   {
@@ -730,35 +732,6 @@ export const urunler = [
     etiket: null,
   },
 ]
-
-// ── Yardımcı Fonksiyonlar ───────────────────────────────────────────────────
-export function getUrun(id) {
-  return urunler.find((u) => u.id === Number(id))
-}
-
-export function getCiltBakimiUrunleri() {
-  return urunler.filter((u) => u.kategori === 'cilt-bakimi')
-}
-
-export function getMakyajUrunleri() {
-  return urunler.filter((u) => u.kategori === 'makyaj')
-}
-
-export function getParfumUrunleri() {
-  return urunler.filter((u) => u.kategori === 'parfum')
-}
-
-export function getSacBakimiUrunleri() {
-  return urunler.filter((u) => u.kategori === 'sac-bakimi')
-}
-
-export function getAnneBebek() {
-  return urunler.filter((u) => u.kategori === 'anne-bebek')
-}
-
-export function getOnecikarUrunler() {
-  return urunler.filter((u) => u.etiket === 'En Favori' || u.etiket === 'Çok Satan').slice(0, 4)
-}
 
 export const kategoriAdlari = {
   'cilt-bakimi': 'Cilt Bakımı',
