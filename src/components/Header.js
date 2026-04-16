@@ -208,10 +208,10 @@ export default function Header() {
                       <defs><linearGradient id="sg2" x1="3" y1="1" x2="13" y2="11" gradientUnits="userSpaceOnUse"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#a78bfa"/></linearGradient></defs>
                     </svg>
                     <span
-                      className="text-[13px] font-black tracking-widest"
+                      className="text-[12px] font-black tracking-wide"
                       style={{ background: 'linear-gradient(135deg,#f43f5e,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                     >
-                      YZ
+                      Yapay Zeka
                     </span>
                   </div>
                   <div className="w-px h-6 bg-gray-200 shrink-0" />
@@ -347,10 +347,10 @@ export default function Header() {
       <div className="md:hidden bg-white border-b border-gray-100 px-3 py-2">
         <input ref={gorselInputRef} type="file" accept="image/*" className="hidden" onChange={handleGorselArama} />
         <form onSubmit={handleArama} className={`flex items-center gap-2 bg-gray-50 border rounded-xl px-3 h-11 focus-within:bg-white transition-all ${aramaHata ? 'border-rose-400' : 'border-gray-200 focus-within:border-rose-400'}`}>
-          {/* YZ badge */}
-          <span className="text-[11px] font-black px-1.5 py-0.5 rounded-lg shrink-0"
+          {/* Yapay Zeka badge */}
+          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-lg shrink-0"
             style={{ background: 'linear-gradient(135deg,rgba(244,63,94,0.1),rgba(167,139,250,0.1))', color: '#f43f5e' }}>
-            ✦ YZ
+            ✦ Yapay Zeka
           </span>
           <div className="w-px h-4 bg-gray-200 shrink-0" />
           <input
