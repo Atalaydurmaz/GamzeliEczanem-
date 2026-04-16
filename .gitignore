@@ -40,10 +40,8 @@ yarn-error.log*
 # Tek kullanımlık admin/seed scriptleri — API key içerebilir
 /scripts/
 
-# Geçici veri dosyaları
-/data/abandonedCarts.json
-/data/routineReminders.json
-/data/messages.json
+# Tüm veri dosyaları — müşteri verisi içerebilir, repoya girmemeli
+/data/
 .pending-orders.json
 
 # Yüklenen görseller
