@@ -197,7 +197,7 @@ export default function Header() {
                 onBlur={() => setAramaFocused(false)}
                 className="flex items-center flex-1 min-w-0 h-full overflow-hidden rounded-l-2xl"
               >
-                {/* AI badge pill — sadece lg'de göster */}
+                {/* YZ badge pill — sadece lg'de göster */}
                 <div className="hidden lg:flex items-center gap-2 pl-5 pr-4 shrink-0">
                   <div
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
@@ -211,7 +211,7 @@ export default function Header() {
                       className="text-[13px] font-black tracking-widest"
                       style={{ background: 'linear-gradient(135deg,#f43f5e,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                     >
-                      AI
+                      YZ
                     </span>
                   </div>
                   <div className="w-px h-6 bg-gray-200 shrink-0" />
@@ -347,10 +347,10 @@ export default function Header() {
       <div className="md:hidden bg-white border-b border-gray-100 px-3 py-2">
         <input ref={gorselInputRef} type="file" accept="image/*" className="hidden" onChange={handleGorselArama} />
         <form onSubmit={handleArama} className={`flex items-center gap-2 bg-gray-50 border rounded-xl px-3 h-11 focus-within:bg-white transition-all ${aramaHata ? 'border-rose-400' : 'border-gray-200 focus-within:border-rose-400'}`}>
-          {/* AI badge */}
+          {/* YZ badge */}
           <span className="text-[11px] font-black px-1.5 py-0.5 rounded-lg shrink-0"
             style={{ background: 'linear-gradient(135deg,rgba(244,63,94,0.1),rgba(167,139,250,0.1))', color: '#f43f5e' }}>
-            ✦ AI
+            ✦ YZ
           </span>
           <div className="w-px h-4 bg-gray-200 shrink-0" />
           <input
@@ -532,13 +532,13 @@ export default function Header() {
                     className="text-[10px] font-black"
                     style={{ background: 'linear-gradient(135deg,#f43f5e,#a78bfa)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                   >
-                    AI
+                    YZ
                   </span>
                   <div className="w-px h-3.5 bg-gray-200" />
                 </div>
                 <input
                   type="text"
-                  placeholder="Sana özel ürünü AI ile bul..."
+                  placeholder="Sana özel ürünü Yapay Zeka ile bul..."
                   value={aramaMetni}
                   onChange={(e) => setAramaMetni(e.target.value)}
                   className="flex-1 text-sm text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent"

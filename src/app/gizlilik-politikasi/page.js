@@ -12,7 +12,7 @@ const BOLUMLER = [
   {
     baslik: '1. Toplanan Kişisel Veriler',
     icerik:
-      'Aşağıdaki kişisel verileriniz, hizmetlerimizin sunulması amacıyla toplanmaktadır:\n\n• Kimlik Bilgileri: Ad, soyad\n• İletişim Bilgileri: E-posta adresi, telefon numarası, teslimat adresi\n• Müşteri İşlem Bilgileri: Sipariş geçmişi, sepet bilgileri, favori ürünler\n• Finansal Bilgiler: Ödeme bilgileri (kart bilgileri sistemimizde saklanmaz, Iyzico altyapısı üzerinden işlenir)\n• Dijital İz Bilgileri: IP adresi, çerez verileri, tarayıcı bilgileri, site kullanım istatistikleri\n• Cilt Analizi Verileri: AI cilt analizi için verdiğiniz yanıtlar (anonim olarak işlenir)',
+      'Aşağıdaki kişisel verileriniz, hizmetlerimizin sunulması amacıyla toplanmaktadır:\n\n• Kimlik Bilgileri: Ad, soyad\n• İletişim Bilgileri: E-posta adresi, telefon numarası, teslimat adresi\n• Müşteri İşlem Bilgileri: Sipariş geçmişi, sepet bilgileri, favori ürünler\n• Finansal Bilgiler: Ödeme bilgileri (kart bilgileri sistemimizde saklanmaz, Iyzico altyapısı üzerinden işlenir)\n• Dijital İz Bilgileri: IP adresi, çerez verileri, tarayıcı bilgileri, site kullanım istatistikleri\n• Cilt Analizi Verileri: Yapay zeka cilt analizi için verdiğiniz yanıtlar (anonim olarak işlenir)',
   },
   {
     baslik: '2. Kişisel Verilerin İşlenme Amaçları',

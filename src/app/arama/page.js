@@ -128,7 +128,7 @@ function AramaIcerigi() {
             <div className="w-20 h-20 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-5">
               <span className="text-4xl">🔍</span>
             </div>
-            <h2 className="text-xl font-bold text-stone-800 mb-2">AI Destekli Akıllı Arama</h2>
+            <h2 className="text-xl font-bold text-stone-800 mb-2">Yapay Zeka Destekli Akıllı Arama</h2>
             <p className="text-stone-400 text-sm mb-8 max-w-sm mx-auto">
               Doğal Türkçe ile ihtiyacınızı yazın, yapay zeka size en uygun ürünleri önersin.
             </p>
@@ -152,7 +152,7 @@ function AramaIcerigi() {
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
               <span className="text-3xl animate-spin" style={{ animationDuration: '2s' }}>✨</span>
             </div>
-            <p className="text-stone-600 font-medium mb-1">AI analiz ediyor...</p>
+            <p className="text-stone-600 font-medium mb-1">Yapay zeka analiz ediyor...</p>
             <p className="text-stone-400 text-sm">
               &ldquo;{sorgu}&rdquo; için en uygun ürünler aranıyor
             </p>
@@ -170,13 +170,13 @@ function AramaIcerigi() {
         {/* Sonuçlar */}
         {sonuc && !yukleniyor && (
           <>
-            {/* AI Açıklaması */}
+            {/* Yapay Zeka Açıklaması */}
             <div className="flex items-start gap-3 bg-rose-50 border border-rose-100 rounded-2xl px-5 py-4 mb-7">
               <div className="w-8 h-8 bg-rose-500 rounded-full flex items-center justify-center text-white text-sm shrink-0 mt-0.5">
                 🤖
               </div>
               <div>
-                <p className="text-xs font-bold text-rose-600 uppercase tracking-wide mb-1">AI Analizi</p>
+                <p className="text-xs font-bold text-rose-600 uppercase tracking-wide mb-1">Yapay Zeka Analizi</p>
                 <p className="text-sm text-stone-700 leading-relaxed">{sonuc.aciklama}</p>
               </div>
             </div>

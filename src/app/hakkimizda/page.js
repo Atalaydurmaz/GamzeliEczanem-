@@ -60,12 +60,12 @@ export default function HakkimizdaSayfasi() {
         </div>
       </section>
 
-      {/* AI Özellikler */}
+      {/* Yapay Zeka Özellikler */}
       <section className="py-16 bg-rose-50/50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { ikon: '🤖', baslik: 'AI Eczacı Asistanı', aciklama: '7/24 kişisel cilt danışmanlığı' },
+              { ikon: '🤖', baslik: 'Yapay Zeka Eczacı Asistanı', aciklama: '7/24 kişisel cilt danışmanlığı' },
               { ikon: '🔍', baslik: 'Akıllı Arama', aciklama: 'Doğal dille ürün bulma' },
               { ikon: '🧴', baslik: 'Cilt Analizi', aciklama: '5 soruda kişisel ürün önerisi' },
               { ikon: '❤️', baslik: 'Kişisel Öneri', aciklama: 'Alışkanlıklarına göre özel öneriler' },

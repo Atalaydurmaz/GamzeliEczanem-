@@ -38,7 +38,7 @@ export default async function AnaSayfa() {
         </div>
       </section>
 
-      {/* AI Cilt Analizi Banner */}
+      {/* Yapay Zeka Cilt Analizi Banner */}
       <section className="py-10 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-500 via-pink-500 to-rose-600 p-8 sm:p-12">
@@ -54,7 +54,7 @@ export default async function AnaSayfa() {
                   Yapay Zeka ile
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
-                  Ücretsiz AI Cilt Analizi
+                  Ücretsiz Yapay Zeka Cilt Analizi
                 </h2>
                 <p className="text-rose-100 text-sm sm:text-base max-w-lg">
                   5 soruyu cevaplayın, eczacı yapay zekamız cilt tipinizi analiz edip size özel ürünler önersin.
