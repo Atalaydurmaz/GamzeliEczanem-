@@ -317,7 +317,7 @@ const kategoriler = [
       {
         id: 'gunes-koruma',
         label: 'Güneş Koruma',
-        href: '/gunes-bakimi/koruma',
+        href: '/gunes-koruyucu/koruma',
         urunler: [
           { label: 'SPF 30 Güneş Kremi', href: '/gunes-bakimi#spf30' },
           { label: 'SPF 50 Güneş Kremi', href: '/gunes-bakimi#spf50' },
@@ -328,7 +328,7 @@ const kategoriler = [
       {
         id: 'after-sun',
         label: 'After Sun',
-        href: '/gunes-bakimi/after-sun',
+        href: '/gunes-koruyucu/after-sun',
         urunler: [
           { label: 'After Sun Losyon', href: '/gunes-bakimi#after-sun-losyon' },
           { label: 'After Sun Jel', href: '/gunes-bakimi#after-sun-jel' },
@@ -338,7 +338,7 @@ const kategoriler = [
       {
         id: 'bronzlastirici',
         label: 'Bronzlaştırıcı',
-        href: '/gunes-bakimi/bronzlastirici',
+        href: '/gunes-koruyucu/bronzlastirici',
         urunler: [
           { label: 'Bronzlaştırıcı Krem', href: '/gunes-bakimi#bronz-krem' },
           { label: 'Bronzlaştırıcı Yağ', href: '/gunes-bakimi#bronz-yag' },
@@ -348,7 +348,7 @@ const kategoriler = [
       {
         id: 'dudak-sac-koruma',
         label: 'Dudak & Saç Koruma',
-        href: '/gunes-bakimi/dudak-sac',
+        href: '/gunes-koruyucu/dudak-sac',
         urunler: [
           { label: 'Güneş Dudak Balsamı', href: '/gunes-bakimi#dudak-balsam' },
           { label: 'Saç Güneş Spreyi', href: '/gunes-bakimi#sac-sprey' },
