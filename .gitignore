@@ -47,8 +47,16 @@ yarn-error.log*
 # Yüklenen görseller
 /public/uploads/
 
-# Claude worktree'leri
+# Claude worktree'leri + local launch config
 .claude/worktrees/
+.claude/launch.json
+
+# Dev server log'ları
+dev*.log
+
+# Playwright test artifact'ları
+playwright-report/
+test-results/
 
 # typescript
 *.tsbuildinfo
