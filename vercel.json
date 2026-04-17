@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/terk-sepet/isle",
-      "schedule": "0 * * * *"
+      "schedule": "0 10 * * *"
     },
     {
       "path": "/api/rutin-hatirlatici/isle",
