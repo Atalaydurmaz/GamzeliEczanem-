@@ -1,8 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { getAnthropicClient } from '@/lib/anthropicClient'
 import { getProducts } from '@/lib/products'
 import { rateLimit, getIp } from '@/lib/rateLimit'
-
-const client = new Anthropic()
 
 // ── Katalog cache (5 dakika) ─────────────────────────────────
 // Supabase'den her istekte çekmek yerine TTL-cache ile optimize.
@@ -69,7 +67,7 @@ export async function POST(request) {
 
     const systemPrompt = await getSystemPrompt()
 
-    const stream = client.messages.stream({
+    const stream = getAnthropicClient().messages.stream({
       model: 'claude-haiku-4-5',
       max_tokens: 1024,
       system: [

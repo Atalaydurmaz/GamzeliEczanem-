@@ -11,9 +11,10 @@ import { useStock } from '@/context/StockContext'
 export default function ProductCard({ urun, index = 0 }) {
   const { favoriMi, favoriToggle } = useFavori()
   const { getUrunStats } = useReviews()
-  const { getUrunStok } = useStock()
+  const { getDbStok } = useStock()
   const favori = favoriMi(urun.id)
-  const stok = getUrunStok(urun.id)
+  // Liste kartı DB stokunu gösterir — sepetteki adete göre "tükendi" görünmesin.
+  const stok = getDbStok(urun.id)
   const stokTukendi = stok !== null && stok === 0
   const reviewStats = getUrunStats(urun.id)
   const puan = reviewStats ? reviewStats.puan : 0

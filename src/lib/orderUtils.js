@@ -1,4 +1,4 @@
-import { urunler } from './data'
+import { getProductsByIds } from './products'
 import { validateDiscountCode } from './discountCodes'
 import { normalizeSehir, normalizeIlce, toTurkishUpperCase } from './tr-iller'
 
@@ -81,13 +81,18 @@ export async function hesaplaSiparisDetay(sepet, indirimKodu, uyeIndirimiFronten
     throw 'Sepet boş veya geçersiz'
   }
 
+  // Tüm ürün ID'lerini toplu çek (N+1 sorgudan kaçın)
+  const ids = sepet.map(item => Number(item.id)).filter(id => Number.isFinite(id) && id > 0)
+  const urunler = await getProductsByIds(ids)
+  const urunMap = Object.fromEntries(urunler.map(u => [u.id, u]))
+
   const sepetSunucu = []
   for (const item of sepet) {
     const adet = Math.floor(Number(item.adet))
     if (!Number.isFinite(adet) || adet < 1) {
       throw `Geçersiz ürün adedi: ${item.id}`
     }
-    const urun = urunler.find((u) => u.id === item.id || u.id === Number(item.id))
+    const urun = urunMap[Number(item.id)]
     if (!urun) {
       throw `Ürün bulunamadı: ${item.id}`
     }

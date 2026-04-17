@@ -32,7 +32,7 @@ export async function POST(req) {
   }
 
   const body = await req.json()
-  const { kart, sepet, indirimKodu, idempotencyKey } = body
+  const { kart, sepet, indirimKodu, idempotencyKey, fatura } = body
   const gecerliKey = idempotencyKey && UUID_RE.test(idempotencyKey) ? idempotencyKey : null
 
   // ── Adım 0: Sipariş zaten tamamlandı mı? ─────────────────────────────
@@ -209,6 +209,7 @@ export async function POST(req) {
       siparisNo,
       adSoyad, email, telefon,
       adres, sehir, ilce, postaKodu,
+      fatura: fatura || null,
       sepet: sepetSunucu, toplamFiyat, kargoUcreti, genelToplam,
       indirimKodu: gecerliIndirimKodu || null,
       indirimTutari: indirimTutari || 0,
@@ -238,6 +239,7 @@ export async function POST(req) {
         siparisNo,
         adSoyad, email, telefon,
         adres, sehir, ilce, postaKodu,
+        fatura: fatura || null,
         sepet: sepetSunucu,
         toplamFiyat, kargoUcreti, genelToplam,
         indirimKodu: gecerliIndirimKodu || null,

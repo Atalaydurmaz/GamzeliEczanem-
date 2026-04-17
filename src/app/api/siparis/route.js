@@ -98,7 +98,7 @@ export async function POST(req) {
     siparisNo,
     tarih: siparisTarihi,
     musteri: { adSoyad, email, telefon },
-    teslimat: { adres, sehir, ilce, postaKodu },
+    teslimat: { adres, sehir, ilce, postaKodu, fatura: body.fatura || null },
     urunler: sepetSunucu,
     toplamFiyat,
     indirimKodu: gecerliIndirimKodu || null,

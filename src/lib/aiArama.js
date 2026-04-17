@@ -1,10 +1,8 @@
 // Yapay zeka destekli ürün arama — sunucu tarafında çalışır.
 // Hem /api/arama route'u hem de /arama Server Component bu fonksiyonu kullanır.
 import 'server-only'
-import Anthropic from '@anthropic-ai/sdk'
+import { getAnthropicClient } from '@/lib/anthropicClient'
 import { getProducts } from '@/lib/products'
-
-const client = new Anthropic()
 
 const KATEGORI_ADLARI = {
   'cilt-bakimi': 'Cilt Bakımı',
@@ -47,7 +45,7 @@ SADECE şu JSON formatında yanıt ver, başka hiçbir şey ekleme:
   "urunIdleri": [id1, id2, id3, id4]
 }`
 
-  const response = await client.messages.create({
+  const response = await getAnthropicClient().messages.create({
     model: 'claude-haiku-4-5',
     max_tokens: 512,
     system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],

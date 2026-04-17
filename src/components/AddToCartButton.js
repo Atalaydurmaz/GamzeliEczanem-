@@ -6,28 +6,40 @@ import { useStock } from '@/context/StockContext'
 import StokBildirimButton from '@/components/StokBildirimButton'
 
 export default function AddToCartButton({ urun }) {
-  const { sepeteEkle } = useCart()
-  const { getUrunStok, decrementLocalStok } = useStock()
+  const { sepeteEkle, drawerAc } = useCart()
+  const { getKalanStok, getDbStok } = useStock()
   const [eklendi, setEklendi] = useState(false)
 
-  const stok = getUrunStok(urun.id)
-  const stokTukendi = stok !== null && stok === 0
+  const dbStok = getDbStok(urun.id)
+  const kalanStok = getKalanStok(urun.id) // DB stok − sepetteki adet
+  const dbTukendi = dbStok !== null && dbStok === 0
+  const ekleyemez = kalanStok !== null && kalanStok <= 0
 
   function handleClick() {
-    if (stokTukendi) return
+    if (ekleyemez) return
     sepeteEkle(urun)
-    decrementLocalStok(urun.id, 1)
     setEklendi(true)
+    drawerAc()
     setTimeout(() => setEklendi(false), 2000)
   }
 
-  if (stokTukendi) {
+  // Gerçekten stok bittiğinde: bildirim aboneliği CTA'sı
+  if (dbTukendi) {
     return (
       <div className="space-y-3">
         <div className="w-full py-4 px-8 rounded-full font-semibold text-sm tracking-wide bg-stone-100 text-stone-400 text-center">
           Stok Tükendi
         </div>
         <StokBildirimButton urunId={urun.id} />
+      </div>
+    )
+  }
+
+  // DB'de stok var ama kullanıcı hepsini sepete atmış
+  if (ekleyemez) {
+    return (
+      <div className="w-full py-4 px-8 rounded-full font-semibold text-sm tracking-wide bg-amber-50 text-amber-700 border border-amber-200 text-center">
+        Tüm stok sepetinizde
       </div>
     )
   }

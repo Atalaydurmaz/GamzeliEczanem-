@@ -7,6 +7,7 @@ import ChatBotLazy from '@/components/ChatBotLazy'
 import PushManager from '@/components/PushManager'
 import CookieBanner from '@/components/CookieBanner'
 import ScrollRestorer from '@/components/ScrollRestorer'
+import CartDrawer from '@/components/CartDrawer'
 
 export default function ShopShell({ children }) {
   const pathname = usePathname()
@@ -21,6 +22,7 @@ export default function ShopShell({ children }) {
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />
+      <CartDrawer />
       <ChatBotLazy />
       <PushManager />
       <CookieBanner />

@@ -180,8 +180,8 @@ export default function Header() {
             }}
           >
             {/* Gizli file inputlar — form dışında olması sorun değil */}
-            <input ref={gorselInputRef} type="file" accept="image/*" className="hidden" onChange={handleGorselArama} />
-            <input ref={kameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleGorselArama} />
+            <input ref={gorselInputRef} type="file" accept="image/*" className="hidden" aria-label="Görsel yükle" tabIndex={-1} onChange={handleGorselArama} />
+            <input ref={kameraInputRef} type="file" accept="image/*" capture="environment" className="hidden" aria-label="Kamera ile çek" tabIndex={-1} onChange={handleGorselArama} />
 
             <div className="relative flex items-center w-full h-14 bg-white rounded-2xl">
               {/* Form: sadece text input kısmı — overflow-hidden buraya sınırlı */}
@@ -345,7 +345,7 @@ export default function Header() {
 
       {/* ── MOBİL ARAMA ÇUBUĞU ─────────────────────────── */}
       <div className="md:hidden bg-white border-b border-gray-100 px-3 py-2">
-        <input ref={gorselInputRef} type="file" accept="image/*" className="hidden" onChange={handleGorselArama} />
+        <input ref={gorselInputRef} type="file" accept="image/*" className="hidden" aria-label="Görsel yükle" tabIndex={-1} onChange={handleGorselArama} />
         <form onSubmit={handleArama} className={`flex items-center gap-2 bg-gray-50 border rounded-xl px-3 h-11 focus-within:bg-white transition-all ${aramaHata ? 'border-rose-400' : 'border-gray-200 focus-within:border-rose-400'}`}>
           {/* Yapay Zeka badge */}
           <span className="text-[10px] font-black px-1.5 py-0.5 rounded-lg shrink-0"
@@ -362,7 +362,7 @@ export default function Header() {
             onBlur={() => setMobilAramaFocused(false)}
             className="flex-1 text-sm text-gray-800 placeholder-gray-400 focus:outline-none bg-transparent"
           />
-          <button type="button" onClick={() => gorselInputRef.current?.click()} className="shrink-0 text-gray-400 hover:text-rose-500 transition-colors">
+          <button type="button" aria-label="Görselle ara" onClick={() => gorselInputRef.current?.click()} className="shrink-0 text-gray-400 hover:text-rose-500 transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />

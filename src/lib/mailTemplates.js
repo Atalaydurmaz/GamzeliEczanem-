@@ -24,12 +24,23 @@ export function musteriSiparisOnayMaili({
   adres, sehir, ilce, postaKodu,
 }) {
   const urunSatirlari = urunSatirlariHTML(sepet)
-  return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"></head>
+  return `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
+<style>
+  .site-link { color:#fff !important; text-decoration:none; transition:opacity 0.2s ease, transform 0.2s ease; display:inline-block; }
+  .site-link:hover { opacity:0.85; transform:translateY(-1px); text-decoration:underline; }
+  .site-link:active { opacity:0.7; transform:translateY(0); }
+</style>
+</head>
 <body style="margin:0;padding:0;background:#fff7f7;font-family:'Segoe UI',Arial,sans-serif">
 <div style="max-width:580px;margin:32px auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
   <div style="background:linear-gradient(135deg,#f43f5e,#fb7185);padding:36px 32px;text-align:center">
     <p style="margin:0;font-size:22px;font-weight:800;color:#fff;letter-spacing:1px">GAMZELİECZANEM</p>
-    <p style="margin:6px 0 0;font-size:13px;color:#fecdd3">gamzelieczanem.com</p>
+    <p style="margin:10px 0 0;font-size:13px">
+      <a href="https://www.instagram.com/gamzelieczanem/" target="_blank" rel="noopener" class="site-link" style="color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+        <span style="display:inline-block;width:18px;height:18px;background:rgba(255,255,255,0.15);border-radius:5px;text-align:center;line-height:18px;font-size:12px;">📷</span>
+        @gamzelieczanem
+      </a>
+    </p>
   </div>
   <div style="padding:32px">
     <h1 style="margin:0 0 8px;font-size:24px;font-weight:800;color:#1c1917">Siparişiniz Alındı! 🎉</h1>

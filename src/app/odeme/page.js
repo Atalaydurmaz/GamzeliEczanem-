@@ -33,7 +33,7 @@ function InputField({ label, id, error, ...props }) {
 
 export default function OdemeSayfasi() {
   const router = useRouter()
-  const { sepet, toplamFiyat, kargoUcreti, sepetiBosalt, hydrated } = useCart()
+  const { sepet, toplamFiyat, kargoUcreti, sepetiBosalt, sepeteEkle, adediGuncelle, hydrated } = useCart()
   const { kullanici } = useAuth()
   const { data: session } = useSession()
   const girisYapti = !!(kullanici || session?.user)
@@ -63,6 +63,20 @@ export default function OdemeSayfasi() {
   const [indirimYukleniyor, setIndirimYukleniyor] = useState(false)
   const [sepetDegistiUyari, setSepetDegistiUyari] = useState(false)
 
+  // Fatura bilgileri — Trendyol tarzı bireysel/kurumsal ayrımı
+  const [fatura, setFatura] = useState({
+    tip: 'bireysel',        // 'bireysel' | 'kurumsal'
+    tckn: '',               // bireysel (opsiyonel, e-arşiv için önerilir)
+    firmaUnvani: '',        // kurumsal zorunlu
+    vergiDairesi: '',       // kurumsal zorunlu
+    vergiNo: '',            // kurumsal zorunlu (10 hane) / bireysel TCKN (11 hane)
+    ayniAdres: true,        // fatura adresi = teslimat adresi mi?
+    adres: '',
+    sehir: '',
+    ilce: '',
+    postaKodu: '',
+  })
+
   // Idempotency key — bu "sipariş girişimi" için bir kez üretilir.
   // Ağ hatası nedeniyle aynı isteği yeniden gönderirken aynı key kullanılır;
   // sunucu daha önce işlenmiş siparişi yeniden kaydetmeden döndürür.
@@ -71,12 +85,36 @@ export default function OdemeSayfasi() {
 
   const genelToplam = Math.round((toplamFiyat - uyeIndirimi - indirimTutari + kargoUcreti) * 100) / 100
 
-  // Boş sepet koruması — hydrate olduktan sonra sepet hâlâ boşsa ana sayfaya yönlendir
+  // 3DS fail sonrası snapshot restore — kullanıcı /odeme/basarisiz?neden=3ds
+  // ekranından "Tekrar Dene"ye bastıktan sonra sepeti otomatik geri yüklüyoruz
+  // ki yeni 3DS kodu ile hemen tekrar denesin.
+  const [snapshotRestoreDenendi, setSnapshotRestoreDenendi] = useState(false)
   useEffect(() => {
-    if (hydrated && sepet.length === 0) {
-      router.replace('/')
+    if (!hydrated || snapshotRestoreDenendi) return
+    setSnapshotRestoreDenendi(true)
+    if (sepet.length > 0) return
+    try {
+      const raw = sessionStorage.getItem('gec_odeme_snapshot')
+      if (!raw) return
+      const snapshot = JSON.parse(raw)
+      if (!snapshot?.sepet || snapshot.expiresAt < Date.now()) {
+        sessionStorage.removeItem('gec_odeme_snapshot')
+        return
+      }
+      snapshot.sepet.forEach((item) => {
+        sepeteEkle({ ...item, adet: 1 })
+        if (item.adet > 1) adediGuncelle(item.id, item.adet)
+      })
+      sessionStorage.removeItem('gec_odeme_snapshot')
+    } catch {}
+  }, [hydrated, sepet.length, snapshotRestoreDenendi, sepeteEkle, adediGuncelle])
+
+  // Boş sepet koruması — hydrate + snapshot restore denendikten sonra sepet hâlâ boşsa sepete gönder
+  useEffect(() => {
+    if (hydrated && snapshotRestoreDenendi && sepet.length === 0) {
+      router.replace('/sepet')
     }
-  }, [hydrated, sepet.length, router])
+  }, [hydrated, snapshotRestoreDenendi, sepet.length, router])
 
   // Çoklu sekme uyarısı — ödeme sayfasındayken başka sekmede sepet değişirse bildir
   // CartContext'teki storage/visibilitychange listener zaten state'i günceller;
@@ -210,6 +248,30 @@ export default function OdemeSayfasi() {
       h.ilce = 'İlçe gerekli'
     if (!/^\d{5}$/.test(form.postaKodu))
       h.postaKodu = '5 haneli posta kodu girin'
+
+    // Fatura doğrulaması
+    if (fatura.tip === 'bireysel') {
+      if (fatura.tckn && !/^\d{11}$/.test(fatura.tckn))
+        h.faturaTckn = 'TC Kimlik No 11 haneli olmalıdır'
+    } else {
+      if (!fatura.firmaUnvani.trim() || fatura.firmaUnvani.trim().length < 2)
+        h.faturaFirma = 'Firma unvanını girin'
+      if (!fatura.vergiDairesi.trim())
+        h.faturaVergiDairesi = 'Vergi dairesini girin'
+      if (!/^\d{10}$/.test(fatura.vergiNo))
+        h.faturaVergiNo = 'Vergi numarası 10 haneli olmalıdır'
+    }
+    if (!fatura.ayniAdres) {
+      if (!fatura.adres.trim() || fatura.adres.trim().length < 10)
+        h.faturaAdres = 'Tam fatura adresinizi girin'
+      if (!fatura.sehir.trim())
+        h.faturaSehir = 'Şehir gerekli'
+      if (!fatura.ilce.trim())
+        h.faturaIlce = 'İlçe gerekli'
+      if (!/^\d{5}$/.test(fatura.postaKodu))
+        h.faturaPostaKodu = '5 haneli posta kodu girin'
+    }
+
     if (odemeYontemi === 'kart') {
       const numaraTemiz = kart.numara.replace(/\s/g, '')
       if (!/^\d{16}$/.test(numaraTemiz))
@@ -227,8 +289,18 @@ export default function OdemeSayfasi() {
         h.kartCvv = 'CVV 3 veya 4 haneli olmalı'
     }
     if (!sozlesmeOnay)
-      h.sozlesme = 'Mesafeli Satış Sözleşmesi\'ni onaylamanız zorunludur'
+      h.sozlesme = 'Ön Bilgilendirme Koşulları ve Mesafeli Satış Sözleşmesi\'ni onaylamanız zorunludur'
     return h
+  }
+
+  function faturaGuncelle(alan, deger) {
+    setFatura((o) => {
+      const yeni = { ...o, [alan]: deger }
+      if (alan === 'sehir') yeni.ilce = ''
+      return yeni
+    })
+    const hataKey = 'fatura' + alan.charAt(0).toUpperCase() + alan.slice(1)
+    if (hatalar[hataKey]) setHatalar((h) => ({ ...h, [hataKey]: '' }))
   }
 
   function kartGuncelle(alan, ham) {
@@ -275,6 +347,7 @@ export default function OdemeSayfasi() {
             sehir: form.sehir,
             ilce: form.ilce,
             postaKodu: form.postaKodu,
+            fatura,
             sepet,
             toplamFiyat,
             kargoUcreti,
@@ -304,7 +377,8 @@ export default function OdemeSayfasi() {
     }
 
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000)
+    // iyzico sandbox bazen 10–15s cevap verebiliyor; 20s tolerans
+    const timeoutId = setTimeout(() => controller.abort(), 20000)
 
     try {
       const res = await fetch('/api/odeme/initialize', {
@@ -319,6 +393,7 @@ export default function OdemeSayfasi() {
           sehir: form.sehir,
           ilce: form.ilce,
           postaKodu: form.postaKodu,
+          fatura,
           kart,
           sepet,
           toplamFiyat,
@@ -537,6 +612,8 @@ export default function OdemeSayfasi() {
                     <label htmlFor="adres" className="block text-sm font-medium text-stone-700 mb-1">Açık Adres *</label>
                     <textarea
                       id="adres"
+                      name="teslimat-adres-manuel"
+                      autoComplete="off"
                       rows={3}
                       placeholder="Mahalle, cadde, sokak, bina no, daire no..."
                       maxLength={500}
@@ -554,6 +631,8 @@ export default function OdemeSayfasi() {
                     <label htmlFor="sehir" className="block text-sm font-medium text-stone-700 mb-1">Şehir *</label>
                     <select
                       id="sehir"
+                      name="teslimat-sehir-manuel"
+                      autoComplete="off"
                       value={form.sehir}
                       onChange={(e) => guncelle('sehir', e.target.value)}
                       className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all bg-white ${hatalar.sehir ? 'border-red-300 focus:ring-red-100' : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'}`}
@@ -569,6 +648,8 @@ export default function OdemeSayfasi() {
                     <label htmlFor="ilce" className="block text-sm font-medium text-stone-700 mb-1">İlçe *</label>
                     <select
                       id="ilce"
+                      name="teslimat-ilce-manuel"
+                      autoComplete="off"
                       value={form.ilce}
                       onChange={(e) => guncelle('ilce', e.target.value)}
                       disabled={!form.sehir}
@@ -585,6 +666,8 @@ export default function OdemeSayfasi() {
                     <InputField
                       label="Posta Kodu *"
                       id="postaKodu"
+                      name="teslimat-posta-kodu-manuel"
+                      autoComplete="off"
                       type="text"
                       placeholder="34710"
                       maxLength={5}
@@ -596,10 +679,180 @@ export default function OdemeSayfasi() {
                 </div>
               </div>
 
+              {/* Fatura Bilgileri */}
+              <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-6">
+                <h2 className="text-lg font-bold text-stone-900 mb-5 flex items-center gap-2">
+                  <span className="flex items-center justify-center w-7 h-7 bg-rose-500 text-white text-xs font-bold rounded-full">3</span>
+                  Fatura Bilgileri
+                </h2>
+
+                {/* Tip seçici */}
+                <div className="grid grid-cols-2 gap-2 mb-5 p-1 bg-stone-100 rounded-xl">
+                  {[
+                    { v: 'bireysel', etiket: 'Bireysel', ikon: '👤' },
+                    { v: 'kurumsal', etiket: 'Kurumsal', ikon: '🏢' },
+                  ].map((t) => (
+                    <button
+                      key={t.v}
+                      type="button"
+                      onClick={() => faturaGuncelle('tip', t.v)}
+                      className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                        fatura.tip === t.v
+                          ? 'bg-white text-rose-600 shadow-sm'
+                          : 'text-stone-500 hover:text-stone-700'
+                      }`}
+                    >
+                      <span>{t.ikon}</span>
+                      {t.etiket}
+                    </button>
+                  ))}
+                </div>
+
+                {fatura.tip === 'bireysel' ? (
+                  <div data-hata={hatalar.faturaTckn ? 'true' : undefined}>
+                    <InputField
+                      label="TC Kimlik No (İsteğe Bağlı)"
+                      id="faturaTckn"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="11 haneli TC kimlik numarası"
+                      maxLength={11}
+                      value={fatura.tckn}
+                      onChange={(e) => faturaGuncelle('tckn', e.target.value.replace(/\D/g, ''))}
+                      error={hatalar.faturaTckn}
+                    />
+                    <p className="mt-2 text-xs text-stone-400">
+                      E-arşiv faturanızın kimliğinize tanımlanması için girebilirsiniz.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div data-hata={hatalar.faturaFirma ? 'true' : undefined} className="sm:col-span-2">
+                      <InputField
+                        label="Firma Unvanı *"
+                        id="faturaFirma"
+                        type="text"
+                        placeholder="Örn: Örnek Kozmetik Ltd. Şti."
+                        maxLength={200}
+                        value={fatura.firmaUnvani}
+                        onChange={(e) => faturaGuncelle('firmaUnvani', e.target.value)}
+                        error={hatalar.faturaFirma}
+                      />
+                    </div>
+                    <div data-hata={hatalar.faturaVergiDairesi ? 'true' : undefined}>
+                      <InputField
+                        label="Vergi Dairesi *"
+                        id="faturaVergiDairesi"
+                        type="text"
+                        placeholder="Örn: Kadıköy"
+                        maxLength={100}
+                        value={fatura.vergiDairesi}
+                        onChange={(e) => faturaGuncelle('vergiDairesi', e.target.value)}
+                        error={hatalar.faturaVergiDairesi}
+                      />
+                    </div>
+                    <div data-hata={hatalar.faturaVergiNo ? 'true' : undefined}>
+                      <InputField
+                        label="Vergi Numarası *"
+                        id="faturaVergiNo"
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="10 haneli vergi no"
+                        maxLength={10}
+                        value={fatura.vergiNo}
+                        onChange={(e) => faturaGuncelle('vergiNo', e.target.value.replace(/\D/g, ''))}
+                        error={hatalar.faturaVergiNo}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Fatura adresi */}
+                <label className="flex items-start gap-3 mt-5 cursor-pointer p-3 rounded-xl bg-stone-50 border border-stone-100 hover:border-rose-200 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={fatura.ayniAdres}
+                    onChange={(e) => faturaGuncelle('ayniAdres', e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-rose-500 shrink-0"
+                  />
+                  <span className="text-sm text-stone-700 leading-relaxed">
+                    <span className="font-medium">Fatura adresim teslimat adresimle aynı</span>
+                    <span className="block text-xs text-stone-400 mt-0.5">
+                      Kaldırırsanız farklı bir fatura adresi girebilirsiniz.
+                    </span>
+                  </span>
+                </label>
+
+                {!fatura.ayniAdres && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div data-hata={hatalar.faturaAdres ? 'true' : undefined} className="sm:col-span-2">
+                      <label htmlFor="faturaAdres" className="block text-sm font-medium text-stone-700 mb-1">Fatura Adresi *</label>
+                      <textarea
+                        id="faturaAdres"
+                        rows={3}
+                        placeholder="Mahalle, cadde, sokak, bina no, daire no..."
+                        maxLength={500}
+                        value={fatura.adres}
+                        onChange={(e) => faturaGuncelle('adres', e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all resize-none ${
+                          hatalar.faturaAdres
+                            ? 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                            : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'
+                        }`}
+                      />
+                      {hatalar.faturaAdres && <p className="mt-1 text-xs text-red-500">{hatalar.faturaAdres}</p>}
+                    </div>
+                    <div data-hata={hatalar.faturaSehir ? 'true' : undefined}>
+                      <label htmlFor="faturaSehir" className="block text-sm font-medium text-stone-700 mb-1">Şehir *</label>
+                      <select
+                        id="faturaSehir"
+                        value={fatura.sehir}
+                        onChange={(e) => faturaGuncelle('sehir', e.target.value)}
+                        className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all bg-white ${hatalar.faturaSehir ? 'border-red-300 focus:ring-red-100' : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'}`}
+                      >
+                        <option value="">İl seçin</option>
+                        {IL_LISTESI.map((il) => (
+                          <option key={il} value={il}>{il}</option>
+                        ))}
+                      </select>
+                      {hatalar.faturaSehir && <p className="mt-1 text-xs text-red-500">{hatalar.faturaSehir}</p>}
+                    </div>
+                    <div data-hata={hatalar.faturaIlce ? 'true' : undefined}>
+                      <label htmlFor="faturaIlce" className="block text-sm font-medium text-stone-700 mb-1">İlçe *</label>
+                      <select
+                        id="faturaIlce"
+                        value={fatura.ilce}
+                        onChange={(e) => faturaGuncelle('ilce', e.target.value)}
+                        disabled={!fatura.sehir}
+                        className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all bg-white disabled:bg-stone-50 disabled:text-stone-400 disabled:cursor-not-allowed ${hatalar.faturaIlce ? 'border-red-300 focus:ring-red-100' : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'}`}
+                      >
+                        <option value="">{fatura.sehir ? 'İlçe seçin' : 'Önce il seçin'}</option>
+                        {getIlceler(fatura.sehir).map((ilce) => (
+                          <option key={ilce} value={ilce}>{ilce}</option>
+                        ))}
+                      </select>
+                      {hatalar.faturaIlce && <p className="mt-1 text-xs text-red-500">{hatalar.faturaIlce}</p>}
+                    </div>
+                    <div data-hata={hatalar.faturaPostaKodu ? 'true' : undefined} className="sm:col-span-2">
+                      <InputField
+                        label="Posta Kodu *"
+                        id="faturaPostaKodu"
+                        type="text"
+                        placeholder="34710"
+                        maxLength={5}
+                        value={fatura.postaKodu}
+                        onChange={(e) => faturaGuncelle('postaKodu', e.target.value.replace(/\D/g, ''))}
+                        error={hatalar.faturaPostaKodu}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* İndirim Kodu */}
               <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-4 flex items-center gap-2">
-                  <span className="flex items-center justify-center w-7 h-7 bg-rose-500 text-white text-xs font-bold rounded-full">3</span>
+                  <span className="flex items-center justify-center w-7 h-7 bg-rose-500 text-white text-xs font-bold rounded-full">4</span>
                   İndirim Kodu (İsteğe Bağlı)
                 </h2>
 
@@ -656,7 +909,7 @@ export default function OdemeSayfasi() {
               {/* Ödeme Yöntemi */}
               <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-6">
                 <h2 className="text-lg font-bold text-stone-900 mb-5 flex items-center gap-2">
-                  <span className="flex items-center justify-center w-7 h-7 bg-rose-500 text-white text-xs font-bold rounded-full">4</span>
+                  <span className="flex items-center justify-center w-7 h-7 bg-rose-500 text-white text-xs font-bold rounded-full">5</span>
                   Ödeme Yöntemi
                 </h2>
 
@@ -795,7 +1048,7 @@ export default function OdemeSayfasi() {
                   <p className="text-xs text-stone-400 text-right mt-1">KDV dahildir</p>
                 </div>
 
-                {/* Mesafeli Satış Sözleşmesi onayı */}
+                {/* Ön Bilgilendirme Koşulları + Mesafeli Satış Sözleşmesi — tek onay (Trendyol tarzı) */}
                 <label className={`flex items-start gap-3 cursor-pointer p-3 rounded-xl border transition-colors ${hatalar.sozlesme ? 'border-red-200 bg-red-50' : 'border-stone-100 hover:bg-stone-50'}`}>
                   <input
                     type="checkbox"
@@ -807,9 +1060,14 @@ export default function OdemeSayfasi() {
                     className="mt-0.5 w-4 h-4 accent-rose-500 shrink-0"
                   />
                   <span className="text-xs text-stone-600 leading-relaxed">
+                    <a href="/on-bilgilendirme-formu" target="_blank" rel="noopener noreferrer" className="text-rose-600 font-semibold hover:underline">
+                      Ön Bilgilendirme Koşulları
+                    </a>
+                    'nı ve{' '}
                     <a href="/mesafeli-satis-sozlesmesi" target="_blank" rel="noopener noreferrer" className="text-rose-600 font-semibold hover:underline">
                       Mesafeli Satış Sözleşmesi
-                    </a>'ni okudum ve kabul ediyorum. <span className="text-red-500 font-semibold">*</span>
+                    </a>
+                    'ni okudum, onaylıyorum.
                   </span>
                 </label>
                 {hatalar.sozlesme && (

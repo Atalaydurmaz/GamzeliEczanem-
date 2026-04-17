@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useCart } from '@/context/CartContext'
+import { useStock } from '@/context/StockContext'
 import { useAuth } from '@/context/AuthContext'
 import { useSession } from 'next-auth/react'
 import SepetEmailKayit from '@/components/SepetEmailKayit'
@@ -12,6 +13,7 @@ const UYE_INDIRIMI_ORANI = 0.05 // %5 üye indirimi
 
 export default function SepetSayfasi() {
   const { sepet, sepeteEkle, sepettenCikar, adediGuncelle, toplamFiyat, kargoUcreti, toplamAdet, hydrated } = useCart()
+  const { getKalanStok } = useStock()
   const { kullanici } = useAuth()
   const { data: session } = useSession()
   const girisYapti = !!(kullanici || session?.user)
@@ -199,7 +201,10 @@ export default function SepetSayfasi() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
-            {sepet.map((item) => (
+            {sepet.map((item) => {
+              const kalanStok = getKalanStok(item.id)
+              const maxUlasildi = kalanStok !== null && kalanStok <= 0
+              return (
               <div
                 key={item.id}
                 className="bg-white rounded-2xl border border-rose-100 shadow-sm p-4 flex gap-4"
@@ -239,7 +244,9 @@ export default function SepetSayfasi() {
                       </span>
                       <button
                         onClick={() => adediGuncelle(item.id, item.adet + 1)}
-                        className="w-11 h-11 flex items-center justify-center text-stone-500 hover:text-rose-600 hover:bg-rose-50 transition-colors text-lg font-medium"
+                        disabled={maxUlasildi}
+                        title={maxUlasildi ? 'Stoktaki son ürüne ulaşıldı' : undefined}
+                        className="w-11 h-11 flex items-center justify-center text-stone-500 hover:text-rose-600 hover:bg-rose-50 transition-colors text-lg font-medium disabled:text-stone-300 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-stone-300"
                       >
                         +
                       </button>
@@ -262,7 +269,8 @@ export default function SepetSayfasi() {
                   </div>
                 </div>
               </div>
-            ))}
+              )
+            })}
           </div>
 
           <div className="lg:col-span-1">

@@ -7,6 +7,10 @@ const CartContext = createContext(null)
 export function CartProvider({ children }) {
   const [hydrated, setHydrated] = useState(false)
   const [sepet, setSepet] = useState([])
+  // Side cart drawer durumu — AddToCartButton tetikler, CartDrawer tüketir
+  const [drawerAcik, setDrawerAcik] = useState(false)
+  function drawerAc() { setDrawerAcik(true) }
+  function drawerKapat() { setDrawerAcik(false) }
 
   // Mount sonrası localStorage'dan oku + Supabase'den güncel fiyatları al
   useEffect(() => {
@@ -146,6 +150,9 @@ export function CartProvider({ children }) {
         toplamFiyat,
         kargoUcreti,
         hydrated,
+        drawerAcik,
+        drawerAc,
+        drawerKapat,
       }}
     >
       {children}

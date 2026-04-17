@@ -8,6 +8,9 @@ export async function POST(request) {
     return Response.json(sonuc)
   } catch (error) {
     console.error('Arama API error:', error)
-    return Response.json({ error: 'Arama yapılırken bir hata oluştu' }, { status: 500 })
+    const mesaj = error?.message?.includes('ANTHROPIC_API_KEY')
+      ? 'AI arama şu an kullanılamıyor'
+      : 'Arama yapılırken bir hata oluştu'
+    return Response.json({ error: mesaj }, { status: 500 })
   }
 }

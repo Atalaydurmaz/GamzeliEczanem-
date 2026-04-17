@@ -1,7 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { getAnthropicClient } from '@/lib/anthropicClient'
 import { getProducts } from '@/lib/products'
-
-const client = new Anthropic()
 
 const ILGILI_KATEGORILER = ['cilt-bakimi', 'gunes-bakimi', 'sac-bakimi']
 
@@ -54,7 +52,7 @@ SADECE ve SADECE aşağıdaki JSON formatında yanıt ver — başka hiçbir şe
   "urunIdleri": [id1, id2, id3, id4, id5]
 }`
 
-    const response = await client.messages.create({
+    const response = await getAnthropicClient().messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 1024,
       system: [

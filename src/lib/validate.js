@@ -221,6 +221,19 @@ const SepetItemSchema = z.object({
   adet:  pozitifTamsayi.max(100),
 })
 
+export const FaturaSchema = z.object({
+  tip:         z.enum(['bireysel', 'kurumsal']),
+  tckn:        z.string().trim().regex(/^\d{11}$/).optional().or(z.literal('')),
+  firmaUnvani: z.string().trim().max(200).optional().or(z.literal('')),
+  vergiDairesi:z.string().trim().max(100).optional().or(z.literal('')),
+  vergiNo:     z.string().trim().regex(/^\d{10}$/).optional().or(z.literal('')),
+  ayniAdres:   z.boolean().default(true),
+  adres:       z.string().trim().max(500).optional().or(z.literal('')),
+  sehir:       z.string().trim().max(100).optional().or(z.literal('')),
+  ilce:        z.string().trim().max(100).optional().or(z.literal('')),
+  postaKodu:   z.string().trim().regex(/^\d{5}$/).optional().or(z.literal('')),
+}).optional()
+
 export const SiparisSchema = z.object({
   // siparisNo artık sunucu tarafında üretilir — client'tan kabul edilmez
   adSoyad:   z.string().trim().min(2).max(100),
@@ -230,6 +243,7 @@ export const SiparisSchema = z.object({
   sehir:     z.string().trim().min(1).max(100),
   ilce:      z.string().trim().min(1).max(100),
   postaKodu: z.string().trim().regex(/^\d{5}$/, 'Posta kodu 5 haneli sayı olmalıdır.'),
+  fatura:    FaturaSchema,
   sepet:     z.array(SepetItemSchema).min(1, 'Sepet boş olamaz.').max(50),
   odemeTipi: z.enum(['kapida', 'havale']),
   indirimKodu: z.string().trim().max(50).optional().nullable(),

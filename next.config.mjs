@@ -33,12 +33,15 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://picsum.photos https://images.unsplash.com https://cdn.dsmcdn.com https://us.lazartigue.com https://witcdn.dermoeczanem.com https://*.supabase.co",
       "font-src 'self'",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://sandbox.iyzipay.com https://www.iyzipay.com",
-      "frame-src 'self' https://www.iyzipay.com https://sandbox.iyzipay.com",
+      // cdn.jsdelivr.net: face-api.js model ağırlıkları (Sanal Makyaj Deneme)
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.iyzipay.com https://cdn.jsdelivr.net",
+      "frame-src 'self' https://*.iyzipay.com https://www.openstreetmap.org",
       "worker-src 'self' blob:",
       "object-src 'none'",
       "base-uri 'self'",
-      "form-action 'self' https://www.iyzipay.com https://sandbox.iyzipay.com",
+      // form-action: 3DS akışında iyzico, banka 3DS sayfalarına ve *.iyzipay.com alt
+      // alan adlarına POST yapar. sandbox-api.iyzipay.com dahil hepsi için wildcard.
+      "form-action 'self' https://*.iyzipay.com",
       "upgrade-insecure-requests",
     ].join('; '),
   },

@@ -84,8 +84,22 @@ async function _processCallback({ paymentId, conversationData, conversationId })
   }).catch((err) => ({ status: 'error', errorMessage: err?.message }))
 
   if (result.status !== 'success') {
-    console.error('iyzico 3DS auth failed:', result.errorMessage)
-    return NextResponse.redirect(`${siteUrl}/odeme/basarisiz?neden=odeme`, { status: 302 })
+    console.error('iyzico 3DS auth failed:', result.errorCode, result.errorMessage)
+    // iyzico errorCode'una göre spesifik neden. Bilinmeyen kodlar 'odeme' fallback.
+    // https://dev.iyzipay.com/tr/api/hatalar
+    const errorCode = String(result.errorCode || '')
+    const KOD_NEDEN_MAP = {
+      '10051': 'bakiye',     // Not sufficient funds
+      '10005': 'reddedildi', // Do not honour
+      '10057': 'reddedildi', // Transaction not permitted to cardholder
+      '10058': 'reddedildi', // Transaction not permitted to terminal
+      '10041': 'kayip',      // Lost card
+      '10043': 'calinti',    // Stolen card
+      '10054': 'sonkullanim',// Expired card
+      '10014': 'kartno',     // Invalid card number
+    }
+    const neden = KOD_NEDEN_MAP[errorCode] || 'odeme'
+    return NextResponse.redirect(`${siteUrl}/odeme/basarisiz?neden=${neden}`, { status: 302 })
   }
 
   // ── Katman 2: DB düzeyinde atomik claim ─────────────────────────────
@@ -111,6 +125,7 @@ async function _processCallback({ paymentId, conversationData, conversationId })
   const {
     siparisNo, adSoyad, email, telefon,
     adres, sehir, ilce, postaKodu,
+    fatura,
     sepet, toplamFiyat, kargoUcreti, genelToplam,
     indirimKodu, indirimTutari,
   } = orderData
@@ -150,7 +165,7 @@ async function _processCallback({ paymentId, conversationData, conversationId })
     siparisNo,
     tarih: siparisTarihi,
     musteri: { adSoyad, email, telefon },
-    teslimat: { adres, sehir, ilce, postaKodu },
+    teslimat: { adres, sehir, ilce, postaKodu, fatura: fatura || null },
     urunler: sepet,
     toplamFiyat,
     indirimKodu: indirimKodu || null,

@@ -48,7 +48,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="tr" className={`${geist.variable} h-full`} data-scroll-behavior="smooth">
-      <body className="min-h-full flex flex-col bg-white text-stone-900 antialiased">
+      <body className="min-h-full flex flex-col bg-white text-stone-900 antialiased overflow-x-hidden">
         <NextAuthProvider>
           <AuthProvider>
             <CartProvider>

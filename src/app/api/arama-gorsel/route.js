@@ -1,7 +1,5 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { getAnthropicClient } from '@/lib/anthropicClient'
 import { getProducts } from '@/lib/products'
-
-const client = new Anthropic()
 
 export async function POST(request) {
   try {
@@ -16,7 +14,7 @@ export async function POST(request) {
       .map((u) => `${u.id}|${u.ad}|${u.kategori}|${u.aciklama}`)
       .join('\n')
 
-    const response = await client.messages.create({
+    const response = await getAnthropicClient().messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 512,
       messages: [

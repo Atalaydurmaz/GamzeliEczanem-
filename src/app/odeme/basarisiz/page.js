@@ -5,13 +5,22 @@ import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
 const NEDEN_MESAJ = {
-  '3ds':  '3D Secure doğrulaması tamamlanamadı.',
-  odeme:  'Kart bilgileriniz doğrulanamadı veya ödeme reddedildi.',
-  veri:   'Oturum süresi doldu, lütfen tekrar deneyin.',
-  stok:   'Sipariş işlenirken bir ürün stokta tükendi. Lütfen sepetinizi güncelleyip tekrar deneyin.',
-  tutar:  'Ödeme tutarında bir uyuşmazlık tespit edildi. Kartınızdan herhangi bir ücret kesilmediyse ya kesildi ise otomatik iade edildi.',
-  kayit:  'Sipariş kaydedilirken bir hata oluştu. Ödemeniz alındıysa otomatik iade edildi.',
+  '3ds':         '3D Secure kodu yanlış veya zaman aşımı oldu. Kartınızdan ücret kesilmedi, yeni bir kod ile tekrar deneyebilirsiniz.',
+  odeme:         'Kart bilgileriniz doğrulanamadı veya ödeme reddedildi.',
+  bakiye:        'Kartınızda yeterli bakiye bulunmuyor.',
+  reddedildi:    'Bankanız işlemi güvenlik nedeniyle reddetti. Lütfen bankanızla iletişime geçin.',
+  kayip:         'Bu kart kayıp olarak işaretlendiği için işlem gerçekleştirilemedi.',
+  calinti:       'Bu kart çalıntı olarak işaretlendiği için işlem gerçekleştirilemedi.',
+  sonkullanim:   'Kartınızın son kullanma tarihi geçmiş.',
+  kartno:        'Girdiğiniz kart numarası geçersiz. Lütfen tekrar kontrol edin.',
+  veri:          'Oturum süresi doldu, lütfen tekrar deneyin.',
+  stok:          'Sipariş işlenirken bir ürün stokta tükendi. Lütfen sepetinizi güncelleyip tekrar deneyin.',
+  tutar:         'Ödeme tutarında bir uyuşmazlık tespit edildi. Kartınızdan herhangi bir ücret kesilmediyse ya kesildi ise otomatik iade edildi.',
+  kayit:         'Sipariş kaydedilirken bir hata oluştu. Ödemeniz alındıysa otomatik iade edildi.',
 }
+
+// Spesifik nedenler için tek cümle — "sık karşılaşılan nedenler" listesi gösterilmez
+const SPESIFIK_NEDENLER = new Set(['bakiye', 'reddedildi', 'kayip', 'calinti', 'sonkullanim', 'kartno', '3ds'])
 
 function BasarisizIcerik() {
   const params = useSearchParams()
@@ -30,7 +39,7 @@ function BasarisizIcerik() {
         <h1 className="text-2xl font-bold text-stone-900 mb-2">Ödeme Başarısız</h1>
         <p className="text-stone-500 text-sm mb-6">{mesaj}</p>
 
-        {neden === 'stok' ? (
+        {SPESIFIK_NEDENLER.has(neden) ? null : neden === 'stok' ? (
           <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6 text-sm text-stone-600 text-left">
             <p className="font-semibold text-stone-700 mb-2">Ne oldu?</p>
             <p>Ödemeniz alındı ancak siz ödeme yaparken başka bir müşteri aynı ürünü satın aldı ve stok tükendi.</p>
@@ -40,7 +49,18 @@ function BasarisizIcerik() {
           <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6 text-sm text-stone-600 text-left">
             <p className="font-semibold text-stone-700 mb-2">Ne yapmalıyım?</p>
             <p>Kartınızdan ücret kesildiyse 3–5 iş günü içinde otomatik olarak iade edilecektir.</p>
-            <p className="mt-2">Sorun çözülmezse müşteri hizmetlerimizle iletişime geçin.</p>
+            <p className="mt-2">
+              Sorun çözülmezse{' '}
+              <a
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=destek.gamzelieczanem@gmail.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-rose-600 font-semibold hover:underline"
+              >
+                destek.gamzelieczanem@gmail.com
+              </a>
+              {' '}adresine yazabilirsiniz.
+            </p>
           </div>
         ) : (
           <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 mb-6 text-sm text-stone-600 text-left space-y-1">

@@ -13,6 +13,87 @@ const DURUM_STIL = {
   'İptal Edildi':    'bg-red-100 text-red-600 border border-red-200',
 }
 
+function ConfirmModal({ title, message, confirmLabel, cancelLabel, danger, onConfirm, onCancel }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onCancel()
+      else if (e.key === 'Enter') onConfirm()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onConfirm, onCancel])
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-[fadeIn_150ms_ease-out]">
+      <div className="bg-white rounded-2xl shadow-2xl border border-stone-100 w-full max-w-md overflow-hidden animate-[popIn_180ms_cubic-bezier(0.2,0.9,0.3,1.1)]">
+        <div className="p-6">
+          <div className="flex items-start gap-4">
+            <div className={`shrink-0 w-11 h-11 rounded-full flex items-center justify-center ${danger ? 'bg-red-50 text-red-500' : 'bg-rose-50 text-rose-500'}`}>
+              {danger ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-semibold text-stone-900 mb-1">{title || 'Emin misiniz?'}</h3>
+              <p className="text-sm text-stone-600 leading-relaxed">{message}</p>
+            </div>
+          </div>
+        </div>
+        <div className="px-6 py-4 bg-stone-50 border-t border-stone-100 flex gap-2 justify-end">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 transition-colors"
+          >
+            {cancelLabel || 'İptal'}
+          </button>
+          <button
+            onClick={onConfirm}
+            autoFocus
+            className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors shadow-sm ${danger ? 'bg-red-500 hover:bg-red-600' : 'bg-rose-500 hover:bg-rose-600'}`}
+          >
+            {confirmLabel || 'Onayla'}
+          </button>
+        </div>
+      </div>
+      <style jsx>{`
+        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95) translateY(6px) } to { opacity: 1; transform: scale(1) translateY(0) } }
+      `}</style>
+    </div>
+  )
+}
+
+function useConfirm() {
+  const [state, setState] = useState(null)
+  const ask = useCallback((message, options = {}) => {
+    return new Promise((resolve) => {
+      setState({ message, resolve, ...options })
+    })
+  }, [])
+  const handle = (ok) => {
+    state?.resolve(ok)
+    setState(null)
+  }
+  const modal = state ? (
+    <ConfirmModal
+      title={state.title}
+      message={state.message}
+      confirmLabel={state.confirmLabel}
+      cancelLabel={state.cancelLabel}
+      danger={state.danger}
+      onConfirm={() => handle(true)}
+      onCancel={() => handle(false)}
+    />
+  ) : null
+  return [ask, modal]
+}
+
 function StatKart({ baslik, deger, alt, ikon }) {
   return (
     <div className="bg-white rounded-2xl border border-rose-100 shadow-sm p-5">
@@ -27,10 +108,14 @@ function StatKart({ baslik, deger, alt, ikon }) {
 }
 
 
-function SiparisDetay({ siparis, onKargoKaydet }) {
+function SiparisDetay({ siparis, onKargoKaydet, onFaturaDegisti }) {
   const [takipNo, setTakipNo] = useState(siparis.kargoTakipNo || '')
   const [kaydediliyor, setKaydediliyor] = useState(false)
   const [gonderildi, setGonderildi] = useState(false)
+  const [faturaYukleniyor, setFaturaYukleniyor] = useState(false)
+  const [faturaHata, setFaturaHata] = useState('')
+  const [askConfirm, confirmEl] = useConfirm()
+  const faturaPdfPath = siparis.teslimat?.fatura?.pdfPath
 
   async function handleKaydet() {
     if (!takipNo.trim()) return
@@ -41,6 +126,154 @@ function SiparisDetay({ siparis, onKargoKaydet }) {
     setTimeout(() => setGonderildi(false), 3000)
   }
 
+  async function faturaYukle(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (file.type !== 'application/pdf') { setFaturaHata('Sadece PDF yükleyebilirsiniz'); return }
+    if (file.size > 10 * 1024 * 1024)    { setFaturaHata('Dosya en fazla 10 MB olabilir'); return }
+    setFaturaHata('')
+    setFaturaYukleniyor(true)
+    try {
+      const fd = new FormData()
+      fd.append('pdf', file)
+      const res = await fetch(`/api/admin/orders/${siparis.siparisNo}/fatura-pdf`, {
+        method: 'POST',
+        body: fd,
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) { setFaturaHata(data.error || 'Yükleme başarısız'); return }
+      onFaturaDegisti?.(siparis.siparisNo, { pdfPath: data.pdfPath, yuklemeTarihi: new Date().toISOString() })
+    } catch {
+      setFaturaHata('Bağlantı hatası')
+    } finally {
+      setFaturaYukleniyor(false)
+    }
+  }
+
+  async function faturaGoruntule(yazdir = false) {
+    setFaturaHata('')
+    try {
+      const res = await fetch(`/api/admin/orders/${siparis.siparisNo}/fatura-pdf`)
+      const data = await res.json()
+      if (!res.ok || !data.url) { setFaturaHata(data.error || 'Açılamadı'); return }
+      if (yazdir) {
+        // Yeni pencerede aç, yüklendikten sonra yazdırma diyaloğunu tetikle
+        const win = window.open(data.url, '_blank')
+        if (win) {
+          win.addEventListener('load', () => { try { win.print() } catch {} })
+          // Bazı tarayıcılarda load event PDF için tetiklenmez — fallback
+          setTimeout(() => { try { win.print() } catch {} }, 1500)
+        }
+      } else {
+        window.open(data.url, '_blank', 'noopener,noreferrer')
+      }
+    } catch {
+      setFaturaHata('Bağlantı hatası')
+    }
+  }
+
+  function kargoEtiketiYazdir() {
+    const no = siparis.kargoTakipNo
+    if (!no) return
+    const m = siparis.musteri || {}
+    const t = siparis.teslimat || {}
+    const takipUrl = `https://www.yurticikargo.com/tr/online-islemler/gonderi-sorgula?code=${encodeURIComponent(no)}`
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+    // Barkod görselliği için CSS çizgileri (okunabilirliği sadece görseldir; numara metin olarak altta)
+    const bars = Array.from({ length: 60 }, () => {
+      const w = [1, 1, 2, 2, 3][Math.floor(Math.random() * 5)]
+      return `<span style="display:inline-block;width:${w}px;height:58px;background:#000;margin-right:1.5px"></span>`
+    }).join('')
+
+    const html = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8">
+<title>Kargo Etiketi — ${esc(siparis.siparisNo)}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#111;padding:20px;background:#fff}
+  .label{max-width:560px;margin:0 auto;border:2px solid #000;border-radius:6px;overflow:hidden}
+  .hdr{background:#000;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+  .hdr h1{font-size:18px;letter-spacing:2px}
+  .hdr span{font-size:12px;opacity:.7}
+  .row{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #000}
+  .cell{padding:14px 20px}
+  .cell+.cell{border-left:1px solid #000}
+  .label-key{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#666;margin-bottom:6px;font-weight:700}
+  .cell p{font-size:13px;line-height:1.5}
+  .cell p.name{font-weight:700;font-size:15px;margin-bottom:4px}
+  .takip{padding:24px 20px;text-align:center;background:#fafafa}
+  .takip .label-key{margin-bottom:10px}
+  .barcode{white-space:nowrap;margin:0 auto 10px;display:inline-flex;align-items:end}
+  .no{font-size:22px;font-weight:800;letter-spacing:4px;font-family:'Courier New',monospace}
+  .footer{padding:14px 20px;border-top:1px solid #000;font-size:11px;color:#666;display:flex;justify-content:space-between;align-items:center}
+  .footer strong{color:#111}
+  @media print{
+    @page{margin:10mm;size:A6 landscape}
+    body{padding:0}
+    .label{border:2px solid #000;max-width:none}
+  }
+</style></head><body>
+<div class="label">
+  <div class="hdr">
+    <h1>YURTİÇİ KARGO</h1>
+    <span>GAMZELİECZANEM</span>
+  </div>
+  <div class="row">
+    <div class="cell">
+      <div class="label-key">Gönderici</div>
+      <p class="name">GAMZELİECZANEM</p>
+      <p>Yeni Çiftlik, Kazım Karabekir Cd. No:12</p>
+      <p>41650 Gölcük / Kocaeli</p>
+      <p style="margin-top:4px;color:#666">0262 412 6928</p>
+    </div>
+    <div class="cell">
+      <div class="label-key">Alıcı</div>
+      <p class="name">${esc(m.adSoyad)}</p>
+      <p>${esc(t.adres).replace(/\n/g, '<br>')}</p>
+      <p>${esc(t.ilce)} / ${esc(t.sehir)} ${esc(t.postaKodu)}</p>
+      <p style="margin-top:4px;color:#666">${esc(m.telefon)}</p>
+    </div>
+  </div>
+  <div class="takip">
+    <div class="label-key">Kargo Takip Numarası</div>
+    <div class="barcode">${bars}</div>
+    <div class="no">${esc(no)}</div>
+  </div>
+  <div class="footer">
+    <span>Sipariş: <strong>${esc(siparis.siparisNo)}</strong></span>
+    <span>${new Date(siparis.tarih).toLocaleDateString('tr-TR')}</span>
+  </div>
+</div>
+<p style="text-align:center;margin-top:14px;font-size:11px;color:#999">Takip: ${takipUrl}</p>
+<script>window.addEventListener('load',()=>{setTimeout(()=>window.print(),300)});</script>
+</body></html>`
+
+    const win = window.open('', '_blank')
+    if (!win) return
+    win.document.open()
+    win.document.write(html)
+    win.document.close()
+  }
+
+  async function faturaSil() {
+    const ok = await askConfirm('Yüklü fatura PDF\'i silinecek. Bu işlem geri alınamaz.', {
+      title: 'Faturayı sil',
+      confirmLabel: 'Sil',
+      danger: true,
+    })
+    if (!ok) return
+    setFaturaHata('')
+    setFaturaYukleniyor(true)
+    try {
+      const res = await fetch(`/api/admin/orders/${siparis.siparisNo}/fatura-pdf`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) { setFaturaHata(data.error || 'Silinemedi'); return }
+      onFaturaDegisti?.(siparis.siparisNo, { pdfPath: null, yuklemeTarihi: null })
+    } finally {
+      setFaturaYukleniyor(false)
+    }
+  }
+
   return (
     <div className="bg-stone-50 border-t border-stone-100 px-4 py-5 grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
       {/* Müşteri */}
@@ -49,6 +282,163 @@ function SiparisDetay({ siparis, onKargoKaydet }) {
         <p className="text-stone-700 font-medium">{siparis.musteri.adSoyad}</p>
         <p className="text-stone-500">{siparis.musteri.email}</p>
         <p className="text-stone-500">{siparis.musteri.telefon}</p>
+
+        {/* Fatura Bilgileri — her siparişte görünür; yoksa "Girilmedi" notu */}
+        <div className="mt-4 pt-3 border-t border-stone-200">
+          <div className="flex items-center gap-1.5 mb-2">
+            <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider">Fatura</p>
+            {siparis.teslimat?.fatura?.tip === 'kurumsal' && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">🏢 KURUMSAL</span>
+            )}
+            {siparis.teslimat?.fatura?.tip === 'bireysel' && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700">👤 BİREYSEL</span>
+            )}
+            {!siparis.teslimat?.fatura?.tip && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-stone-100 text-stone-500">GİRİLMEDİ</span>
+            )}
+          </div>
+
+          {!siparis.teslimat?.fatura?.tip ? (
+            <p className="text-xs text-stone-400 italic">
+              Bu sipariş için fatura bilgisi girilmemiş.
+            </p>
+          ) : siparis.teslimat.fatura.tip === 'kurumsal' ? (
+            <div className="space-y-0.5 text-xs">
+              <p className="text-stone-700 font-medium">{siparis.teslimat.fatura.firmaUnvani}</p>
+              <p className="text-stone-500">
+                <span className="text-stone-400">V.D:</span> {siparis.teslimat.fatura.vergiDairesi}
+              </p>
+              <p className="text-stone-500 font-mono">
+                <span className="text-stone-400 font-sans">V.No:</span> {siparis.teslimat.fatura.vergiNo}
+              </p>
+            </div>
+          ) : (
+            <p className="text-xs text-stone-500 font-mono">
+              {siparis.teslimat.fatura.tckn
+                ? <><span className="text-stone-400 font-sans">TCKN:</span> {siparis.teslimat.fatura.tckn}</>
+                : <span className="text-stone-400 italic font-sans">TCKN girilmedi</span>}
+            </p>
+          )}
+
+          {siparis.teslimat?.fatura?.ayniAdres === false && siparis.teslimat.fatura.adres && (
+            <div className="mt-2 pt-2 border-t border-stone-100">
+              <p className="text-[10px] font-semibold text-stone-400 uppercase mb-1">Fatura Adresi</p>
+              <p className="text-xs text-stone-500 leading-relaxed">
+                {siparis.teslimat.fatura.adres}<br />
+                {siparis.teslimat.fatura.ilce} / {siparis.teslimat.fatura.sehir} {siparis.teslimat.fatura.postaKodu}
+              </p>
+            </div>
+          )}
+
+          {confirmEl}
+
+          {/* Fatura işlemleri */}
+          <div className="mt-3 space-y-2">
+            {!faturaPdfPath ? (
+              <>
+                <a
+                  href="https://trendyolefaturam.com/portal"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-1.5 w-full px-3 py-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white text-xs font-semibold rounded-lg hover:shadow-md hover:shadow-orange-200 transition-all"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                  </svg>
+                  1. E-Fatura Kes (Trendyol)
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                </a>
+                <label className={`flex items-center justify-center gap-1.5 w-full px-3 py-2 border-2 border-dashed rounded-lg text-xs font-semibold cursor-pointer transition-all ${
+                  faturaYukleniyor
+                    ? 'border-stone-200 text-stone-400 cursor-wait'
+                    : 'border-emerald-300 text-emerald-700 bg-emerald-50/50 hover:bg-emerald-50 hover:border-emerald-400'
+                }`}>
+                  {faturaYukleniyor ? (
+                    <>
+                      <svg className="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Yükleniyor...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                      </svg>
+                      2. Fatura PDF'i Yükle
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={faturaYukle}
+                    disabled={faturaYukleniyor}
+                  />
+                </label>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-emerald-800">Fatura yüklendi</p>
+                    {siparis.teslimat?.fatura?.yuklemeTarihi && (
+                      <p className="text-[10px] text-emerald-600">
+                        {new Date(siparis.teslimat.fatura.yuklemeTarihi).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => faturaGoruntule(false)}
+                    className="flex items-center justify-center gap-1 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Görüntüle
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => faturaGoruntule(true)}
+                    className="flex items-center justify-center gap-1 px-3 py-2 bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold rounded-lg transition-colors"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+                    </svg>
+                    Yazdır
+                  </button>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <label className="text-[11px] text-stone-500 hover:text-stone-700 cursor-pointer underline decoration-dotted">
+                    Yeni PDF ile değiştir
+                    <input type="file" accept="application/pdf" className="hidden" onChange={faturaYukle} disabled={faturaYukleniyor} />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={faturaSil}
+                    disabled={faturaYukleniyor}
+                    className="text-[11px] text-stone-400 hover:text-red-500 transition-colors"
+                  >
+                    Sil
+                  </button>
+                </div>
+              </>
+            )}
+
+            {faturaHata && (
+              <p className="text-xs text-red-500 px-1">{faturaHata}</p>
+            )}
+          </div>
+        </div>
       </div>
       {/* Teslimat */}
       <div>
@@ -78,6 +468,18 @@ function SiparisDetay({ siparis, onKargoKaydet }) {
               {kaydediliyor ? '...' : gonderildi ? '✓ Gönderildi' : 'Kaydet & Bildir'}
             </button>
           </div>
+          {siparis.kargoTakipNo && (
+            <button
+              type="button"
+              onClick={kargoEtiketiYazdir}
+              className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-stone-800 hover:bg-stone-900 text-white text-xs font-semibold rounded-lg transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              Kargo Etiketi Yazdır
+            </button>
+          )}
         </div>
       </div>
       {/* Ürünler */}
@@ -576,6 +978,7 @@ function UrunlerSekme() {
   const [siliniyor, setSiliniyor] = useState(null)
   const [hata, setHata] = useState('')
   const [arama, setArama] = useState('')
+  const [askConfirm, confirmEl] = useConfirm()
 
   useEffect(() => {
     fetch('/api/admin/products').then(r => r.json()).then(setUrunler).finally(() => setYukleniyor(false))
@@ -645,7 +1048,13 @@ function UrunlerSekme() {
   }
 
   async function sil(id) {
-    if (!confirm('Bu ürünü silmek istediğinize emin misiniz?')) return
+    const urun = urunler.find(u => u.id === id)
+    const ok = await askConfirm(`"${urun?.ad || 'Bu ürün'}" kalıcı olarak silinecek. Bu işlem geri alınamaz.`, {
+      title: 'Ürünü sil',
+      confirmLabel: 'Sil',
+      danger: true,
+    })
+    if (!ok) return
     setSiliniyor(id)
     const res = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' })
     if (res.ok) setUrunler(p => p.filter(u => u.id !== id))
@@ -690,7 +1099,11 @@ function UrunlerSekme() {
     }).filter(r => r.id && r.ad)
 
     if (kayitlar.length === 0) { alert('CSV dosyasında geçerli satır bulunamadı.'); return }
-    if (!confirm(`${kayitlar.length} ürün içe aktarılacak. Devam edilsin mi?`)) return
+    const onay = await askConfirm(`${kayitlar.length} ürün CSV'den içe aktarılacak. Devam edilsin mi?`, {
+      title: 'CSV içe aktar',
+      confirmLabel: 'İçe aktar',
+    })
+    if (!onay) return
 
     let basarili = 0, hatali = 0
     for (const kayit of kayitlar) {
@@ -725,6 +1138,7 @@ function UrunlerSekme() {
 
   return (
     <div className="space-y-4">
+      {confirmEl}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <input
           type="text" placeholder="Ürün ara..."
@@ -930,6 +1344,7 @@ function MesajlarSekme({ mesajlar, setMesajlar }) {
   const [cevap, setCevap] = useState('')
   const [gonderiyor, setGonderiyor] = useState(false)
   const [filtre, setFiltre] = useState('hepsi') // hepsi | okunmamis | cevaplandi
+  const [askConfirm, confirmEl] = useConfirm()
 
   const filtrelenmis = mesajlar.filter(m => {
     if (filtre === 'okunmamis') return !m.okundu
@@ -960,7 +1375,12 @@ function MesajlarSekme({ mesajlar, setMesajlar }) {
   }
 
   async function sil(id) {
-    if (!confirm('Bu mesajı silmek istediğinize emin misiniz?')) return
+    const ok = await askConfirm('Bu mesaj kalıcı olarak silinecek. Bu işlem geri alınamaz.', {
+      title: 'Mesajı sil',
+      confirmLabel: 'Sil',
+      danger: true,
+    })
+    if (!ok) return
     await fetch('/api/admin/mesajlar', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
@@ -972,6 +1392,7 @@ function MesajlarSekme({ mesajlar, setMesajlar }) {
 
   return (
     <div className="space-y-4">
+      {confirmEl}
       {/* Filtre */}
       <div className="flex gap-2">
         {[
@@ -1325,6 +1746,7 @@ export default function AdminPaneli() {
   const [acikId, setAcikId] = useState(null)
   const [arama, setArama] = useState('')
   const [kritikHepsi, setKritikHepsi] = useState(false)
+  const [askConfirm, confirmEl] = useConfirm()
 
   const fetchOrders = useCallback(async () => {
     setVeriYukleniyor(true)
@@ -1378,9 +1800,22 @@ export default function AdminPaneli() {
   }
 
   async function siparisSil(siparisNo) {
-    if (!confirm(`${siparisNo} nolu siparişi silmek istediğinize emin misiniz?`)) return
+    const ok = await askConfirm(`${siparisNo} numaralı sipariş kalıcı olarak silinecek. Bu işlem geri alınamaz.`, {
+      title: 'Siparişi sil',
+      confirmLabel: 'Sil',
+      danger: true,
+    })
+    if (!ok) return
     await fetch(`/api/admin/orders/${siparisNo}`, { method: 'DELETE' })
     setSiparisler((prev) => prev.filter((s) => s.siparisNo !== siparisNo))
+  }
+
+  function faturaDegisti(siparisNo, patch) {
+    setSiparisler((prev) => prev.map((s) =>
+      s.siparisNo === siparisNo
+        ? { ...s, teslimat: { ...s.teslimat, fatura: { ...(s.teslimat?.fatura || {}), ...patch } } }
+        : s
+    ))
   }
 
   async function kargoTakipKaydet(siparisNo, kargoTakipNo) {
@@ -1438,6 +1873,7 @@ export default function AdminPaneli() {
 
   return (
     <div className="min-h-screen bg-stone-50">
+      {confirmEl}
       {/* Top bar */}
       <header className="bg-white border-b border-rose-100 sticky top-0 z-30 shadow-sm">
         {/* Üst satır: logo + yenile + çıkış */}
@@ -1674,7 +2110,7 @@ export default function AdminPaneli() {
                   </div>
 
                   {/* Detay */}
-                  {acikId === siparis.siparisNo && <SiparisDetay siparis={siparis} onKargoKaydet={kargoTakipKaydet} />}
+                  {acikId === siparis.siparisNo && <SiparisDetay siparis={siparis} onKargoKaydet={kargoTakipKaydet} onFaturaDegisti={faturaDegisti} />}
                 </div>
               ))}
             </div>
@@ -1762,7 +2198,12 @@ export default function AdminPaneli() {
                     </div>
                     <button
                       onClick={async () => {
-                        if (!confirm('Bu yorumu silmek istediğinize emin misiniz?')) return
+                        const ok = await askConfirm('Bu yorum kalıcı olarak silinecek. Bu işlem geri alınamaz.', {
+                          title: 'Yorumu sil',
+                          confirmLabel: 'Sil',
+                          danger: true,
+                        })
+                        if (!ok) return
                         await fetch(`/api/reviews/${y.id}`, { method: 'DELETE' })
                         setYorumlar(prev => prev.filter(r => r.id !== y.id))
                       }}

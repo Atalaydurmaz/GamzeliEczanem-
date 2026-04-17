@@ -165,19 +165,34 @@ export default function IletisimSayfasi() {
               </div>
             </div>
 
-            {/* Google Maps */}
-            <div className="relative h-52 rounded-2xl overflow-hidden border border-stone-200 shadow-sm">
+            {/* Harita — OpenStreetMap (API key gerektirmez, her zaman yüklenir) */}
+            <a
+              href="https://www.google.com/maps/dir/?api=1&destination=Yeni+%C3%87iftlik+Kaz%C4%B1m+Karabekir+Cd+No+12+G%C3%B6lc%C3%BCk+Kocaeli&destination_place_id=&travelmode=driving"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block relative h-52 rounded-2xl overflow-hidden border border-stone-200 shadow-sm group"
+              title="Buradan yol tarifi al"
+            >
               <iframe
-                src={`https://maps.google.com/maps?q=${encodeURIComponent('Yeni Çiftlik, Kazım Karabekir Cd. No:12, 41650 Gölcük/Kocaeli')}&output=embed&z=16`}
+                src="https://www.openstreetmap.org/export/embed.html?bbox=29.8240%2C40.7160%2C29.8310%2C40.7206&layer=mapnik&marker=40.7183%2C29.8275"
                 width="100%"
                 height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
+                style={{ border: 0, pointerEvents: 'none' }}
                 loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
                 title="GAMZELİECZANEM Konumu"
               />
-            </div>
+              {/* Şeffaf tıklama katmanı — iframe içi etkileşim yerine Google Maps'e yönlendir */}
+              <span className="absolute inset-0 cursor-pointer" aria-hidden="true" />
+              <div className="absolute top-2 right-2 bg-white/95 backdrop-blur px-2.5 py-1.5 rounded-lg shadow-sm text-xs font-semibold text-stone-700 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+                </svg>
+                Yol Tarifi Al
+              </div>
+              <div className="absolute bottom-2 left-2 bg-white/95 backdrop-blur px-2.5 py-1 rounded-lg shadow-sm text-[11px] font-medium text-stone-600">
+                📍 Yeni Çiftlik, Gölcük
+              </div>
+            </a>
           </div>
 
           {/* Sağ: Form */}
@@ -202,7 +217,7 @@ export default function IletisimSayfasi() {
               ) : (
                 <form onSubmit={handleSubmit} noValidate className="space-y-5">
                   {/* Honeypot — botlar bu alanı doldurur, insanlar görmez */}
-                  <div style={{ position: 'absolute', left: '-9999px', top: 'auto', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
+                  <div style={{ display: 'none' }} aria-hidden="true">
                     <label htmlFor="faxNumber">Website</label>
                     <input
                       id="faxNumber"
@@ -245,7 +260,7 @@ export default function IletisimSayfasi() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-stone-700 mb-1">Konu *</label>
-                      <select value={form.konu} onChange={(e) => guncelle('konu', e.target.value)}
+                      <select aria-label="Konu" value={form.konu} onChange={(e) => guncelle('konu', e.target.value)}
                         className={`w-full px-4 py-3 border rounded-xl text-sm focus:outline-none focus:ring-2 transition-all bg-white ${hatalar.konu ? 'border-red-300 focus:ring-red-100' : 'border-stone-200 focus:border-rose-400 focus:ring-rose-100'}`}>
                         <option value="">Konu seçin</option>
                         {konular.map((k) => <option key={k} value={k}>{k}</option>)}
