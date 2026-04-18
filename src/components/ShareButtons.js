@@ -5,7 +5,7 @@ import { useState } from 'react'
 export default function ShareButtons({ urunAd, url }) {
   const [copied, setCopied] = useState(false)
 
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
+  const whatsappUrl = `https://wa.me/905305129783?text=${encodeURIComponent(
     `${urunAd} - GAMZELİECZANEM\n${url}`
   )}`
 
