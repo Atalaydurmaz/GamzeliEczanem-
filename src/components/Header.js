@@ -368,7 +368,14 @@ export default function Header() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
           </button>
-          <button type="submit" className="shrink-0 bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold px-4 h-8 rounded-lg transition-colors">
+          <button
+            type="submit"
+            className="shrink-0 flex items-center gap-1.5 text-white text-sm font-bold px-3.5 h-8 rounded-lg transition-all active:scale-95 shadow-sm"
+            style={{ background: 'linear-gradient(135deg,#f43f5e,#a855f7)' }}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             Ara
           </button>
         </form>
