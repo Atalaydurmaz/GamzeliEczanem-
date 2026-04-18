@@ -162,26 +162,35 @@ export default function ChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 flex flex-col bg-white rounded-2xl shadow-2xl border border-rose-100 overflow-hidden"
-          style={{ height: '480px' }}
+        <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[min(320px,calc(100vw-2rem))] sm:w-96 flex flex-col bg-white rounded-2xl shadow-2xl border border-rose-100 overflow-hidden"
+          style={{ height: 'min(60vh, 480px)' }}
         >
           {/* Header */}
-          <div className="bg-rose-500 px-4 py-3 flex items-center gap-3 shrink-0">
-            <div className="w-9 h-9 bg-white/20 rounded-full flex items-center justify-center text-lg">
+          <div className="bg-rose-500 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3 shrink-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white/20 rounded-full flex items-center justify-center text-base sm:text-lg">
               💊
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white font-semibold text-sm leading-tight">Eczacı Asistanı</p>
-              <p className="text-rose-100 text-xs">GAMZELİECZANEM</p>
+              <p className="text-white font-semibold text-xs sm:text-sm leading-tight">Eczacı Asistanı</p>
+              <p className="text-rose-100 text-[10px] sm:text-xs">GAMZELİECZANEM</p>
             </div>
-            <span className="flex items-center gap-1.5 text-xs text-rose-100">
-              <span className="w-2 h-2 bg-green-400 rounded-full inline-block"></span>
+            <span className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-rose-100">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full inline-block"></span>
               Çevrimiçi
             </span>
+            <button
+              onClick={() => setIsOpen(false)}
+              aria-label="Sohbeti kapat"
+              className="sm:hidden text-white/80 hover:text-white p-1 -mr-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-rose-50/30">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5 sm:space-y-3 bg-rose-50/30">
             {messages.map((msg, i) => (
               <div
                 key={i}
@@ -193,7 +202,7 @@ export default function ChatBot() {
                   </div>
                 )}
                 <div
-                  className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
+                  className={`max-w-[80%] px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl text-xs sm:text-sm leading-relaxed whitespace-pre-wrap ${
                     msg.role === 'user'
                       ? 'bg-rose-500 text-white rounded-tr-sm'
                       : 'bg-white text-stone-800 rounded-tl-sm shadow-sm border border-rose-100'
@@ -228,17 +237,17 @@ export default function ChatBot() {
 
           {/* Quick suggestions (only when just greeting shown) */}
           {messages.length === 1 && (
-            <div className="px-3 pb-2 flex flex-wrap gap-1.5 bg-white border-t border-rose-50 pt-2 shrink-0">
+            <div className="px-2.5 sm:px-3 pb-1.5 sm:pb-2 flex flex-wrap gap-1 sm:gap-1.5 bg-white border-t border-rose-50 pt-1.5 sm:pt-2 shrink-0">
               {[
-                'Kuru cilt için ne önerirsiniz?',
-                'Yağlı cilt ürünleri',
-                'Güneş koruyucu tavsiyesi',
-                'Saç dökülmesi için ne iyi?',
+                'Kuru cilt',
+                'Yağlı cilt',
+                'Güneş koruyucu',
+                'Saç dökülmesi',
               ].map((suggestion) => (
                 <button
                   key={suggestion}
                   onClick={() => setInput(suggestion)}
-                  className="text-xs px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full hover:bg-rose-100 transition-colors border border-rose-100"
+                  className="text-[11px] sm:text-xs px-2 sm:px-2.5 py-0.5 sm:py-1 bg-rose-50 text-rose-600 rounded-full hover:bg-rose-100 transition-colors border border-rose-100"
                 >
                   {suggestion}
                 </button>
@@ -249,7 +258,7 @@ export default function ChatBot() {
           {/* Input */}
           <form
             onSubmit={sendMessage}
-            className="p-3 border-t border-rose-100 flex gap-2 bg-white shrink-0"
+            className="p-2.5 sm:p-3 border-t border-rose-100 flex gap-1.5 sm:gap-2 bg-white shrink-0"
           >
             <input
               ref={inputRef}
@@ -258,12 +267,12 @@ export default function ChatBot() {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Sorunuzu yazın..."
               disabled={isLoading}
-              className="flex-1 text-sm px-3.5 py-2 border border-rose-200 rounded-full focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 disabled:opacity-50 transition-all"
+              className="flex-1 text-xs sm:text-sm px-3 sm:px-3.5 py-1.5 sm:py-2 border border-rose-200 rounded-full focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 disabled:opacity-50 transition-all"
             />
             <button
               type="submit"
               disabled={isLoading || !input.trim()}
-              className="w-9 h-9 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 disabled:opacity-40 transition-colors shrink-0"
+              className="w-8 h-8 sm:w-9 sm:h-9 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 disabled:opacity-40 transition-colors shrink-0"
             >
               <svg className="w-4 h-4 rotate-90" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
