@@ -4,29 +4,26 @@ import { getRedis } from '@/lib/redis'
 import { sendMail } from '@/lib/notify'
 
 // ============================================================
-// Admin brute-force + 2FA (email OTP) koruması.
+// Admin giriş + 2FA (email OTP).
 //
 // Adım 1 — Şifre: POST { sifre }
-//   • Doğruysa → 6 haneli OTP üret, Redis'e kaydet (5 dk TTL),
+//   • Doğruysa → 6 haneli OTP üret, Redis/memory'e kaydet (5 dk TTL),
 //     admin e-postasına gönder, { ok: true, otpGerekli: true } dön.
-//   • Yanlışsa → deneme sayacını artır, 5 hatada 15 dk kilitle.
+//   • Yanlışsa → güvenlik bildirim maili gönder, 401 dön.
 //
 // Adım 2 — OTP: POST { otp }
-//   • Redis'teki OTP ile eşleşirse → session cookie oluştur.
-//   • Eşleşmezse → deneme sayacını artır.
+//   • OTP ile eşleşirse → session cookie oluştur.
+//   • Eşleşmezse → 401 dön.
 //
-// Redis varsa kalıcı (multi-instance güvenli), yoksa in-memory fallback.
+// NOT: Kilitleme mekanizması YOK — hesap asla kilitlenmez.
+// Brute-force tespiti yalnızca e-posta bildirimi ile yapılır.
 // ============================================================
 
-const MAX_ATTEMPTS    = 5
-const LOCK_SEC        = 15 * 60
 const OTP_TTL_SEC     = 5 * 60
-const LOGIN_PREFIX    = 'gla:admin-login:'
 const OTP_PREFIX      = 'gla:admin-otp:'
 const ADMIN_EMAIL     = process.env.ADMIN_EMAIL || 'destek.gamzelieczanem@gmail.com'
 
-const memAttempts = new Map()
-const memOtp      = new Map()
+const memOtp = new Map()
 
 function getIp(req) {
   return (
@@ -34,36 +31,6 @@ function getIp(req) {
     req.headers.get('x-real-ip') ||
     'unknown'
   )
-}
-
-// ── Brute-force kayıtları ──────────────────────────────────────────────────
-async function getRecord(ip) {
-  const redis = getRedis()
-  if (redis) {
-    const raw = await redis.get(LOGIN_PREFIX + ip)
-    if (!raw) return { count: 0, lockedUntil: 0 }
-    const entry = typeof raw === 'string' ? JSON.parse(raw) : raw
-    return { count: entry.count || 0, lockedUntil: entry.lockedUntil || 0 }
-  }
-  return memAttempts.get(ip) || { count: 0, lockedUntil: 0 }
-}
-
-async function setRecord(ip, record) {
-  const redis = getRedis()
-  if (redis) {
-    const ttl = record.lockedUntil > 0
-      ? Math.max(60, Math.ceil((record.lockedUntil - Date.now()) / 1000) + 60)
-      : LOCK_SEC
-    await redis.set(LOGIN_PREFIX + ip, JSON.stringify(record), { ex: ttl })
-  } else {
-    memAttempts.set(ip, record)
-  }
-}
-
-async function clearRecord(ip) {
-  const redis = getRedis()
-  if (redis) await redis.del(LOGIN_PREFIX + ip)
-  else memAttempts.delete(ip)
 }
 
 // ── OTP kayıtları ──────────────────────────────────────────────────────────
@@ -96,7 +63,6 @@ async function deleteOtp(ip) {
 function safeEqual(a, b) {
   const bufA = Buffer.from(String(a), 'utf8')
   const bufB = Buffer.from(String(b), 'utf8')
-  // Uzunluk farklıysa sahte karşılaştırma yaparak timing sızıntısını önle
   if (bufA.length !== bufB.length) {
     timingSafeEqual(bufA, bufA)
     return false
@@ -106,18 +72,7 @@ function safeEqual(a, b) {
 
 // ─────────────────────────────────────────────────────────────────────────
 export async function POST(req) {
-  const ip  = getIp(req)
-  const now = Date.now()
-  const record = await getRecord(ip)
-
-  if (record.lockedUntil > now) {
-    const kalanDakika = Math.ceil((record.lockedUntil - now) / 60000)
-    return Response.json(
-      { ok: false, hata: `Çok fazla hatalı deneme. ${kalanDakika} dakika bekleyin.` },
-      { status: 429 }
-    )
-  }
-
+  const ip = getIp(req)
   const body = await req.json().catch(() => ({}))
 
   // ── Adım 2: OTP doğrulama ────────────────────────────────────────────
@@ -125,46 +80,56 @@ export async function POST(req) {
     const kayitliOtp = await getOtp(ip)
 
     if (!kayitliOtp || !safeEqual(String(body.otp).trim(), String(kayitliOtp))) {
-      const yeniCount = record.count + 1
-      const lockedUntil = yeniCount >= MAX_ATTEMPTS ? now + LOCK_SEC * 1000 : 0
-      await setRecord(ip, { count: yeniCount, lockedUntil })
-
-      const hata = lockedUntil
-        ? 'Çok fazla hatalı deneme. 15 dakika bekleyin.'
-        : 'Hatalı veya süresi dolmuş kod. Tekrar deneyin.'
-
-      return Response.json({ ok: false, hata }, { status: 401 })
+      return Response.json(
+        { ok: false, hata: 'Hatalı veya süresi dolmuş kod. Tekrar deneyin.' },
+        { status: 401 }
+      )
     }
 
     // OTP doğru — tek kullanımlık, hemen sil
     await deleteOtp(ip)
-    await clearRecord(ip)
     await setAdminCookie()
     return Response.json({ ok: true })
   }
 
   // ── Adım 1: Şifre doğrulama ───────────────────────────────────────────
   if (!safeEqual(body.sifre ?? '', process.env.ADMIN_PASSWORD ?? '')) {
-    const yeniCount = record.count + 1
-    const lockedUntil = yeniCount >= MAX_ATTEMPTS ? now + LOCK_SEC * 1000 : 0
-    await setRecord(ip, { count: yeniCount, lockedUntil })
+    // Güvenlik uyarı maili — her hatalı denemede otomatik gönder
+    const userAgent = req.headers.get('user-agent') || 'bilinmiyor'
+    const zaman = new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })
+    sendMail({
+      to: ADMIN_EMAIL,
+      subject: '⚠️ Admin Paneli — Hatalı Şifre Denemesi',
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:auto;background:#fff7f7;padding:24px;border-radius:12px">
+          <h2 style="color:#ea580c;margin:0 0 16px">⚠️ Hatalı Şifre Denemesi</h2>
+          <p style="color:#1c1917;margin:0 0 16px">
+            Admin paneline <b>hatalı şifre</b> ile giriş denemesi yapıldı.
+          </p>
+          <table style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden">
+            <tr><td style="padding:10px 14px;background:#f5f5f4;font-weight:600;width:40%">Zaman</td><td style="padding:10px 14px">${zaman}</td></tr>
+            <tr><td style="padding:10px 14px;background:#f5f5f4;font-weight:600">IP Adresi</td><td style="padding:10px 14px;font-family:monospace">${ip}</td></tr>
+            <tr><td style="padding:10px 14px;background:#f5f5f4;font-weight:600">Tarayıcı</td><td style="padding:10px 14px;font-size:12px;color:#78716c;word-break:break-all">${userAgent}</td></tr>
+          </table>
+          <p style="margin:20px 0 0;color:#78716c;font-size:14px">
+            Bu giriş denemesini siz yapmadıysanız, yönetici şifrenizi değiştirmenizi öneririz.
+          </p>
+        </div>
+      `,
+      context: 'admin-hatali-sifre',
+    }).catch((err) => console.error('[admin/login] Hatalı şifre bildirim maili gönderilemedi:', err?.message))
 
-    const kalanHak = MAX_ATTEMPTS - yeniCount
-    const hata = lockedUntil
-      ? 'Çok fazla hatalı deneme. 15 dakika bekleyin.'
-      : kalanHak === 1
-        ? 'Hatalı şifre. Son 1 deneme hakkınız kaldı.'
-        : `Hatalı şifre. ${kalanHak} deneme hakkınız kaldı.`
-
-    return Response.json({ ok: false, hata }, { status: 401 })
+    return Response.json({ ok: false, hata: 'Hatalı şifre.' }, { status: 401 })
   }
 
   // Şifre doğru → OTP üret, gönder, bekle
   const otpKod = String(randomInt(100000, 999999))
   await setOtp(ip, otpKod)
 
-  // E-posta gönderimini arka plana at — kullanıcı çok nadiren bekler
-  sendMail({
+  // OTP mailini AWAIT ile gönder — fire-and-forget olursa Next.js dev/edge
+  // ortamında request bittikten sonra bağlantı kesilebiliyor. Admin OTP
+  // kritik akış olduğu için 1 sn beklemek kabul edilebilir.
+  const mailSonuc = await sendMail({
     to: ADMIN_EMAIL,
     subject: `🔐 Admin Giriş Kodu: ${otpKod}`,
     html: `
@@ -180,7 +145,19 @@ export async function POST(req) {
       </div>
     `,
     context: 'admin-otp',
-  }).catch((err) => console.error('[admin/login] OTP e-postası gönderilemedi:', err?.message))
+  }).catch((err) => {
+    console.error('[admin/login] OTP e-postası gönderilemedi:', err?.message)
+    return false
+  })
+
+  if (!mailSonuc) {
+    // Mail gönderilemedi — kodu temizle ve hata dön
+    await deleteOtp(ip)
+    return Response.json(
+      { ok: false, hata: 'Doğrulama kodu gönderilemedi. Lütfen tekrar deneyin.' },
+      { status: 500 }
+    )
+  }
 
   return Response.json({ ok: true, otpGerekli: true })
 }

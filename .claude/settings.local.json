@@ -2,7 +2,22 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:www.trendyol.com)",
-      "Bash(npm run:*)"
+      "Bash(npm run:*)",
+      "Bash(grep -n \"force-dynamic\\\\|revalidate\\\\|generateStaticParams\\\\|noStore\\\\|cookies\\\\|headers\\\\|searchParams\\\\|getProducts\\\\|supabase\\\\|fetch\" C:/Users/ATALAY/kozmetik-shop/src/app/urunler/[id]/page.js)",
+      "Bash(identify C:/Users/ATALAY/kozmetik-shop/public/hero-skincare.png)",
+      "Bash(cwebp -version)",
+      "Bash(ffmpeg -version)",
+      "Bash(magick -version)",
+      "Bash(sharp --version)",
+      "Bash(node -e \"require\\('sharp'\\)\")",
+      "Bash(node -e ':*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)",
+      "Bash(node -e \"const p=require\\('./package.json'\\);console.log\\('next:',p.dependencies.next\\)\")",
+      "Bash(npm list *)",
+      "Bash(vercel --version)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

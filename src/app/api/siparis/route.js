@@ -21,6 +21,21 @@ import {
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
 export async function POST(req) {
+  try {
+    return await _handlePOST(req)
+  } catch (err) {
+    console.error('[siparis] UNCAUGHT ERROR:', err)
+    const dev = process.env.NODE_ENV !== 'production'
+    return Response.json({
+      hata: dev
+        ? `Server hatası: ${err?.message || err?.code || String(err)}`
+        : 'Sipariş kaydedilemedi, lütfen tekrar deneyin.',
+      ...(dev ? { stack: err?.stack?.split('\n').slice(0, 5), kod: err?.code } : {}),
+    }, { status: 500 })
+  }
+}
+
+async function _handlePOST(req) {
   // Rate limit: IP başına dakikada 10 sipariş isteği
   const ip = getIp(req)
   const rl = await rateLimit(`siparis:${ip}`, 10, 60 * 1000)

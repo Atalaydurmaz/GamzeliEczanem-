@@ -369,8 +369,9 @@ export default function OdemeSayfasi() {
         sepetiBosalt()
         // replace: Geri tuşu /odeme'ye değil, /sepet'e (veya önceki sayfaya) döner
         router.replace(`/odeme/basarili?siparis=${gercekSiparisNo}`)
-      } catch {
-        setHatalar({ genel: 'Bağlantı hatası, lütfen tekrar deneyin.' })
+      } catch (err) {
+        console.error('[odeme/kapida] fetch/parse hatası:', err)
+        setHatalar({ genel: `Bağlantı hatası: ${err?.message || err?.name || 'bilinmeyen'}` })
         setYukleniyor(false)
       }
       return
@@ -444,7 +445,8 @@ export default function OdemeSayfasi() {
       if (err.name === 'AbortError') {
         setZamanAsimi(true)
       } else {
-        setHatalar({ genel: 'Bağlantı hatası, lütfen tekrar deneyin.' })
+        console.error('[odeme] fetch/parse hatası:', err)
+        setHatalar({ genel: `Bağlantı hatası: ${err?.message || err?.name || 'bilinmeyen'}` })
       }
       setYukleniyor(false)
     }
