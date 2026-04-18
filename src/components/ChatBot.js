@@ -281,7 +281,7 @@ export default function ChatBot() {
           {/* Quick suggestions — yatay scroll'lu, tek satırda */}
           {messages.length === 1 && (
             <div
-              className="flex gap-2 overflow-x-auto whitespace-nowrap bg-white border-t border-rose-50 px-3 pt-2 pb-1.5 shrink-0"
+              className="flex gap-2 overflow-x-auto whitespace-nowrap sm:flex-col sm:overflow-x-visible sm:whitespace-normal sm:items-stretch bg-white border-t border-rose-50 px-3 pt-2 pb-1.5 shrink-0"
               style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
             >
               {SUGGESTIONS.map((suggestion) => (
@@ -291,7 +291,7 @@ export default function ChatBot() {
                     setInput(suggestion)
                     inputRef.current?.focus()
                   }}
-                  className="text-[11px] sm:text-xs px-3 py-1.5 bg-rose-50 text-rose-600 rounded-full hover:bg-rose-100 active:scale-95 transition-all border border-rose-100 shrink-0"
+                  className="text-[11px] sm:text-xs px-3 py-1.5 bg-rose-50 text-rose-600 rounded-full hover:bg-rose-100 active:scale-95 transition-all border border-rose-100 shrink-0 sm:w-full sm:text-left sm:rounded-xl"
                 >
                   {suggestion}
                 </button>
