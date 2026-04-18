@@ -7,8 +7,11 @@ export async function GET(req) {
     const data = await getProducts({ kategori })
     return Response.json(data, {
       headers: {
-        // Fiyat ve stok canlı veri — tarayıcı ve CDN cache'lemesin
-        'Cache-Control': 'no-store',
+        // Ürün meta verisi nadiren değişir; stok ayrıca /api/stock üzerinden
+        // StockContext tarafından canlı çekilip UI'yi override ediyor.
+        // Vercel edge cache'e 60s ver, 600s stale-while-revalidate ile
+        // admin güncellemesi sonrası hızla tazelensin.
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=600',
       },
     })
   } catch (e) {
