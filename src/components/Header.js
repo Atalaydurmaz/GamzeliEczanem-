@@ -348,8 +348,8 @@ export default function Header() {
         <input ref={gorselInputRef} type="file" accept="image/*" className="hidden" aria-label="Görsel yükle" tabIndex={-1} onChange={handleGorselArama} />
         <form onSubmit={handleArama} className={`flex items-center gap-2 bg-gray-50 border rounded-xl px-3 h-11 focus-within:bg-white transition-all ${aramaHata ? 'border-rose-400' : 'border-gray-200 focus-within:border-rose-400'}`}>
           {/* Yapay Zeka badge */}
-          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-lg shrink-0"
-            style={{ background: 'linear-gradient(135deg,rgba(244,63,94,0.1),rgba(167,139,250,0.1))', color: '#f43f5e' }}>
+          <span className="text-[10px] font-black px-2 py-1 rounded-full shrink-0"
+            style={{ background: 'linear-gradient(135deg,#fecdd3,#fbcfe8)', color: '#e11d48' }}>
             ✦ Yapay Zeka
           </span>
           <div className="w-px h-4 bg-gray-200 shrink-0" />
