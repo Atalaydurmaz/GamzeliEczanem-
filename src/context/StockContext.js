@@ -20,9 +20,11 @@ export function StockProvider({ children }) {
   useEffect(() => { fetchStok() }, [fetchStok])
 
   // Admin iptal edince / stok güncellenince shop senkron kalsın diye:
-  // (1) 30s periyodik poll, (2) sekmeye geri dönüldüğünde anında refetch.
+  // (1) 60s periyodik poll, (2) sekmeye geri dönüldüğünde anında refetch.
+  // 60s tercih edildi: kullanıcı başına saatlik API çağrısını 120→60'a yarıladı,
+  // visibilitychange zaten sekmeye dönünce anında senkron sağlıyor.
   useEffect(() => {
-    const interval = setInterval(fetchStok, 30000)
+    const interval = setInterval(fetchStok, 60000)
     function onVisible() {
       if (document.visibilityState === 'visible') fetchStok()
     }

@@ -9,7 +9,7 @@ export default function Footer() {
           {/* Marka */}
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <img src="/icon.png" alt="GAMZELİECZANEM" className="w-8 h-8 object-contain rounded-lg" />
+              <img src="/icon.png" alt="GAMZELİECZANEM" width="32" height="32" loading="lazy" className="w-8 h-8 object-contain rounded-lg" />
               <span className="text-xl font-bold tracking-widest text-rose-400 uppercase">GAMZELİECZANEM</span>
             </div>
             <p className="text-sm text-stone-400 leading-relaxed mb-5">

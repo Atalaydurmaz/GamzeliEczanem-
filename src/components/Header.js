@@ -156,7 +156,7 @@ export default function Header() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <img src="/icon.png" alt="GAMZELİECZANEM" className="w-9 h-9 sm:w-12 sm:h-12 object-contain rounded-xl" />
+            <img src="/icon.png" alt="GAMZELİECZANEM" width="48" height="48" fetchPriority="high" className="w-9 h-9 sm:w-12 sm:h-12 object-contain rounded-xl" />
             <div className="leading-tight">
               <span className="block text-[13px] sm:text-[16px] font-black tracking-[0.1em] sm:tracking-[0.15em] text-rose-700 uppercase">
                 GAMZELİECZANEM
