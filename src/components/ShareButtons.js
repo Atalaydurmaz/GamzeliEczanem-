@@ -15,6 +15,7 @@ export default function ShareButtons({ urunAd, url }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2500)
     } catch {}
+    window.open('https://www.instagram.com/gamzelieczanem/', '_blank', 'noopener,noreferrer')
   }
 
   return (
