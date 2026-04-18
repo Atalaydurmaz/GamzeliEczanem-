@@ -162,8 +162,8 @@ export default function ChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[min(320px,calc(100vw-2rem))] sm:w-96 flex flex-col bg-white rounded-2xl shadow-2xl border border-rose-100 overflow-hidden"
-          style={{ height: 'min(60vh, 480px)' }}
+        <div className="fixed bottom-24 right-4 sm:right-6 z-50 w-[min(280px,calc(100vw-2rem))] sm:w-96 flex flex-col bg-white rounded-2xl shadow-2xl border border-rose-100 overflow-hidden"
+          style={{ height: 'min(50vh, 480px)', maxHeight: '420px' }}
         >
           {/* Header */}
           <div className="bg-rose-500 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3 shrink-0">
