@@ -355,7 +355,7 @@ export default function Header() {
           <div className="w-px h-4 bg-gray-200 shrink-0" />
           <input
             type="text"
-            placeholder="Ne arıyorsunuz?"
+            placeholder="Yapay zekaya sor..."
             value={aramaMetni}
             onChange={(e) => setAramaMetni(e.target.value)}
             onFocus={() => setMobilAramaFocused(true)}
