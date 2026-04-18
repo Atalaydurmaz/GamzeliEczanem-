@@ -347,15 +347,9 @@ export default function Header() {
       <div className="md:hidden bg-white border-b border-gray-100 px-3 py-2">
         <input ref={gorselInputRef} type="file" accept="image/*" className="hidden" aria-label="Görsel yükle" tabIndex={-1} onChange={handleGorselArama} />
         <form onSubmit={handleArama} className={`flex items-center gap-2 bg-gray-50 border rounded-xl px-3 h-11 focus-within:bg-white transition-all ${aramaHata ? 'border-rose-400' : 'border-gray-200 focus-within:border-rose-400'}`}>
-          {/* Yapay Zeka badge */}
-          <span className="text-[10px] font-black px-1.5 py-0.5 rounded-lg shrink-0"
-            style={{ background: 'linear-gradient(135deg,rgba(244,63,94,0.1),rgba(167,139,250,0.1))', color: '#f43f5e' }}>
-            ✦ Yapay Zeka
-          </span>
-          <div className="w-px h-4 bg-gray-200 shrink-0" />
           <input
             type="text"
-            placeholder="Yapay zekaya sor..."
+            placeholder="Ne arıyorsunuz? Yapay zekaya sor.."
             value={aramaMetni}
             onChange={(e) => setAramaMetni(e.target.value)}
             onFocus={() => setMobilAramaFocused(true)}
