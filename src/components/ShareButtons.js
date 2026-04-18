@@ -6,7 +6,7 @@ export default function ShareButtons({ urunAd, url }) {
   const [copied, setCopied] = useState(false)
 
   const whatsappUrl = `https://wa.me/905305129783?text=${encodeURIComponent(
-    `${urunAd} - GAMZELİECZANEM\n${url}`
+    `Merhaba, bu ürün hakkında bilgi almak istiyorum:\n${urunAd}\n${url}`
   )}`
 
   async function copyForInstagram() {
