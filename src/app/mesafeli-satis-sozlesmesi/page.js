@@ -27,7 +27,7 @@ export default function MesafeliSatisSozlesmesi() {
               <p>Vergi Dairesi / VKN: Gölcük / 3160931792</p>
               <p>Adres: Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli</p>
               <p>Tel: 0262 412 6928</p>
-              <p>E-posta: destek.gamzelieczanem@gmail.com</p>
+              <p>E-posta: destek@gamzelidermokozmetik.com</p>
               <p>Web: gamzelikozmetik.com</p>
             </div>
             <div className="mt-4 space-y-2">
@@ -63,7 +63,7 @@ export default function MesafeliSatisSozlesmesi() {
             <ul className="list-disc pl-5 space-y-1 mt-2">
               <li>Ürünün kullanılmamış, açılmamış ve orijinal ambalajında olması gerekir.</li>
               <li>Hijyen ve sağlık koruması nedeniyle ambalajı açılmış kozmetik ürünlerde cayma hakkı kullanılamaz.</li>
-              <li>Cayma bildirimi destek.gamzelieczanem@gmail.com adresine e-posta ile yapılabilir.</li>
+              <li>Cayma bildirimi destek@gamzelidermokozmetik.com adresine e-posta ile yapılabilir.</li>
             </ul>
             <p className="mt-2">Cayma halinde ürün bedeli, iade kargosunun ulaşmasından itibaren <strong>14 gün</strong> içinde iade edilir.</p>
           </section>

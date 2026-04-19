@@ -109,14 +109,14 @@ export async function POST(req) {
 
       const promises = [
         sendMail({ to: email, subject: `Siparişiniz Alındı – ${siparisNo} 🎉`, html, context: 'siparis-onay-mock' }),
-        sendMail({ to: 'destek.gamzelieczanem@gmail.com', subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`, html: adminHtml, context: 'admin-yeni-siparis-mock' }),
+        sendMail({ to: 'destek@gamzelidermokozmetik.com', subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`, html: adminHtml, context: 'admin-yeni-siparis-mock' }),
         sendSms({ telefon, mesaj: smsMesaj, context: 'siparis-onay-mock' }),
       ]
 
       if (lowStockMails.length > 0) {
         promises.push(
           sendMail({
-            to: 'destek.gamzelieczanem@gmail.com',
+            to: 'destek@gamzelidermokozmetik.com',
             subject: `⚠️ Düşük Stok Uyarısı – ${lowStockMails.length} ürün`,
             html: dusukStokUyariMaili({ siparisNo, lowStockItems: lowStockMails }),
             context: 'dusuk-stok-uyari-mock',

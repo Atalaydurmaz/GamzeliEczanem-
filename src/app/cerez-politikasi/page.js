@@ -105,7 +105,7 @@ export default function CerezPolitikasi() {
 
           <section>
             <h2 className="text-base font-bold text-stone-900 mb-3">6. İLETİŞİM</h2>
-            <p>Çerezler ve kişisel verilerinize ilişkin sorularınız için <a href="mailto:destek.gamzelieczanem@gmail.com" className="text-rose-600 hover:underline">destek.gamzelieczanem@gmail.com</a> adresine e-posta gönderebilirsiniz. Daha fazla bilgi için <a href="/kvkk-aydinlatma-metni" className="text-rose-600 hover:underline">KVKK Aydınlatma Metnimizi</a> ve <a href="/gizlilik-politikasi" className="text-rose-600 hover:underline">Gizlilik Politikamızı</a> inceleyebilirsiniz.</p>
+            <p>Çerezler ve kişisel verilerinize ilişkin sorularınız için <a href="mailto:destek@gamzelidermokozmetik.com" className="text-rose-600 hover:underline">destek@gamzelidermokozmetik.com</a> adresine e-posta gönderebilirsiniz. Daha fazla bilgi için <a href="/kvkk-aydinlatma-metni" className="text-rose-600 hover:underline">KVKK Aydınlatma Metnimizi</a> ve <a href="/gizlilik-politikasi" className="text-rose-600 hover:underline">Gizlilik Politikamızı</a> inceleyebilirsiniz.</p>
           </section>
 
         </div>

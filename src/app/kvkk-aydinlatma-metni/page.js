@@ -23,7 +23,7 @@ export default function KVKKAydinlatmaMetni() {
               <p>Marka Adı: GAMZELİECZANEM</p>
               <p>MERSİS No: 1017857069400001</p>
               <p>Adres: Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli</p>
-              <p>E-posta: destek.gamzelieczanem@gmail.com</p>
+              <p>E-posta: destek@gamzelidermokozmetik.com</p>
               <p>Tel: 0262 412 6928</p>
             </div>
             <p className="mt-3">6698 Sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") m.10 uyarınca, veri sorumlusu sıfatıyla hazırlanan bu aydınlatma metni ile kişisel verilerinizin hangi amaçla işlendiği, kimlere aktarıldığı ve haklarınız konusunda sizi bilgilendirmek istiyoruz.</p>
@@ -107,7 +107,7 @@ export default function KVKKAydinlatmaMetni() {
               <li>Otomatik sistemlerle analiz sonucu aleyhinize bir durum oluşmuşsa bu sonuca itiraz etme.</li>
               <li>Kanuna aykırı işleme nedeniyle zarara uğramışsanız tazminat talep etme.</li>
             </ul>
-            <p className="mt-3"><strong>Başvuru yolu:</strong> Yukarıdaki haklarınızı kullanmak için, kimliğinizi tevsik edici belgelerle birlikte <a href="mailto:destek.gamzelieczanem@gmail.com" className="text-rose-600 hover:underline">destek.gamzelieczanem@gmail.com</a> adresine veya yukarıda belirtilen posta adresine yazılı olarak başvurabilirsiniz. Başvurunuz KVKK m.13 uyarınca en geç <strong>30 gün</strong> içinde sonuçlandırılır.</p>
+            <p className="mt-3"><strong>Başvuru yolu:</strong> Yukarıdaki haklarınızı kullanmak için, kimliğinizi tevsik edici belgelerle birlikte <a href="mailto:destek@gamzelidermokozmetik.com" className="text-rose-600 hover:underline">destek@gamzelidermokozmetik.com</a> adresine veya yukarıda belirtilen posta adresine yazılı olarak başvurabilirsiniz. Başvurunuz KVKK m.13 uyarınca en geç <strong>30 gün</strong> içinde sonuçlandırılır.</p>
           </section>
 
           <section>

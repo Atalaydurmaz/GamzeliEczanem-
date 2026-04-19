@@ -52,12 +52,12 @@ function BasarisizIcerik() {
             <p className="mt-2">
               Sorun çözülmezse{' '}
               <a
-                href="https://mail.google.com/mail/?view=cm&fs=1&to=destek.gamzelieczanem@gmail.com"
+                href="https://mail.google.com/mail/?view=cm&fs=1&to=destek@gamzelidermokozmetik.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-rose-600 font-semibold hover:underline"
               >
-                destek.gamzelieczanem@gmail.com
+                destek@gamzelidermokozmetik.com
               </a>
               {' '}adresine yazabilirsiniz.
             </p>

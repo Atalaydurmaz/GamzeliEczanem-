@@ -7,7 +7,7 @@ const BOLUMLER = [
   {
     baslik: 'Veri Sorumlusu',
     icerik:
-      'Bu aydınlatma metni, 6698 sayılı Kişisel Verilerin Korunması Kanunu\'nun ("KVKK") 10. maddesi ile Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında hazırlanmıştır.\n\nVeri Sorumlusu: ATALAY DURMAZ (Gerçek Kişilere Ait Ticari İşletme)\nMarka Adı: GAMZELİECZANEM\nMERSİS No: 1017857069400001\nTicaret Sicil No: GÖLCÜK/6055\nVergi Dairesi / VKN: Gölcük / 3160931792\nAdres: Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli\nTelefon: 0262 412 6928\nE-posta: destek.gamzelieczanem@gmail.com\nWeb: gamzelikozmetik.com',
+      'Bu aydınlatma metni, 6698 sayılı Kişisel Verilerin Korunması Kanunu\'nun ("KVKK") 10. maddesi ile Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında hazırlanmıştır.\n\nVeri Sorumlusu: ATALAY DURMAZ (Gerçek Kişilere Ait Ticari İşletme)\nMarka Adı: GAMZELİECZANEM\nMERSİS No: 1017857069400001\nTicaret Sicil No: GÖLCÜK/6055\nVergi Dairesi / VKN: Gölcük / 3160931792\nAdres: Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli\nTelefon: 0262 412 6928\nE-posta: destek@gamzelidermokozmetik.com\nWeb: gamzelikozmetik.com',
   },
   {
     baslik: '1. Toplanan Kişisel Veriler',
@@ -47,7 +47,7 @@ const BOLUMLER = [
   {
     baslik: '8. Başvuru Yöntemi',
     icerik:
-      'KVKK kapsamındaki haklarınızı kullanmak için aşağıdaki yöntemlerle başvurabilirsiniz:\n\n• E-posta: destek.gamzelieczanem@gmail.com (konu satırına "KVKK Başvurusu" yazınız)\n• Telefon: 0262 412 6928\n• Posta: Yeni Çiftlik, Kazım Karabekir Cd. No:12, 41650 Gölcük / Kocaeli\n\nBaşvurularınız en geç 30 gün içinde ücretsiz olarak yanıtlanacaktır. İşlemin ayrıca bir maliyet gerektirmesi halinde Kişisel Verileri Koruma Kurulu tarafından belirlenen tarife uygulanır.',
+      'KVKK kapsamındaki haklarınızı kullanmak için aşağıdaki yöntemlerle başvurabilirsiniz:\n\n• E-posta: destek@gamzelidermokozmetik.com (konu satırına "KVKK Başvurusu" yazınız)\n• Telefon: 0262 412 6928\n• Posta: Yeni Çiftlik, Kazım Karabekir Cd. No:12, 41650 Gölcük / Kocaeli\n\nBaşvurularınız en geç 30 gün içinde ücretsiz olarak yanıtlanacaktır. İşlemin ayrıca bir maliyet gerektirmesi halinde Kişisel Verileri Koruma Kurulu tarafından belirlenen tarife uygulanır.',
   },
   {
     baslik: '9. Veri Saklama Süresi',

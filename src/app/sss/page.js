@@ -38,7 +38,7 @@ const kategoriler = [
       },
       {
         soru: 'İade süreci nasıl işliyor?',
-        cevap: 'destek.gamzelieczanem@gmail.com adresine e-posta gönderin veya 0262 412 6928 numaralı hattı arayın. Size iade talimatları ve kargo kodu iletilir. İade kargosunu ödemek zorunda değilsiniz.',
+        cevap: 'destek@gamzelidermokozmetik.com adresine e-posta gönderin veya 0262 412 6928 numaralı hattı arayın. Size iade talimatları ve kargo kodu iletilir. İade kargosunu ödemek zorunda değilsiniz.',
       },
       {
         soru: 'Para iadesi ne zaman yapılır?',

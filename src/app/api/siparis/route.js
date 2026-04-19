@@ -207,14 +207,14 @@ async function _handlePOST(req) {
 
       const promises = [
         sendMail({ to: email, subject: `Siparişiniz Alındı – ${siparisNo} 🎉`, html, context: 'siparis-onay' }),
-        sendMail({ to: 'destek.gamzelieczanem@gmail.com', subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`, html: adminHtml, context: 'admin-yeni-siparis' }),
+        sendMail({ to: 'destek@gamzelidermokozmetik.com', subject: `🛍️ Yeni Sipariş: ${siparisNo} – ${genelToplam.toLocaleString('tr-TR')} ₺`, html: adminHtml, context: 'admin-yeni-siparis' }),
         sendSms({ telefon, mesaj: smsMesaj, context: 'siparis-onay' }),
       ]
 
       if (lowStockMails.length > 0) {
         promises.push(
           sendMail({
-            to: 'destek.gamzelieczanem@gmail.com',
+            to: 'destek@gamzelidermokozmetik.com',
             subject: `⚠️ Düşük Stok Uyarısı – ${lowStockMails.length} ürün`,
             html: dusukStokUyariMaili({ siparisNo, lowStockItems: lowStockMails }),
             context: 'dusuk-stok-uyari',

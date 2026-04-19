@@ -74,7 +74,7 @@ export async function GET(req) {
   </div>
 
   <div style="background:#fff1f2;padding:20px 32px;text-align:center;border-top:1px solid #fce7f3">
-    <a href="mailto:destek.gamzelieczanem@gmail.com" style="color:#f43f5e;font-size:13px;font-weight:600;text-decoration:none">destek.gamzelieczanem@gmail.com</a>
+    <a href="mailto:destek@gamzelidermokozmetik.com" style="color:#f43f5e;font-size:13px;font-weight:600;text-decoration:none">destek@gamzelidermokozmetik.com</a>
     <p style="margin:8px 0 0;font-size:12px;color:#d1d5db">0262 412 6928 · Gölcük / Kocaeli</p>
     <p style="margin:8px 0 0;font-size:11px;color:#e5e7eb">Bu e-postayı almak istemiyorsanız bizimle iletişime geçin.</p>
   </div>

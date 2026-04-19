@@ -27,7 +27,7 @@ export default function CaymaFormu() {
               <p><strong>Alıcı:</strong> ATALAY DURMAZ (GAMZELİECZANEM)</p>
               <p><strong>Adres:</strong> Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli</p>
               <p><strong>Tel:</strong> 0262 412 6928</p>
-              <p><strong>E-posta:</strong> destek.gamzelieczanem@gmail.com</p>
+              <p><strong>E-posta:</strong> destek@gamzelidermokozmetik.com</p>
             </div>
           </section>
 
@@ -55,7 +55,7 @@ export default function CaymaFormu() {
           <section>
             <h2 className="text-base font-bold text-stone-900 mb-3">Nasıl İletebilirim?</h2>
             <ul className="list-disc pl-5 space-y-1">
-              <li><strong>E-posta ile:</strong> Yukarıdaki bilgileri doldurup <a href="mailto:destek.gamzelieczanem@gmail.com" className="text-rose-600 hover:underline">destek.gamzelieczanem@gmail.com</a> adresine gönderebilirsiniz.</li>
+              <li><strong>E-posta ile:</strong> Yukarıdaki bilgileri doldurup <a href="mailto:destek@gamzelidermokozmetik.com" className="text-rose-600 hover:underline">destek@gamzelidermokozmetik.com</a> adresine gönderebilirsiniz.</li>
               <li><strong>Yazılı olarak:</strong> Doldurduğunuz formu yukarıdaki Satıcı adresine postalayabilirsiniz.</li>
               <li><strong>Sipariş üzerinden:</strong> "Hesabım → Siparişlerim → Sipariş Detay" ekranından "İade Talebi Oluştur" butonu ile başvurabilirsiniz.</li>
             </ul>

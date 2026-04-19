@@ -30,7 +30,7 @@ export default function OnBilgilendirmeFormu() {
               <p>Vergi Dairesi / VKN: Gölcük / 3160931792</p>
               <p>Adres: Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli</p>
               <p>Tel: 0262 412 6928</p>
-              <p>E-posta: destek.gamzelieczanem@gmail.com</p>
+              <p>E-posta: destek@gamzelidermokozmetik.com</p>
               <p>Web: gamzelikozmetik.com</p>
             </div>
           </section>
@@ -68,7 +68,7 @@ export default function OnBilgilendirmeFormu() {
               <li>Tesliminden sonra ambalaj, bant, mühür, paket gibi koruyucu unsurları açılmış olan ürünlerden; iadesi sağlık ve hijyen açısından uygun olmayanlar (açılmış kozmetik, makyaj, cilt bakım ürünleri dahil).</li>
               <li>Tesliminden sonra başka ürünlerle karışan ve doğası gereği ayrıştırılması mümkün olmayan ürünler.</li>
             </ul>
-            <p className="mt-2"><strong>Cayma bildirimi:</strong> destek.gamzelieczanem@gmail.com adresine e-posta ile veya yazılı olarak yukarıdaki Satıcı adresine yapılabilir.</p>
+            <p className="mt-2"><strong>Cayma bildirimi:</strong> destek@gamzelidermokozmetik.com adresine e-posta ile veya yazılı olarak yukarıdaki Satıcı adresine yapılabilir.</p>
             <p className="mt-2"><strong>Bedel iadesi:</strong> Alıcı'nın cayma bildirimi ve iade edilen ürünün Satıcı'ya ulaşmasından itibaren <strong>14 gün</strong> içinde, ödeme hangi araçla yapıldıysa aynı araçla ve tek seferde iade edilir.</p>
             <p className="mt-2"><strong>İade kargosu:</strong> Anlaşmalı kargo firması (PTT Kargo / Yurtiçi Kargo) kullanıldığında iade kargo bedeli Satıcı'ya aittir. Anlaşmalı olmayan kargo firması kullanıldığında iade kargo bedeli Alıcı'ya aittir.</p>
           </section>

@@ -115,7 +115,7 @@ export default function IletisimSayfasi() {
                       </svg>
                     ),
                     baslik: 'E-posta',
-                    deger: 'destek.gamzelieczanem@gmail.com',
+                    deger: 'destek@gamzelidermokozmetik.com',
                     href: null,
                   },
                   {
