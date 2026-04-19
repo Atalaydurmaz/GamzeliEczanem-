@@ -1,7 +1,9 @@
 <h1 align="center">💊 Gamzelieczanem</h1>
 
 <p align="center">
-  <strong>Eczacı güvencesiyle kozmetik ve kişisel bakım e-ticaret platformu</strong>
+  <strong>🤖 Yapay zekâ destekli kozmetik ve kişisel bakım e-ticaret platformu</strong>
+  <br/>
+  <sub>Eczacı güvencesiyle · AI cilt analizi · Sanal makyaj deneme · 7/24 Eczacı Asistanı</sub>
 </p>
 
 <p align="center">
