@@ -61,3 +61,6 @@ test-results/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# screenshot helper
+capture.js
