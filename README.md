@@ -7,10 +7,10 @@
 </p>
 
 <p align="center">
-  <a href="https://gamzeli-eczanem-shop.vercel.app">
-    <img src="https://img.shields.io/badge/🌐_Canlı_Demo-gamzeli--eczanem--shop.vercel.app-ec4899?style=for-the-badge" alt="Canlı Demo" />
+  <a href="https://gamzelikozmetik.com">
+    <img src="https://img.shields.io/badge/🌐_Canlı_Demo-gamzelikozmetik.com-ec4899?style=for-the-badge" alt="Canlı Demo" />
   </a>
-  <a href="https://gamzeli-eczanem-shop.vercel.app">
+  <a href="https://gamzelikozmetik.com">
     <img src="https://img.shields.io/badge/▲_Vercel-Deploy-000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
   </a>
 </p>
