@@ -96,7 +96,7 @@ function AdminGirisForm() {
                 <label className="block text-sm font-medium text-stone-700 mb-1">E-posta</label>
                 <input
                   type="email"
-                  value="destek.gamzelieczanem@gmail.com"
+                  value="destek@gamzelidermokozmetik.com"
                   readOnly
                   className="w-full px-4 py-3 border border-stone-200 rounded-xl text-sm bg-stone-50 text-stone-500 cursor-default"
                 />
@@ -135,7 +135,7 @@ function AdminGirisForm() {
                   </svg>
                 </div>
                 <p className="text-sm text-stone-600">
-                  <span className="font-medium">destek.gamzelieczanem@gmail.com</span> adresine<br />
+                  <span className="font-medium">destek@gamzelidermokozmetik.com</span> adresine<br />
                   6 haneli doğrulama kodu gönderildi.
                 </p>
               </div>
