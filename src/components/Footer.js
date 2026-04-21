@@ -92,8 +92,26 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-stone-800 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="border-t border-stone-800 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-xs text-stone-500">© 2026 GAMZELİECZANEM. Tüm hakları saklıdır.</p>
+
+          {/* ETBİS Kayıt Etiketi */}
+          <a
+            href="https://etbis.ticaret.gov.tr/sitesorgulama?SiteUrl=gamzelidermokozmetik.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="ETBİS Kayıt Bilgileri"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-stone-800 border border-stone-700 hover:border-rose-500 transition-colors"
+          >
+            <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex flex-col leading-tight">
+              <span className="text-[10px] font-semibold text-stone-200 uppercase tracking-wider">ETBİS'e Kayıtlıdır</span>
+              <span className="text-[10px] text-stone-400">Site Kayıt No: 5267474226</span>
+            </div>
+          </a>
+
           <div className="flex items-center gap-4">
             <span className="text-xs text-stone-500">Güvenli ödeme</span>
             <div className="flex gap-2">
