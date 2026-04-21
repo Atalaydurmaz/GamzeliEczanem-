@@ -259,6 +259,33 @@ export default async function UrunDetaySayfasi({ params }) {
                 <p className="text-sm text-stone-500 leading-relaxed whitespace-pre-line">{urun.detay}</p>
               </div>
             )}
+
+            {/* İçerik Listesi (INCI) — açılır/kapanır */}
+            {urun.icerik && (
+              <details className="border-t border-rose-100 pt-6 group">
+                <summary className="flex items-center justify-between cursor-pointer list-none">
+                  <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wider">
+                    İçindekiler (INCI)
+                  </h2>
+                  <svg
+                    className="w-5 h-5 text-stone-400 transition-transform group-open:rotate-180"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div className="mt-3 p-4 bg-stone-50 border border-stone-100 rounded-xl">
+                  <p className="text-xs text-stone-600 leading-relaxed font-mono break-words whitespace-pre-wrap">
+                    {urun.icerik}
+                  </p>
+                  <p className="text-[10px] text-stone-400 mt-3">
+                    Üretici tarafından beyan edilen içerik listesidir. Alerjiniz varsa kullanmadan önce kontrol ediniz.
+                  </p>
+                </div>
+              </details>
+            )}
           </div>
         </div>
       </div>

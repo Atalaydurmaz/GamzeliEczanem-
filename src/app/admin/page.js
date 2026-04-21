@@ -900,7 +900,7 @@ const KATEGORILER = [
   { value: 'anne-bebek',    label: 'Anne & Bebek' },
 ]
 
-const BOŞ_FORM = { id: '', ad: '', kategori: 'cilt-bakimi', altKategori: '', fiyat: '', eskiFiyat: '', stok: '10', aciklama: '', detay: '', ciltTipi: '', kullanim: '', rutinOnerisi: '', gorsel: '', etiket: '', aktif: true }
+const BOŞ_FORM = { id: '', ad: '', kategori: 'cilt-bakimi', altKategori: '', fiyat: '', eskiFiyat: '', stok: '10', aciklama: '', detay: '', ciltTipi: '', kullanim: '', rutinOnerisi: '', icerik: '', gorsel: '', etiket: '', aktif: true }
 
 function GorselYukle({ url, onChange }) {
   const [yukleniyor, setYukleniyor] = useState(false)
@@ -1004,6 +1004,7 @@ function UrunlerSekme() {
         ciltTipi:    urun.cilt_tipi ?? '',
         kullanim:    urun.kullanim ?? '',
         rutinOnerisi:urun.rutin_onerisi ?? '',
+        icerik:      urun.icerik ?? '',
         gorsel:      urun.gorsel ?? '',
         etiket:      urun.etiket ?? '',
         aktif:       urun.aktif !== false,
@@ -1025,6 +1026,7 @@ function UrunlerSekme() {
       fiyat: Number(form.fiyat), eskiFiyat: form.eskiFiyat ? Number(form.eskiFiyat) : null,
       stok: Number(form.stok) || 0, aciklama: form.aciklama || null, detay: form.detay || null,
       ciltTipi: form.ciltTipi || null, kullanim: form.kullanim || null, rutinOnerisi: form.rutinOnerisi || null,
+      icerik: form.icerik || null,
       gorsel: form.gorsel || null, etiket: form.etiket || null, aktif: form.aktif,
     }
     try {
@@ -1423,6 +1425,15 @@ function UrunlerSekme() {
                     <textarea rows={3} value={form.rutinOnerisi} onChange={e => set('rutinOnerisi', e.target.value)}
                       placeholder="Temizleyici → tonik → bu ürün → nemlendirici → SPF..."
                       className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-stone-600 mb-1">
+                      İçindekiler (INCI)
+                      <span className="ml-2 text-[10px] text-stone-400 font-normal">Virgülle ayırın — ambalajdaki sıraya göre</span>
+                    </label>
+                    <textarea rows={4} value={form.icerik} onChange={e => set('icerik', e.target.value)}
+                      placeholder="Aqua, Glycerin, Niacinamide, Sodium Hyaluronate, Panthenol, Tocopherol, Phenoxyethanol, ..."
+                      className="w-full px-3 py-2 border border-stone-200 rounded-xl text-xs font-mono focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all resize-none" />
                   </div>
                 </div>
               </div>

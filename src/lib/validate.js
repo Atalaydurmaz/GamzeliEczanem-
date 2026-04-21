@@ -207,6 +207,7 @@ export const AdminProductUpdateSchema = z.object({
   ciltTipi:    z.string().trim().max(1000).nullable().optional(),
   kullanim:    z.string().trim().max(1000).nullable().optional(),
   rutinOnerisi:z.string().trim().max(1500).nullable().optional(),
+  icerik:      z.string().trim().max(5000).nullable().optional(),
   gorsel:      z.string().url('Geçersiz görsel URL.').max(500).nullable().optional(),
   etiket:      z.string().trim().max(50).nullable().optional(),
   aktif:       z.boolean().optional(),

@@ -13,6 +13,7 @@ function mapRow(row, stockMap = {}) {
     ciltTipi: row.cilt_tipi ?? null,
     kullanim: row.kullanim ?? null,
     rutinOnerisi: row.rutin_onerisi ?? null,
+    icerik: row.icerik ?? null,
     gorsel: row.gorsel ?? null,
     puan: Number(row.puan ?? 0),
     yorumSayisi: row.yorum_sayisi ?? 0,
