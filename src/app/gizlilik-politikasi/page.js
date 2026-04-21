@@ -7,7 +7,7 @@ const BOLUMLER = [
   {
     baslik: 'Veri Sorumlusu',
     icerik:
-      'Bu aydınlatma metni, 6698 sayılı Kişisel Verilerin Korunması Kanunu\'nun ("KVKK") 10. maddesi ile Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında hazırlanmıştır.\n\nVeri Sorumlusu: ATALAY DURMAZ (Gerçek Kişilere Ait Ticari İşletme)\nMarka Adı: GAMZELİECZANEM\nMERSİS No: 1017857069400001\nTicaret Sicil No: GÖLCÜK/6055\nVergi Dairesi / VKN: Gölcük / 3160931792\nAdres: Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli\nTelefon: 0262 412 6928\nE-posta: destek@gamzelidermokozmetik.com\nWeb: gamzelikozmetik.com',
+      'Bu aydınlatma metni, 6698 sayılı Kişisel Verilerin Korunması Kanunu\'nun ("KVKK") 10. maddesi ile Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında hazırlanmıştır.\n\nVeri Sorumlusu: ATALAY DURMAZ (Gerçek Kişilere Ait Ticari İşletme)\nMarka Adı: GAMZELİECZANEM\nMERSİS No: 1017857069400001\nTicaret Sicil No: GÖLCÜK/6055\nVergi Dairesi / VKN: Gölcük / 3160931792\nETBİS Site Kayıt No: 5267474226\nAdres: Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli\nTelefon: 0262 412 6928\nE-posta: destek@gamzelidermokozmetik.com\nWeb: gamzelidermokozmetik.com',
   },
   {
     baslik: '1. Toplanan Kişisel Veriler',
@@ -74,7 +74,7 @@ export default function GizlilikPolitikasiPage() {
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
         <div className="bg-rose-50 border border-rose-100 rounded-2xl px-6 py-4 mb-8 text-sm text-stone-600 leading-relaxed">
-          Bu aydınlatma metni, GAMZELİECZANEM tarafından işletilen gamzelikozmetik.com web sitesini kullanan ziyaretçi ve müşterilerimizin kişisel verilerinin nasıl toplandığını, işlendiğini, korunduğunu ve haklarınızı açıklamaktadır.
+          Bu aydınlatma metni, GAMZELİECZANEM tarafından işletilen gamzelidermokozmetik.com web sitesini kullanan ziyaretçi ve müşterilerimizin kişisel verilerinin nasıl toplandığını, işlendiğini, korunduğunu ve haklarınızı açıklamaktadır.
         </div>
 
         <div className="space-y-6">

@@ -28,10 +28,11 @@ export default function OnBilgilendirmeFormu() {
               <p>MERSİS No: 1017857069400001</p>
               <p>Ticaret Sicil No: GÖLCÜK/6055</p>
               <p>Vergi Dairesi / VKN: Gölcük / 3160931792</p>
+              <p>ETBİS Site Kayıt No: 5267474226</p>
               <p>Adres: Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli</p>
               <p>Tel: 0262 412 6928</p>
               <p>E-posta: destek@gamzelidermokozmetik.com</p>
-              <p>Web: gamzelikozmetik.com</p>
+              <p>Web: gamzelidermokozmetik.com</p>
             </div>
           </section>
 

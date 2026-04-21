@@ -22,6 +22,7 @@ export default function KVKKAydinlatmaMetni() {
               <p>Ticaret Unvanı: ATALAY DURMAZ (Gerçek Kişilere Ait Ticari İşletme)</p>
               <p>Marka Adı: GAMZELİECZANEM</p>
               <p>MERSİS No: 1017857069400001</p>
+              <p>ETBİS Site Kayıt No: 5267474226</p>
               <p>Adres: Yüzbaşılar Mah. 3013. Sk. D Blok No:2D İç Kapı No:7, Gölcük / Kocaeli</p>
               <p>E-posta: destek@gamzelidermokozmetik.com</p>
               <p>Tel: 0262 412 6928</p>
