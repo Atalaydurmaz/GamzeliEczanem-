@@ -900,7 +900,7 @@ const KATEGORILER = [
   { value: 'anne-bebek',    label: 'Anne & Bebek' },
 ]
 
-const BOŞ_FORM = { id: '', ad: '', kategori: 'cilt-bakimi', altKategori: '', fiyat: '', eskiFiyat: '', stok: '10', aciklama: '', detay: '', gorsel: '', etiket: '', aktif: true }
+const BOŞ_FORM = { id: '', ad: '', kategori: 'cilt-bakimi', altKategori: '', fiyat: '', eskiFiyat: '', stok: '10', aciklama: '', detay: '', ciltTipi: '', kullanim: '', rutinOnerisi: '', gorsel: '', etiket: '', aktif: true }
 
 function GorselYukle({ url, onChange }) {
   const [yukleniyor, setYukleniyor] = useState(false)
@@ -975,6 +975,8 @@ function UrunlerSekme() {
   const [modal, setModal] = useState(null) // null | { mod: 'ekle' | 'duzenle', urun?: {} }
   const [form, setForm] = useState(BOŞ_FORM)
   const [kaydediyor, setKaydediyor] = useState(false)
+  const [aiDolduruyor, setAiDolduruyor] = useState(false)
+  const [toplu, setToplu] = useState({ calisiyor: false, sonuc: null })
   const [siliniyor, setSiliniyor] = useState(null)
   const [hata, setHata] = useState('')
   const [arama, setArama] = useState('')
@@ -999,6 +1001,9 @@ function UrunlerSekme() {
         stok:        String(urun.stok ?? '0'),
         aciklama:    urun.aciklama ?? '',
         detay:       urun.detay ?? '',
+        ciltTipi:    urun.cilt_tipi ?? '',
+        kullanim:    urun.kullanim ?? '',
+        rutinOnerisi:urun.rutin_onerisi ?? '',
         gorsel:      urun.gorsel ?? '',
         etiket:      urun.etiket ?? '',
         aktif:       urun.aktif !== false,
@@ -1019,6 +1024,7 @@ function UrunlerSekme() {
       ad: form.ad, kategori: form.kategori, altKategori: form.altKategori || null,
       fiyat: Number(form.fiyat), eskiFiyat: form.eskiFiyat ? Number(form.eskiFiyat) : null,
       stok: Number(form.stok) || 0, aciklama: form.aciklama || null, detay: form.detay || null,
+      ciltTipi: form.ciltTipi || null, kullanim: form.kullanim || null, rutinOnerisi: form.rutinOnerisi || null,
       gorsel: form.gorsel || null, etiket: form.etiket || null, aktif: form.aktif,
     }
     try {
@@ -1161,6 +1167,32 @@ function UrunlerSekme() {
             <input type="file" accept=".csv,text/csv" className="hidden" onChange={csvIcerAktar} />
           </label>
           <button
+            type="button"
+            disabled={toplu.calisiyor}
+            onClick={async () => {
+              if (!confirm('Açıklaması eksik tüm ürünler için AI ile "Kimler için uygun / Nasıl kullanılır / Rutin önerisi" alanları doldurulacak. Devam edilsin mi?')) return
+              setToplu({ calisiyor: true, sonuc: null })
+              try {
+                const res = await fetch('/api/admin/products/enhance', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ overwrite: false, limit: 200 }),
+                })
+                const d = await res.json()
+                setToplu({ calisiyor: false, sonuc: d })
+                // Ürün listesini tazele
+                const upd = await fetch('/api/admin/products').then(r => r.json())
+                setUrunler(upd)
+              } catch (e) {
+                setToplu({ calisiyor: false, sonuc: { hata: true, mesaj: e.message } })
+              }
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border border-purple-200 text-purple-700 hover:bg-purple-50 disabled:opacity-50 rounded-xl transition-all"
+          >
+            <span aria-hidden>✨</span>
+            {toplu.calisiyor ? 'Üretiliyor...' : 'Eksikleri AI ile Doldur'}
+          </button>
+          <button
             onClick={() => aç('ekle')}
             className="flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm shrink-0"
           >
@@ -1169,6 +1201,17 @@ function UrunlerSekme() {
           </button>
         </div>
       </div>
+
+      {toplu.sonuc && (
+        <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-sm text-purple-800 flex items-center justify-between gap-3">
+          <span>
+            {toplu.sonuc.hata
+              ? `Hata: ${toplu.sonuc.mesaj}`
+              : `AI doldurma tamamlandı — ${toplu.sonuc.tamam} başarılı, ${toplu.sonuc.hata} hatalı, ${toplu.sonuc.atlanan} atlandı (zaten doluydu).`}
+          </span>
+          <button onClick={() => setToplu({ calisiyor: false, sonuc: null })} className="text-purple-500 hover:text-purple-700 text-lg leading-none">×</button>
+        </div>
+      )}
 
       <div className="overflow-x-auto rounded-xl border border-stone-100">
         <table className="w-full text-sm">
@@ -1319,6 +1362,69 @@ function UrunlerSekme() {
                 <label className="block text-xs font-medium text-stone-600 mb-1">Detay (uzun açıklama)</label>
                 <textarea rows={3} value={form.detay} onChange={e => set('detay', e.target.value)}
                   className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all resize-none" />
+              </div>
+
+              {/* Yapılandırılmış açıklama alanları */}
+              <div className="pt-3 border-t border-stone-100">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-semibold text-stone-700">Yapılandırılmış Açıklama</h4>
+                  {modal.mod === 'duzenle' && modal.urun?.id && (
+                    <button
+                      type="button"
+                      disabled={aiDolduruyor}
+                      onClick={async () => {
+                        setAiDolduruyor(true)
+                        try {
+                          const res = await fetch('/api/admin/products/enhance', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ids: [modal.urun.id], overwrite: true }),
+                          })
+                          const d = await res.json()
+                          if (!res.ok || d.hata > 0) {
+                            alert('AI doldurma başarısız: ' + (d.detay?.[0]?.hata || d.error || 'Bilinmeyen hata'))
+                          } else {
+                            // Güncel değerleri çek
+                            const upd = await fetch(`/api/admin/products`).then(r => r.json())
+                            const yeni = upd.find(u => u.id === modal.urun.id)
+                            if (yeni) {
+                              set('ciltTipi', yeni.cilt_tipi ?? '')
+                              set('kullanim', yeni.kullanim ?? '')
+                              set('rutinOnerisi', yeni.rutin_onerisi ?? '')
+                            }
+                          }
+                        } catch (e) {
+                          alert('Hata: ' + e.message)
+                        } finally {
+                          setAiDolduruyor(false)
+                        }
+                      }}
+                      className="px-3 py-1 text-xs font-semibold text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 disabled:opacity-50 transition-colors"
+                    >
+                      {aiDolduruyor ? 'Üretiliyor...' : '✨ AI ile Doldur'}
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-xs font-medium text-stone-600 mb-1">Kimler İçin Uygun (cilt/saç tipi)</label>
+                    <textarea rows={2} value={form.ciltTipi} onChange={e => set('ciltTipi', e.target.value)}
+                      placeholder="Örn: Yağlı ve karma ciltler için. Akne sorunu yaşayanlara uygundur."
+                      className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-stone-600 mb-1">Nasıl Kullanılır</label>
+                    <textarea rows={3} value={form.kullanim} onChange={e => set('kullanim', e.target.value)}
+                      placeholder="Adım adım kullanım talimatı..."
+                      className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-stone-600 mb-1">Rutin Önerisi (kombinasyon)</label>
+                    <textarea rows={3} value={form.rutinOnerisi} onChange={e => set('rutinOnerisi', e.target.value)}
+                      placeholder="Temizleyici → tonik → bu ürün → nemlendirici → SPF..."
+                      className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all resize-none" />
+                  </div>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">

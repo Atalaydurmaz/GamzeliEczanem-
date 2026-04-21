@@ -19,6 +19,9 @@ export async function PATCH(req, { params }) {
   if (body.eskiFiyat    !== undefined) updates.eski_fiyat   = body.eskiFiyat ?? null
   if (body.aciklama     !== undefined) updates.aciklama     = body.aciklama
   if (body.detay        !== undefined) updates.detay        = body.detay
+  if (body.ciltTipi     !== undefined) updates.cilt_tipi    = body.ciltTipi
+  if (body.kullanim     !== undefined) updates.kullanim     = body.kullanim
+  if (body.rutinOnerisi !== undefined) updates.rutin_onerisi= body.rutinOnerisi
   if (body.gorsel       !== undefined) updates.gorsel       = body.gorsel
   if (body.etiket       !== undefined) updates.etiket       = body.etiket ?? null
   if (body.aktif        !== undefined) updates.aktif        = body.aktif

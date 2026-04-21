@@ -211,13 +211,54 @@ export default async function UrunDetaySayfasi({ params }) {
               />
             </div>
 
-            {/* Detaylı Açıklama */}
-            <div className="border-t border-rose-100 pt-6">
-              <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wider mb-3">
-                Ürün Açıklaması
-              </h2>
-              <p className="text-sm text-stone-500 leading-relaxed">{urun.detay}</p>
-            </div>
+            {/* Yapılandırılmış kullanım kartları */}
+            {(urun.ciltTipi || urun.kullanim || urun.rutinOnerisi) && (
+              <div className="border-t border-rose-100 pt-6 space-y-3">
+                {urun.ciltTipi && (
+                  <div className="flex gap-3 p-4 bg-rose-50/60 border border-rose-100 rounded-xl">
+                    <span className="text-xl leading-none shrink-0" aria-hidden>🧴</span>
+                    <div>
+                      <h3 className="text-xs font-semibold text-rose-700 uppercase tracking-wider mb-1">
+                        Kimler İçin Uygun
+                      </h3>
+                      <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-line">{urun.ciltTipi}</p>
+                    </div>
+                  </div>
+                )}
+                {urun.kullanim && (
+                  <div className="flex gap-3 p-4 bg-emerald-50/60 border border-emerald-100 rounded-xl">
+                    <span className="text-xl leading-none shrink-0" aria-hidden>⏱️</span>
+                    <div>
+                      <h3 className="text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-1">
+                        Nasıl Kullanılır
+                      </h3>
+                      <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-line">{urun.kullanim}</p>
+                    </div>
+                  </div>
+                )}
+                {urun.rutinOnerisi && (
+                  <div className="flex gap-3 p-4 bg-amber-50/60 border border-amber-100 rounded-xl">
+                    <span className="text-xl leading-none shrink-0" aria-hidden>✨</span>
+                    <div>
+                      <h3 className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">
+                        Rutin Önerisi
+                      </h3>
+                      <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-line">{urun.rutinOnerisi}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Detaylı Açıklama (fallback / ek bilgi) */}
+            {urun.detay && (
+              <div className="border-t border-rose-100 pt-6">
+                <h2 className="text-sm font-semibold text-stone-700 uppercase tracking-wider mb-3">
+                  Ürün Açıklaması
+                </h2>
+                <p className="text-sm text-stone-500 leading-relaxed whitespace-pre-line">{urun.detay}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
