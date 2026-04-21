@@ -1,6 +1,6 @@
 import { getProducts } from '@/lib/products'
 
-const BASE_URL = 'https://gamzelieczanem.com'
+const BASE_URL = 'https://gamzelidermokozmetik.com'
 
 export default async function sitemap() {
   const urunler = await getProducts().catch(() => [])

@@ -1,7 +1,7 @@
 import { sendMail } from '@/lib/notify'
 import { getDueReminders, markReminderSent } from '@/lib/routineReminders'
 
-const BASE_URL = 'https://gamzelieczanem.com'
+const BASE_URL = 'https://gamzelidermokozmetik.com'
 
 function ayMetni(gun) {
   const ay = Math.round(gun / 30)

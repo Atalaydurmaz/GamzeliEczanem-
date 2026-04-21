@@ -92,7 +92,7 @@ export async function POST(req) {
 
     <!-- Footer -->
     <div style="background:#fff1f2;padding:16px 32px;text-align:center;border-top:1px solid #fce7f3">
-      <p style="margin:0;font-size:12px;color:#9ca3af">GAMZELİECZANEM · gamzelieczanem.com</p>
+      <p style="margin:0;font-size:12px;color:#9ca3af">GAMZELİECZANEM · gamzelidermokozmetik.com</p>
     </div>
   </div>
 </body>

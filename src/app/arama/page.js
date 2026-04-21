@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { aiArama } from '@/lib/aiArama'
 import AramaKlient from './AramaKlient'
 
-const BASE_URL = 'https://gamzelieczanem.com'
+const BASE_URL = 'https://gamzelidermokozmetik.com'
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 

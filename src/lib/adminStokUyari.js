@@ -71,7 +71,7 @@ export async function adminStokUyariGonder(urunIds) {
       </table>
 
       <div style="text-align:center">
-        <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://gamzelieczanem.com'}/admin"
+        <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'https://gamzelidermokozmetik.com'}/admin"
            style="display:inline-block;padding:14px 32px;background:#f43f5e;color:#fff;font-weight:700;font-size:15px;border-radius:999px;text-decoration:none">
           Admin Paneline Git
         </a>

@@ -14,7 +14,7 @@ const geist = Geist({
   display: 'swap',
 })
 
-const BASE_URL = 'https://gamzelieczanem.com'
+const BASE_URL = 'https://gamzelidermokozmetik.com'
 
 export const viewport = {
   width: 'device-width',

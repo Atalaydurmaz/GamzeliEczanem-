@@ -34,14 +34,14 @@ export async function PATCH(req) {
     if (bildirimler.length > 0) {
       const urun = await getProductById(urunId)
       const urunAd = urun?.ad ?? `Ürün #${urunId}`
-      const urunUrl = `https://gamzelieczanem.com/urunler/${urunId}`
+      const urunUrl = `https://gamzelidermokozmetik.com/urunler/${urunId}`
 
       const html = `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#fff7f7;font-family:'Segoe UI',Arial,sans-serif">
 <div style="max-width:520px;margin:32px auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)">
   <div style="background:linear-gradient(135deg,#f43f5e,#fb7185);padding:36px 32px;text-align:center">
     <p style="margin:0;font-size:22px;font-weight:800;color:#fff;letter-spacing:1px">GAMZELİECZANEM</p>
-    <p style="margin:6px 0 0;font-size:13px;color:#fecdd3">gamzelieczanem.com</p>
+    <p style="margin:6px 0 0;font-size:13px;color:#fecdd3">gamzelidermokozmetik.com</p>
   </div>
   <div style="padding:32px">
     <h1 style="margin:0 0 8px;font-size:22px;font-weight:800;color:#1c1917">Ürün Tekrar Stokta! 🎉</h1>

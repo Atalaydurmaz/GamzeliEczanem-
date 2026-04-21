@@ -17,7 +17,7 @@ export async function generateStaticParams() {
   return urunler.map((u) => ({ id: String(u.id) }))
 }
 
-const BASE_URL = 'https://gamzelieczanem.com'
+const BASE_URL = 'https://gamzelidermokozmetik.com'
 
 export async function generateMetadata({ params }) {
   const { id } = await params

@@ -61,14 +61,14 @@ export async function POST(req) {
       <p style="margin:0 0 24px;font-size:14px;color:#44403c;line-height:1.7">
         Artık yeni ürünler, özel kampanyalar ve eczacı önerileri hakkında ilk siz haberdar olacaksınız.
       </p>
-      <a href="https://gamzelieczanem.com/urunler"
+      <a href="https://gamzelidermokozmetik.com/urunler"
          style="display:inline-block;background:#f43f5e;color:#fff;font-size:14px;font-weight:700;padding:12px 28px;border-radius:50px;text-decoration:none">
         Alışverişe Başla →
       </a>
     </div>
     <div style="background:#fff1f2;padding:16px 32px;text-align:center;border-top:1px solid #fce7f3">
       <p style="margin:0;font-size:11px;color:#9ca3af">
-        Bu e-postayı yanlışlıkla aldıysanız dikkate almayınız. · GAMZELİECZANEM · gamzelieczanem.com
+        Bu e-postayı yanlışlıkla aldıysanız dikkate almayınız. · GAMZELİECZANEM · gamzelidermokozmetik.com
       </p>
     </div>
   </div>

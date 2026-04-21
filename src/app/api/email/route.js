@@ -25,7 +25,7 @@ export async function POST(req) {
     <!-- Header -->
     <div style="background:linear-gradient(135deg,#f43f5e,#fb7185);padding:36px 32px;text-align:center">
       <p style="margin:0;font-size:22px;font-weight:800;color:#fff;letter-spacing:1px">GAMZELİECZANEM</p>
-      <p style="margin:6px 0 0;font-size:13px;color:#fecdd3">gamzelieczanem.com</p>
+      <p style="margin:6px 0 0;font-size:13px;color:#fecdd3">gamzelidermokozmetik.com</p>
     </div>
 
     <!-- Body -->

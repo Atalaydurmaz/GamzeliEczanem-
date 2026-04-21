@@ -7,6 +7,6 @@ export default function robots() {
         disallow: ['/admin', '/api/', '/odeme', '/hesabim', '/sepet'],
       },
     ],
-    sitemap: 'https://gamzelieczanem.com/sitemap.xml',
+    sitemap: 'https://gamzelidermokozmetik.com/sitemap.xml',
   }
 }

@@ -1,11 +1,11 @@
 export const metadata = {
   title: { absolute: 'GAMZELİECZANEM | Eczacı Güvencesiyle Dermokozmetik' },
   description: 'Eczacı güvencesiyle dermokozmetik, makyaj, yüz ve cilt bakımı ürünleri. Türkiye\'nin en kaliteli online eczane kozmetik mağazası.',
-  alternates: { canonical: 'https://gamzelieczanem.com' },
+  alternates: { canonical: 'https://gamzelidermokozmetik.com' },
   openGraph: {
     title: 'GAMZELİECZANEM | Eczacı Güvencesiyle Dermokozmetik',
     description: 'Eczacı güvencesiyle dermokozmetik, makyaj, yüz ve cilt bakımı ürünleri. Türkiye\'nin en kaliteli online eczane kozmetik mağazası.',
-    url: 'https://gamzelieczanem.com',
+    url: 'https://gamzelidermokozmetik.com',
     type: 'website',
   },
 }

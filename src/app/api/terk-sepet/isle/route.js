@@ -34,7 +34,7 @@ export async function GET(req) {
 
   <div style="background:linear-gradient(135deg,#f43f5e,#fb7185);padding:36px 32px;text-align:center">
     <p style="margin:0;font-size:22px;font-weight:800;color:#fff;letter-spacing:1px">GAMZELİECZANEM</p>
-    <p style="margin:6px 0 0;font-size:13px;color:#fecdd3">gamzelieczanem.com</p>
+    <p style="margin:6px 0 0;font-size:13px;color:#fecdd3">gamzelidermokozmetik.com</p>
   </div>
 
   <div style="padding:32px">
@@ -58,7 +58,7 @@ export async function GET(req) {
     </div>
 
     <div style="text-align:center">
-      <a href="https://gamzelieczanem.com/sepet" style="display:inline-block;padding:16px 40px;background:#f43f5e;color:#fff;font-weight:700;font-size:15px;border-radius:999px;text-decoration:none;letter-spacing:.3px">
+      <a href="https://gamzelidermokozmetik.com/sepet" style="display:inline-block;padding:16px 40px;background:#f43f5e;color:#fff;font-weight:700;font-size:15px;border-radius:999px;text-decoration:none;letter-spacing:.3px">
         Sepetime Dön &amp; Siparişi Tamamla
       </a>
     </div>
