@@ -1,14 +1,14 @@
 <h1 align="center">💊 Gamzelieczanem</h1>
 
 <p align="center">
-  <strong>🤖 Yapay zekâ destekli kozmetik ve kişisel bakım e-ticaret platformu</strong>
+  <strong>🤖 An AI-powered e-commerce platform for cosmetics and personal care</strong>
   <br/>
-  <sub>Eczacı güvencesiyle · AI cilt analizi · Sanal makyaj deneme · 7/24 Eczacı Asistanı</sub>
+  <sub>Trusted by pharmacists · AI skin analysis · Virtual makeup try-on · 24/7 Pharmacist Assistant</sub>
 </p>
 
 <p align="center">
   <a href="https://gamzelidermokozmetik.com">
-    <img src="https://img.shields.io/badge/🌐_Canlı_Demo-gamzelidermokozmetik.com-ec4899?style=for-the-badge" alt="Canlı Demo" />
+    <img src="https://img.shields.io/badge/🌐_Live_Demo-gamzelidermokozmetik.com-ec4899?style=for-the-badge" alt="Live Demo" />
   </a>
   <a href="https://gamzelidermokozmetik.com">
     <img src="https://img.shields.io/badge/▲_Vercel-Deploy-000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
@@ -20,91 +20,91 @@
   <img src="https://img.shields.io/badge/React-19-20232a?style=flat-square&logo=react&logoColor=61dafb" />
   <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ecf8e?style=flat-square&logo=supabase&logoColor=white" />
   <img src="https://img.shields.io/badge/Tailwind-CSS-06b6d4?style=flat-square&logo=tailwindcss&logoColor=white" />
-  <img src="https://img.shields.io/badge/Iyzico-Ödeme-1e40af?style=flat-square" />
+  <img src="https://img.shields.io/badge/Iyzico-Payment-1e40af?style=flat-square" />
   <img src="https://img.shields.io/badge/Anthropic-Claude-d97757?style=flat-square&logo=anthropic&logoColor=white" />
 </p>
 
 <p align="center">
-  <img src="screenshots/01-anasayfa.png" width="92%" alt="Gamzelieczanem — Anasayfa" />
+  <img src="screenshots/01-anasayfa.png" width="92%" alt="Gamzelieczanem — Home Page" />
 </p>
 
 ---
 
-## ✨ Öne Çıkan Özellikler
+## ✨ Main Features
 
-- 🤖 **AI Cilt Analizi** — Anket tabanlı kişiselleştirilmiş ürün önerileri (Anthropic Claude)
-- 💄 **Sanal Makyaj Deneme** — face-api.js ile gerçek zamanlı ruj, allık ve far simülasyonu
-- 💳 **Güvenli Ödeme** — Iyzico entegrasyonu ile kredi/banka kartı
-- 👤 **Kullanıcı Hesabı** — E-posta + Google OAuth, sipariş geçmişi, favoriler
-- 🛒 **Tam E-Ticaret** — Sepet, indirim kodları, sipariş takibi, stok yönetimi
-- 📧 **Bildirimler** — Email (SMTP) ve SMS (Netgsm) ile sipariş bildirimleri
-- 🔐 **Admin Paneli** — Ürün, sipariş ve kullanıcı yönetimi
-- 🧠 **7/24 Eczacı Asistanı** — AI destekli ürün önerisi sohbeti
+- 🤖 **AI Skin Analysis** — Personal product suggestions based on a short survey (powered by Anthropic Claude)
+- 💄 **Virtual Makeup Try-On** — Real-time lipstick, blush, and eyeshadow simulation with face-api.js
+- 💳 **Safe Payment** — Credit and debit card payment with Iyzico
+- 👤 **User Account** — Email and Google login, order history, and favorites
+- 🛒 **Full E-Commerce** — Cart, discount codes, order tracking, and stock control
+- 📧 **Notifications** — Order updates by email (SMTP) and SMS (Netgsm)
+- 🔐 **Admin Panel** — Manage products, orders, and users
+- 🧠 **24/7 Pharmacist Assistant** — An AI chat that helps you choose the right product
 
 ---
 
-## 📸 Ekran Görüntüleri
+## 📸 Screenshots
 
 <table>
   <tr>
-    <td width="50%"><strong>Anasayfa</strong><br/><img src="screenshots/01-anasayfa.png" alt="Anasayfa" /></td>
-    <td width="50%"><strong>Ürünler</strong><br/><img src="screenshots/02-urunler.png" alt="Ürün Listesi" /></td>
+    <td width="50%"><strong>Home Page</strong><br/><img src="screenshots/01-anasayfa.png" alt="Home Page" /></td>
+    <td width="50%"><strong>Products</strong><br/><img src="screenshots/02-urunler.png" alt="Product List" /></td>
   </tr>
   <tr>
-    <td width="50%"><strong>AI Cilt Analizi</strong><br/><img src="screenshots/04-cilt-analizi.png" alt="AI Cilt Analizi" /></td>
-    <td width="50%"><strong>Sanal Makyaj Deneme</strong><br/><img src="screenshots/05-sanal-deneme.png" alt="Sanal Deneme" /></td>
+    <td width="50%"><strong>AI Skin Analysis</strong><br/><img src="screenshots/04-cilt-analizi.png" alt="AI Skin Analysis" /></td>
+    <td width="50%"><strong>Virtual Makeup Try-On</strong><br/><img src="screenshots/05-sanal-deneme.png" alt="Virtual Try-On" /></td>
   </tr>
   <tr>
-    <td width="50%"><strong>Sepet</strong><br/><img src="screenshots/06-sepet.png" alt="Sepet" /></td>
-    <td width="50%"><strong>Giriş / Hesap</strong><br/><img src="screenshots/07-giris.png" alt="Giriş" /></td>
+    <td width="50%"><strong>Cart</strong><br/><img src="screenshots/06-sepet.png" alt="Cart" /></td>
+    <td width="50%"><strong>Login / Account</strong><br/><img src="screenshots/07-giris.png" alt="Login" /></td>
   </tr>
 </table>
 
-### 📱 Mobil Görünüm
+### 📱 Mobile View
 
 <p align="center">
-  <img src="screenshots/08-mobil-anasayfa.png" width="42%" alt="Mobil Anasayfa" />
+  <img src="screenshots/08-mobil-anasayfa.png" width="42%" alt="Mobile Home Page" />
   &nbsp;&nbsp;
-  <img src="screenshots/09-mobil-urunler.png" width="42%" alt="Mobil Ürünler" />
+  <img src="screenshots/09-mobil-urunler.png" width="42%" alt="Mobile Products" />
 </p>
 
 ---
 
-## 🛠️ Teknoloji
+## 🛠️ Technology
 
-| Katman | Teknoloji |
-|--------|-----------|
+| Layer | Technology |
+|-------|------------|
 | Frontend | Next.js 16 · React 19 · Tailwind CSS · Framer Motion |
 | Backend | Next.js API Routes · NextAuth |
-| Veritabanı | Supabase (PostgreSQL) |
-| Ödeme | Iyzico |
+| Database | Supabase (PostgreSQL) |
+| Payment | Iyzico |
 | AI | Anthropic Claude SDK · face-api.js |
-| E-posta & SMS | SMTP · Netgsm |
-| Deploy | Vercel (cron jobs: terk-sepet, rutin-hatirlatici) |
+| Email & SMS | SMTP · Netgsm |
+| Deploy | Vercel (cron jobs: abandoned-cart, routine-reminder) |
 
 ---
 
-## 📁 Proje Yapısı
+## 📁 Project Structure
 
 ```
 src/app/
-├── (shop)/                   # Mağaza sayfaları
-│   ├── urunler/              # Ürün listesi & detay
-│   ├── cilt-analizi/         # AI cilt analizi
-│   ├── sanal-deneme/         # Sanal makyaj deneme
-│   ├── sepet/                # Alışveriş sepeti
-│   └── hesabim/              # Kullanıcı hesabı
-├── admin/                    # Admin paneli
+├── (shop)/                   # Shop pages
+│   ├── urunler/              # Product list & detail
+│   ├── cilt-analizi/         # AI skin analysis
+│   ├── sanal-deneme/         # Virtual makeup try-on
+│   ├── sepet/                # Shopping cart
+│   └── hesabim/              # User account
+├── admin/                    # Admin panel
 ├── api/                      # API route handlers
 │   ├── odeme/                # Iyzico callback & checkout
-│   ├── terk-sepet/           # Terk edilmiş sepet cron
-│   └── rutin-hatirlatici/    # Rutin hatırlatma cron
-└── odeme/                    # Ödeme sayfaları
+│   ├── terk-sepet/           # Abandoned cart cron
+│   └── rutin-hatirlatici/    # Routine reminder cron
+└── odeme/                    # Payment pages
 ```
 
 ---
 
-## 🚀 Yerel Kurulum
+## 🚀 Local Setup
 
 ```bash
 git clone https://github.com/Atalaydurmaz/GamzeliEczanem-.git
@@ -114,9 +114,9 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Tarayıcıda [http://localhost:3000](http://localhost:3000) adresini aç.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### ⚙️ Ortam Değişkenleri
+### ⚙️ Environment Variables
 
 ```env
 # Supabase
@@ -136,7 +136,7 @@ GOOGLE_CLIENT_SECRET=
 IYZICO_API_KEY=
 IYZICO_SECRET_KEY=
 
-# Anthropic Claude (AI cilt analizi & asistan)
+# Anthropic Claude (AI skin analysis & assistant)
 ANTHROPIC_API_KEY=
 
 # Email (SMTP)
@@ -151,19 +151,19 @@ NETGSM_PASSWORD=
 
 ---
 
-## 📦 Kategoriler
+## 📦 Categories
 
-| Kategori | Açıklama |
-|----------|----------|
-| Cilt Bakım | Temizleyici, nemlendirici, serum |
-| Makyaj | Ruj, fondöten, maskara |
-| Güneş Koruyucu | SPF ürünleri |
-| Saç Bakımı | Şampuan, saç maskesi |
-| Ağız Bakımı | Diş macunu, gargara |
-| Anne & Bebek | Bebek şampuanı, krem |
+| Category | Description |
+|----------|-------------|
+| Skin Care | Cleanser, moisturizer, serum |
+| Makeup | Lipstick, foundation, mascara |
+| Sun Protection | SPF products |
+| Hair Care | Shampoo, hair mask |
+| Oral Care | Toothpaste, mouthwash |
+| Mother & Baby | Baby shampoo, baby cream |
 
 ---
 
 <p align="center">
-  <sub>Geliştirici: <a href="https://github.com/Atalaydurmaz">@Atalaydurmaz</a></sub>
+  <sub>Developer: <a href="https://github.com/Atalaydurmaz">@Atalaydurmaz</a></sub>
 </p>
