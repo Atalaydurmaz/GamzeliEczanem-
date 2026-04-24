@@ -1172,7 +1172,7 @@ function UrunlerSekme() {
             type="button"
             disabled={toplu.calisiyor}
             onClick={async () => {
-              if (!confirm('Açıklaması eksik tüm ürünler için AI ile "Kimler için uygun / Nasıl kullanılır / Rutin önerisi" alanları doldurulacak. Devam edilsin mi?')) return
+              if (!confirm('Açıklaması eksik tüm ürünler için yapay zeka ile "Kimler için uygun / Nasıl kullanılır / Rutin önerisi" alanları doldurulacak. Devam edilsin mi?')) return
               setToplu({ calisiyor: true, sonuc: null })
               try {
                 const res = await fetch('/api/admin/products/enhance', {
@@ -1192,7 +1192,7 @@ function UrunlerSekme() {
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border border-purple-200 text-purple-700 hover:bg-purple-50 disabled:opacity-50 rounded-xl transition-all"
           >
             <span aria-hidden>✨</span>
-            {toplu.calisiyor ? 'Üretiliyor...' : 'Eksikleri AI ile Doldur'}
+            {toplu.calisiyor ? 'Üretiliyor...' : 'Eksikleri Yapay Zeka ile Doldur'}
           </button>
           <button
             onClick={() => aç('ekle')}
@@ -1403,7 +1403,7 @@ function UrunlerSekme() {
                       }}
                       className="px-3 py-1 text-xs font-semibold text-rose-600 border border-rose-200 rounded-lg hover:bg-rose-50 disabled:opacity-50 transition-colors"
                     >
-                      {aiDolduruyor ? 'Üretiliyor...' : '✨ AI ile Doldur'}
+                      {aiDolduruyor ? 'Üretiliyor...' : '✨ Yapay Zeka ile Doldur'}
                     </button>
                   )}
                 </div>
