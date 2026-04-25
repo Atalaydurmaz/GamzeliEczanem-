@@ -163,6 +163,23 @@ export default async function UrunDetaySayfasi({ params }) {
               <span className="text-sm text-stone-400">({urunYorumSayisi} yorum)</span>
             </div>
 
+            {/* Stok & SKT — ulaşılabilirlik + tazelik tek satırda */}
+            {(stok > 0 || urun.skt) && (
+              <div className="text-xs text-stone-400 mb-5 flex items-center gap-2">
+                {stok > 0 ? (
+                  <span>Stokta <span className="font-medium text-stone-500">{stok}</span> adet</span>
+                ) : (
+                  <span className="text-stone-400">Stokta yok</span>
+                )}
+                {urun.skt && (
+                  <>
+                    <span aria-hidden="true">•</span>
+                    <span>SKT: <span className="font-medium text-stone-500">{urun.skt}</span></span>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Kısa açıklama */}
             <p className="text-stone-500 leading-relaxed mb-6">{urun.aciklama}</p>
 

@@ -581,7 +581,10 @@ function StokYonetimi({ adminUrunler = [] }) {
                 <tr key={urun.id} className={tukendi ? 'bg-red-50/50' : dusuk ? 'bg-amber-50/50' : ''}>
                   <td className="px-4 py-3">
                     <p className="font-medium text-stone-800 line-clamp-1">{urun.ad}</p>
-                    <p className="text-xs text-stone-400">#{urun.id}</p>
+                    <p className="text-xs text-stone-400">
+                      #{urun.id}
+                      {urun.skt && <span className="ml-2">• SKT {urun.skt}</span>}
+                    </p>
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold ${tukendi ? 'bg-red-100 text-red-600' : dusuk ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
@@ -900,7 +903,7 @@ const KATEGORILER = [
   { value: 'anne-bebek',    label: 'Anne & Bebek' },
 ]
 
-const BOŞ_FORM = { id: '', ad: '', kategori: 'cilt-bakimi', altKategori: '', fiyat: '', eskiFiyat: '', stok: '10', aciklama: '', detay: '', ciltTipi: '', kullanim: '', rutinOnerisi: '', icerik: '', gorsel: '', etiket: '', aktif: true }
+const BOŞ_FORM = { id: '', ad: '', kategori: 'cilt-bakimi', altKategori: '', fiyat: '', eskiFiyat: '', stok: '10', aciklama: '', detay: '', ciltTipi: '', kullanim: '', rutinOnerisi: '', icerik: '', skt: '', gorsel: '', etiket: '', aktif: true }
 
 function GorselYukle({ url, onChange }) {
   const [yukleniyor, setYukleniyor] = useState(false)
@@ -1005,6 +1008,7 @@ function UrunlerSekme() {
         kullanim:    urun.kullanim ?? '',
         rutinOnerisi:urun.rutin_onerisi ?? '',
         icerik:      urun.icerik ?? '',
+        skt:         urun.skt ?? '',
         gorsel:      urun.gorsel ?? '',
         etiket:      urun.etiket ?? '',
         aktif:       urun.aktif !== false,
@@ -1027,6 +1031,7 @@ function UrunlerSekme() {
       stok: Number(form.stok) || 0, aciklama: form.aciklama || null, detay: form.detay || null,
       ciltTipi: form.ciltTipi || null, kullanim: form.kullanim || null, rutinOnerisi: form.rutinOnerisi || null,
       icerik: form.icerik || null,
+      skt: form.skt || null,
       gorsel: form.gorsel || null, etiket: form.etiket || null, aktif: form.aktif,
     }
     try {
@@ -1250,6 +1255,7 @@ function UrunlerSekme() {
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${(urun.stok ?? 0) === 0 ? 'bg-red-100 text-red-600' : (urun.stok ?? 0) < 5 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
                     {urun.stok ?? 0}
                   </span>
+                  {urun.skt && <p className="text-[10px] text-stone-400 mt-1">SKT {urun.skt}</p>}
                 </td>
                 <td className="px-4 py-3 text-center hidden sm:table-cell">
                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${urun.aktif ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-500'}`}>
@@ -1286,7 +1292,7 @@ function UrunlerSekme() {
             <form onSubmit={kaydet} className="p-6 space-y-4">
               {hata && <p className="text-xs text-red-500 bg-red-50 border border-red-100 rounded-lg px-3 py-2">{hata}</p>}
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-stone-600 mb-1">ID <span className="text-red-400">*</span></label>
                   <input type="number" required value={form.id} onChange={e => set('id', e.target.value)}
@@ -1296,6 +1302,12 @@ function UrunlerSekme() {
                 <div>
                   <label className="block text-xs font-medium text-stone-600 mb-1">Stok</label>
                   <input type="number" min="0" value={form.stok} onChange={e => set('stok', e.target.value)}
+                    className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-stone-600 mb-1">SKT <span className="text-stone-400 font-normal">(MM/YYYY)</span></label>
+                  <input type="text" inputMode="numeric" pattern="(0[1-9]|1[0-2])/\d{4}" placeholder="06/2027"
+                    value={form.skt} onChange={e => set('skt', e.target.value)}
                     className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all" />
                 </div>
               </div>

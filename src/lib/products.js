@@ -14,6 +14,7 @@ function mapRow(row, stockMap = {}) {
     kullanim: row.kullanim ?? null,
     rutinOnerisi: row.rutin_onerisi ?? null,
     icerik: row.icerik ?? null,
+    skt: row.skt ?? null,
     gorsel: row.gorsel ?? null,
     puan: Number(row.puan ?? 0),
     yorumSayisi: row.yorum_sayisi ?? 0,

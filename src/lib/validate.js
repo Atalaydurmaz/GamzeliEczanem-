@@ -208,6 +208,7 @@ export const AdminProductUpdateSchema = z.object({
   kullanim:    z.string().trim().max(1000).nullable().optional(),
   rutinOnerisi:z.string().trim().max(1500).nullable().optional(),
   icerik:      z.string().trim().max(5000).nullable().optional(),
+  skt:         z.string().trim().regex(/^(0[1-9]|1[0-2])\/\d{4}$/, 'SKT formatı MM/YYYY olmalıdır.').nullable().optional(),
   gorsel:      z.string().url('Geçersiz görsel URL.').max(500).nullable().optional(),
   etiket:      z.string().trim().max(50).nullable().optional(),
   aktif:       z.boolean().optional(),

@@ -30,6 +30,7 @@ export async function POST(req) {
       eski_fiyat:   body.eskiFiyat ? Number(body.eskiFiyat) : null,
       aciklama:     body.aciklama || null,
       detay:        body.detay || null,
+      skt:          body.skt || null,
       gorsel:       body.gorsel || null,
       etiket:       body.etiket || null,
       aktif:        body.aktif !== false,
