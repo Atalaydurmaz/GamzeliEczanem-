@@ -1306,8 +1306,11 @@ function UrunlerSekme() {
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-stone-600 mb-1">SKT <span className="text-stone-400 font-normal">(MM/YYYY)</span></label>
-                  <input type="text" inputMode="numeric" pattern="(0[1-9]|1[0-2])/\d{4}" placeholder="06/2027"
-                    value={form.skt} onChange={e => set('skt', e.target.value)}
+                  <input type="text" inputMode="numeric" pattern="(0[1-9]|1[0-2])/\d{4}" placeholder="06/2027" maxLength={7}
+                    value={form.skt} onChange={e => {
+                      const d = e.target.value.replace(/\D/g, '').slice(0, 6)
+                      set('skt', d.length >= 3 ? `${d.slice(0, 2)}/${d.slice(2)}` : d)
+                    }}
                     className="w-full px-3 py-2 border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100 transition-all" />
                 </div>
               </div>
