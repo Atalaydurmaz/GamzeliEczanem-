@@ -1,6 +1,15 @@
 /** @type {import('next').NextConfig} */
 
+import { withSentryConfig } from '@sentry/nextjs'
+
 const securityHeaders = [
+  // HSTS — tarayıcıya "bu siteye yalnızca HTTPS üzerinden bağlan" der.
+  // 2 yıl + alt alan adları + preload listesi için hazır.
+  // Vercel zaten Let's Encrypt SSL sağlar; bu header downgrade saldırılarını kapatır.
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload',
+  },
   // MIME sniffing koruması — tarayıcı Content-Type'ı zorunlu tutar
   {
     key: 'X-Content-Type-Options',
@@ -34,7 +43,9 @@ const securityHeaders = [
       "img-src 'self' data: blob: https://picsum.photos https://images.unsplash.com https://cdn.dsmcdn.com https://us.lazartigue.com https://witcdn.dermoeczanem.com https://*.supabase.co",
       "font-src 'self'",
       // cdn.jsdelivr.net: face-api.js model ağırlıkları (Sanal Makyaj Deneme)
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.iyzipay.com https://cdn.jsdelivr.net",
+      // *.sentry.io / *.ingest.sentry.io: Sentry hata raporlama (tunnelRoute kullansak da
+      // fallback olarak doğrudan gönderim için gerekli)
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.iyzipay.com https://cdn.jsdelivr.net https://*.sentry.io https://*.ingest.sentry.io",
       "frame-src 'self' https://*.iyzipay.com https://www.openstreetmap.org",
       "worker-src 'self' blob:",
       "object-src 'none'",
@@ -93,4 +104,39 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+// ────────────────────────────────────────────────────────────────────
+// Sentry yapılandırması
+//
+// withSentryConfig şunları yapar:
+//   - Build sırasında source map'leri Sentry'e yükler (SENTRY_AUTH_TOKEN gerekli)
+//   - Webpack bundle'a Sentry SDK'yı entegre eder
+//   - "Tunnel" route oluşturur (/monitoring) — adblock'ları bypass eder, hatalar
+//     kullanıcıya yansımadan Sentry'e ulaşır
+//   - Production'da Sentry source map upload comment'lerini build çıktısından temizler
+// ────────────────────────────────────────────────────────────────────
+export default withSentryConfig(nextConfig, {
+  // Sentry org ve proje slug'ları — sentry.io'daki proje URL'inden alınır.
+  // Örn. https://sentry.io/organizations/MY-ORG/projects/MY-PROJECT/ → org: MY-ORG, project: MY-PROJECT
+  // Build zamanında source map upload için gerekli; çalışma zamanında kullanılmaz.
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // Build log'larını sessizleştir (sadece hatalar yazılır)
+  silent: !process.env.CI,
+
+  // ⭐ Adblock bypass — Sentry istekleri /monitoring üzerinden proxy'lenir.
+  // Tarayıcıdan doğrudan sentry.io'ya gitmediği için uBlock/AdGuard engellemez.
+  tunnelRoute: '/monitoring',
+
+  // Source map'leri sadece Sentry'e yüklendikten sonra build çıktısından sil
+  // (kullanıcı kaynak kodunu indiremesin diye).
+  hideSourceMaps: true,
+
+  webpack: {
+    // SDK debug log'larını tree-shake eder (eski `disableLogger` opsiyonunun yerini aldı)
+    treeshake: { removeDebugLogging: true },
+    // Vercel cron monitoring (kullanmıyorsanız etkisiz, eski top-level
+    // `automaticVercelMonitors` opsiyonunun yerini aldı)
+    automaticVercelMonitors: false,
+  },
+})
