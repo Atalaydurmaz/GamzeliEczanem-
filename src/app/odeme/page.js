@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
 import { useSession } from 'next-auth/react'
-import { IL_LISTESI, getIlceler } from '@/lib/tr-iller'
+import { IL_LISTESI, getIlceler, normalizeSehir, normalizeIlce } from '@/lib/tr-iller'
 import MobilOdemeButonu from './MobilOdemeButonu'
 
 const UYE_INDIRIMI_ORANI = 0.05
@@ -148,13 +148,20 @@ export default function OdemeSayfasi() {
       return
     }
     setSeciliAdresId(adres.id)
+    // hesabim/adresler eski kayıtlarda il/ilçeyi free-text alıyordu (örn. "kocaeli"),
+    // ödeme dropdown'u Title Case ('Kocaeli') bekliyor — dropdown boş kalmasın
+    // diye kanonik forma çeviriyoruz. Eşleşmezse ham değeri bırakıyoruz.
+    let kanonikIl = adres.il
+    let kanonikIlce = adres.ilce
+    try { kanonikIl = normalizeSehir(adres.il) } catch {}
+    try { kanonikIlce = normalizeIlce(kanonikIl, adres.ilce) } catch {}
     setForm((prev) => ({
       ...prev,
       adSoyad: adres.ad || prev.adSoyad,
       telefon: adres.telefon || prev.telefon,
       adres:   adres.adres + (adres.mahalle ? `, ${adres.mahalle}` : ''),
-      sehir:   adres.il,
-      ilce:    adres.ilce,
+      sehir:   kanonikIl,
+      ilce:    kanonikIlce,
       postaKodu: adres.postaKodu || '',
     }))
     // Adrese ait alanların hatalarını temizle

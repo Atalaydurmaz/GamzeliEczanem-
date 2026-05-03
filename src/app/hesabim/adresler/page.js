@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { IL_LISTESI, getIlceler } from '@/lib/tr-iller'
 
 export default function AdreslerimSayfasi() {
   const [adresler, setAdresler] = useState([])
@@ -69,6 +70,12 @@ export default function AdreslerimSayfasi() {
   }
 
   function guncelle(alan, deger) {
+    if (alan === 'il') {
+      // İl değişince ilçeyi sıfırla — eski ilçe yeni ilin listesinde olmayabilir
+      setForm((f) => ({ ...f, il: deger, ilce: '' }))
+      setHatalar((h) => ({ ...h, il: '', ilce: '' }))
+      return
+    }
     setForm((f) => ({ ...f, [alan]: deger }))
     if (hatalar[alan]) setHatalar((h) => ({ ...h, [alan]: '' }))
   }
@@ -188,14 +195,25 @@ export default function AdreslerimSayfasi() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">İl *</label>
-                <input type="text" value={form.il} onChange={(e) => guncelle('il', e.target.value)}
-                  className={inputCls('il')} maxLength={100} />
+                <select value={form.il} onChange={(e) => guncelle('il', e.target.value)}
+                  className={`${inputCls('il')} bg-white`}>
+                  <option value="">İl seçin</option>
+                  {IL_LISTESI.map((il) => (
+                    <option key={il} value={il}>{il}</option>
+                  ))}
+                </select>
                 {hatalar.il && <p className="mt-1 text-xs text-red-500">{hatalar.il}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">İlçe *</label>
-                <input type="text" value={form.ilce} onChange={(e) => guncelle('ilce', e.target.value)}
-                  className={inputCls('ilce')} maxLength={100} />
+                <select value={form.ilce} onChange={(e) => guncelle('ilce', e.target.value)}
+                  disabled={!form.il}
+                  className={`${inputCls('ilce')} bg-white disabled:bg-stone-50 disabled:text-stone-400`}>
+                  <option value="">{form.il ? 'İlçe seçin' : 'Önce il seçin'}</option>
+                  {form.il && getIlceler(form.il).map((ilce) => (
+                    <option key={ilce} value={ilce}>{ilce}</option>
+                  ))}
+                </select>
                 {hatalar.ilce && <p className="mt-1 text-xs text-red-500">{hatalar.ilce}</p>}
               </div>
             </div>

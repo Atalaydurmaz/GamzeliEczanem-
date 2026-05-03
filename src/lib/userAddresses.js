@@ -1,4 +1,5 @@
 import { supabaseAdmin } from './supabase'
+import { normalizeSehir, normalizeIlce } from './tr-iller'
 
 function mapRow(row) {
   return {
@@ -29,6 +30,16 @@ export async function getUserAddresses(userId) {
 export async function createUserAddress(userId, fields) {
   const { baslik, ad, telefon, il, ilce, mahalle, adres, postaKodu } = fields
 
+  // İl/ilçeyi kanonik forma çevir — dropdown bypass edilse bile DB tutarlı kalır.
+  // Eşleşmezse normalizeSehir/normalizeIlce string fırlatır → kullanıcıya 400 döner.
+  let kanonikIl, kanonikIlce
+  try {
+    kanonikIl = normalizeSehir(il)
+    kanonikIlce = normalizeIlce(kanonikIl, ilce)
+  } catch (e) {
+    throw new Error(typeof e === 'string' ? e : 'Geçersiz il/ilçe.')
+  }
+
   // Kullanıcının toplam adres sayısını sınırla (max 10)
   const { count } = await supabaseAdmin
     .from('user_addresses')
@@ -45,8 +56,8 @@ export async function createUserAddress(userId, fields) {
       baslik:     baslik.trim().slice(0, 50),
       ad:         ad.trim().slice(0, 100),
       telefon:    telefon.trim().slice(0, 20),
-      il:         il.trim().slice(0, 100),
-      ilce:       ilce.trim().slice(0, 100),
+      il:         kanonikIl,
+      ilce:       kanonikIlce,
       mahalle:    mahalle?.trim().slice(0, 100) || null,
       adres:      adres.trim().slice(0, 500),
       posta_kodu: postaKodu?.trim().slice(0, 10) || null,
