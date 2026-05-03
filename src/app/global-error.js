@@ -8,12 +8,16 @@
 // gönder. instrumentation.js'in onRequestError hook'u SADECE server hatalarını
 // yakalar; client-side render/event hatalarını bu dosya yakalar.
 
-import * as Sentry from '@sentry/nextjs'
 import { useEffect } from 'react'
+
+// NOT: Sentry.captureException çağrısı geçici olarak kaldırıldı.
+// Vercel build sırasında '@sentry/nextjs' paketi resolve edilemediği için
+// import zincirini kırıyordu. Sentry tekrar etkinleştirildiğinde geri alınacak.
 
 export default function GlobalError({ error, reset }) {
   useEffect(() => {
-    Sentry.captureException(error)
+    // Şimdilik sadece tarayıcı console'una basıyoruz
+    console.error('[GlobalError]', error)
   }, [error])
 
   return (
