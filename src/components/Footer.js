@@ -112,13 +112,18 @@ export default function Footer() {
             </div>
           </a>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <span className="text-xs text-stone-500">Güvenli ödeme</span>
-            <div className="flex gap-2">
-              {['VISA', 'MC', 'TROY'].map((c) => (
-                <span key={c} className="px-2 py-0.5 bg-stone-800 text-stone-400 text-xs rounded border border-stone-700">{c}</span>
-              ))}
-            </div>
+            {/* iyzico resmi logo band: Visa, MasterCard, Troy ve "iyzico ile Öde" tek SVG'de.
+                Marka kullanım kuralları için iyzico logo pack'inden alınmıştır. */}
+            <img
+              src="/iyzico-logo-band-white.svg"
+              alt="Visa, MasterCard, Troy — iyzico ile güvenli ödeme"
+              width="228"
+              height="16"
+              loading="lazy"
+              className="h-4 w-auto opacity-90"
+            />
           </div>
         </div>
       </div>
