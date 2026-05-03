@@ -1,15 +1,28 @@
 /** @type {import('next').NextConfig} */
 
-import { withSentryConfig } from '@sentry/nextjs'
+// Sentry'yi opsiyonel olarak yükle — paket bulunamazsa (build cache sorunu,
+// install başarısızlığı vs.) build'i kıracağına config'i olduğu gibi döndüren
+// bir fallback kullanıyoruz. Site Sentry olmadan da çalışır.
+let withSentryConfig
+try {
+  ({ withSentryConfig } = await import('@sentry/nextjs'))
+} catch {
+  console.warn('[next.config] @sentry/nextjs yüklü değil; Sentry entegrasyonu atlanıyor.')
+  withSentryConfig = (cfg) => cfg
+}
+
+const isDev = process.env.NODE_ENV !== 'production'
 
 const securityHeaders = [
   // HSTS — tarayıcıya "bu siteye yalnızca HTTPS üzerinden bağlan" der.
   // 2 yıl + alt alan adları + preload listesi için hazır.
   // Vercel zaten Let's Encrypt SSL sağlar; bu header downgrade saldırılarını kapatır.
-  {
+  // Dev'de (HTTP localhost/LAN) HSTS koymuyoruz — yoksa tarayıcı sonsuza kadar
+  // HTTPS'e zorlar ve dev sunucu erişilemez hale gelir.
+  ...(isDev ? [] : [{
     key: 'Strict-Transport-Security',
     value: 'max-age=63072000; includeSubDomains; preload',
-  },
+  }]),
   // MIME sniffing koruması — tarayıcı Content-Type'ı zorunlu tutar
   {
     key: 'X-Content-Type-Options',
@@ -53,13 +66,20 @@ const securityHeaders = [
       // form-action: 3DS akışında iyzico, banka 3DS sayfalarına ve *.iyzipay.com alt
       // alan adlarına POST yapar. sandbox-api.iyzipay.com dahil hepsi için wildcard.
       "form-action 'self' https://*.iyzipay.com",
-      "upgrade-insecure-requests",
+      // upgrade-insecure-requests sadece prod'da. Dev'de HTTP üzerinden çalışıyoruz
+      // ve bu directive tarayıcının asset isteklerini HTTPS'e zorlayıp 404'e
+      // düşürüyor (CSS/JS yüklenmez, sayfa stilsiz görünür).
+      ...(isDev ? [] : ["upgrade-insecure-requests"]),
     ].join('; '),
   },
 ]
 
 const nextConfig = {
   serverExternalPackages: ['iyzipay'],
+  // LAN üzerinden test (telefon hotspot, ofis WiFi vb.) — Next.js 16'da
+  // dev resource'lara cross-origin istekler default'ta bloklanır.
+  // Burada yalnızca dev için izin veriyoruz; production build etkilenmez.
+  allowedDevOrigins: ['172.20.10.4', '192.168.100.90', '192.168.1.80', '*.trycloudflare.com', '*.local'],
   async headers() {
     return [
       {
@@ -93,6 +113,10 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'witcdn.dermoeczanem.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
       },
       // Supabase Storage
       {
