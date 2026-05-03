@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import ProductCard from '@/components/ProductCard'
+import ProductGridSkeleton from '@/components/ProductGridSkeleton'
 import { makyajKategorileri } from '@/lib/data'
 
 const siralamaSecenekleri = [
@@ -144,7 +145,9 @@ export default function MakyajSayfasi() {
         </div>
 
         {/* Ürün grid */}
-        {filtreliUrunler.length > 0 ? (
+        {yukleniyor ? (
+          <ProductGridSkeleton />
+        ) : filtreliUrunler.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-6">
             {filtreliUrunler.map((urun) => (
               <ProductCard key={urun.id} urun={urun} />

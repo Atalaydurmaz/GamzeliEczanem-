@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import ProductCard from '@/components/ProductCard'
+import ProductGridSkeleton from '@/components/ProductGridSkeleton'
 
 const siralamaSecenekleri = [
   { value: 'varsayilan', label: 'Önerilen' },
@@ -64,7 +65,9 @@ export default function AnneBebek() {
           </select>
         </div>
 
-        {filtreliUrunler.length === 0 ? (
+        {yukleniyor ? (
+          <ProductGridSkeleton />
+        ) : filtreliUrunler.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-4xl mb-3">🔍</p>
             <p className="text-stone-500 font-medium">Ürün bulunamadı</p>
